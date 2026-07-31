@@ -1,0 +1,165 @@
+import AppKit
+import SwiftUI
+import UniformTypeIdentifiers
+
+/// 首页：选择比较模式并拖入/选择两侧的文件或文件夹
+struct HomeView: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        VStack(spacing: 36) {
+            VStack(spacing: 10) {
+                Image(systemName: "arrow.triangle.swap")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.white)
+                    .frame(width: 88, height: 88)
+                    .background(
+                        LinearGradient(colors: [.purple, .indigo],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing),
+                        in: .rect(cornerRadius: 22))
+                    .shadow(color: .purple.opacity(0.35), radius: 12, y: 6)
+                Text("GrapeCompare")
+                    .font(.system(size: 32, weight: .bold))
+                Text("Native, fast, and professional file & folder comparison")
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 44)
+
+            HStack(spacing: 24) {
+                CompareCard(
+                    title: "Compare Files",
+                    icon: "doc.text.magnifyingglass",
+                    description: "Side-by-side diff with line and in-line highlighting",
+                    acceptsFolders: false,
+                    left: $state.leftFileURL,
+                    right: $state.rightFileURL,
+                    action: state.startFileCompare)
+                CompareCard(
+                    title: "Compare Folders",
+                    icon: "folder.badge.questionmark",
+                    description: "Recursively compare folders to find added, missing, and modified files",
+                    acceptsFolders: true,
+                    left: $state.leftFolderURL,
+                    right: $state.rightFolderURL,
+                    action: state.startFolderCompare)
+            }
+            .padding(.horizontal, 48)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct CompareCard: View {
+    let title: String
+    let icon: String
+    let description: String
+    let acceptsFolders: Bool
+    @Binding var left: URL?
+    @Binding var right: URL?
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.system(size: 28))
+                .foregroundStyle(.tint)
+            Text(title)
+                .font(.title3).bold()
+            Text(description)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 10) {
+                DropSlot(label: "Left", acceptsFolders: acceptsFolders, url: $left)
+                Image(systemName: "arrow.left.arrow.right")
+                    .foregroundStyle(.tertiary)
+                DropSlot(label: "Right", acceptsFolders: acceptsFolders, url: $right)
+            }
+
+            Button("Compare", action: action)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(left == nil || right == nil)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+    }
+}
+
+/// 拖放/点选槽位
+struct DropSlot: View {
+    let label: String
+    let acceptsFolders: Bool
+    @Binding var url: URL?
+    @State private var isTargeted = false
+
+    var body: some View {
+        VStack(spacing: 6) {
+            if let url {
+                Image(systemName: acceptsFolders ? "folder.fill" : "doc.fill")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
+                Text(url.lastPathComponent)
+                    .font(.callout).bold()
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text((url.path(percentEncoded: false) as NSString).abbreviatingWithTildeInPath)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Button("Remove") { self.url = nil }
+                    .font(.caption)
+                    .buttonStyle(.link)
+            } else {
+                Image(systemName: "arrow.down.doc")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                Text("\(label): drop a \(acceptsFolders ? "folder" : "file") here")
+                    .font(.caption)
+                Text("or click to choose")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, minHeight: 116)
+        .background(isTargeted ? Color.accentColor.opacity(0.08) : Color.clear,
+                    in: .rect(cornerRadius: 10))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.4),
+                              style: StrokeStyle(lineWidth: 1.5, dash: [6]))
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: pick)
+        .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
+            guard let provider = providers.first else { return false }
+            _ = provider.loadObject(ofClass: URL.self) { item, _ in
+                DispatchQueue.main.async {
+                    guard let item else { return }
+                    if self.acceptsFolders, !item.hasDirectoryPath { return }
+                    self.url = item
+                }
+            }
+            return true
+        }
+    }
+
+    private func pick() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = !acceptsFolders
+        panel.canChooseDirectories = acceptsFolders
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Choose"
+        if panel.runModal() == .OK {
+            url = panel.url
+        }
+    }
+}
