@@ -70,4 +70,4 @@ macos/
 
 ## 说明
 
-- 为让命令行可读取任意路径，App Sandbox 已关闭（与 Beyond Compare 取舍一致）。如计划上架 App Store，请重新开启沙盒。
+- App Sandbox 已开启，并授予“用户选定文件的只读访问”权限。打开面板与拖放两种方式均可正常比较；拖放得到的 URL 是 security-scoped 的，应用会对其调用 `startAccessingSecurityScopedResource()`。命令行用法（`GrapeCompare <左> <右>`）在沙盒下无法读取任意路径，会被静默忽略——如需此功能请关闭沙盒（与 Beyond Compare 取舍一致）。

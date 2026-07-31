@@ -70,4 +70,4 @@ macos/
 
 ## Notes
 
-- App Sandbox is disabled so the CLI can read arbitrary paths (same trade-off as Beyond Compare). Re-enable it if you plan to distribute via the App Store.
+- App Sandbox is enabled with read-only user-selected file access. Both input methods (open panel and drag & drop) work fully; dropped URLs are security-scoped and the app calls `startAccessingSecurityScopedResource()` on them. The CLI form (`GrapeCompare <left> <right>`) cannot read arbitrary paths under the sandbox and is silently ignored — disable the sandbox (same trade-off as Beyond Compare) if you need it.

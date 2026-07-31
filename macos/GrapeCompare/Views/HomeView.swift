@@ -110,7 +110,7 @@ struct DropSlot: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Button("Remove") { self.url = nil }
+                Button("Remove") { setURL(nil) }
                     .font(.caption)
                     .buttonStyle(.link)
             } else {
@@ -141,11 +141,22 @@ struct DropSlot: View {
                 DispatchQueue.main.async {
                     guard let item else { return }
                     if self.acceptsFolders, !item.hasDirectoryPath { return }
-                    self.url = item
+                    self.setURL(item)
                 }
             }
             return true
         }
+    }
+
+    /// 设置槽位 URL 并管理沙盒安全作用域访问。
+    /// App Sandbox 下，拖放得来的 URL 是 security-scoped 的，必须先
+    /// startAccessing 才能读取其内容（文件夹访问权覆盖其所有子项）。
+    /// NSOpenPanel 返回的 URL 已获授权，startAccessing 会返回 false，无害。
+    private func setURL(_ new: URL?) {
+        guard new != url else { return }
+        url?.stopAccessingSecurityScopedResource()
+        if let new { _ = new.startAccessingSecurityScopedResource() }
+        url = new
     }
 
     private func pick() {
@@ -155,7 +166,7 @@ struct DropSlot: View {
         panel.allowsMultipleSelection = false
         panel.prompt = "Choose"
         if panel.runModal() == .OK {
-            url = panel.url
+            setURL(panel.url)
         }
     }
 }
