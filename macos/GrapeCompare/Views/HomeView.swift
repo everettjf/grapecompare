@@ -13,7 +13,7 @@ struct HomeView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 96, height: 96)
-                    .shadow(color: .purple.opacity(0.35), radius: 12, y: 6)
+                    .shadow(color: .green.opacity(0.35), radius: 12, y: 6)
                 Text("GrapeCompare")
                     .font(.system(size: 32, weight: .bold))
                 Text("Native, fast, and professional file & folder comparison")
