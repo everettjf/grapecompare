@@ -9,14 +9,10 @@ struct HomeView: View {
     var body: some View {
         VStack(spacing: 36) {
             VStack(spacing: 10) {
-                Image(systemName: "arrow.triangle.swap")
-                    .font(.system(size: 44))
-                    .foregroundStyle(.white)
-                    .frame(width: 88, height: 88)
-                    .background(
-                        LinearGradient(colors: [.purple, .indigo],
-                                       startPoint: .topLeading, endPoint: .bottomTrailing),
-                        in: .rect(cornerRadius: 22))
+                Image("GrapeIcon")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 96, height: 96)
                     .shadow(color: .purple.opacity(0.35), radius: 12, y: 6)
                 Text("GrapeCompare")
                     .font(.system(size: 32, weight: .bold))
