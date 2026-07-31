@@ -66,7 +66,11 @@ final class AppState: ObservableObject {
 
     @Published var isComparing = false
 
-    /// 处理命令行参数：`GrapeCompare <左> <右>`，目录走文件夹比较，其余走文件比较
+    /// 待处理的启动参数（`GrapeCompare <左> <右>`）
+    private var pendingArgs: (left: URL, right: URL)?
+
+    /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
+    /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
     init() {
         let stored = UserDefaults.standard.string(forKey: "appearance")
         appearance = AppearanceMode(rawValue: stored ?? "") ?? .system
@@ -77,11 +81,21 @@ final class AppState: ObservableObject {
         guard args.count >= 3 else { return }
         let l = URL(fileURLWithPath: args[1]).standardizedFileURL
         let r = URL(fileURLWithPath: args[2]).standardizedFileURL
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: l.path(percentEncoded: false)),
+              fm.fileExists(atPath: r.path(percentEncoded: false)) else { return }
+        pendingArgs = (l, r)
+    }
+
+    /// 首个窗口出现后处理启动参数：目录走文件夹比较，其余走文件比较
+    func consumePendingArgs() {
+        guard let (l, r) = pendingArgs else { return }
+        pendingArgs = nil
         var isDirL: ObjCBool = false
         var isDirR: ObjCBool = false
         let fm = FileManager.default
-        guard fm.fileExists(atPath: l.path(percentEncoded: false), isDirectory: &isDirL),
-              fm.fileExists(atPath: r.path(percentEncoded: false), isDirectory: &isDirR) else { return }
+        fm.fileExists(atPath: l.path(percentEncoded: false), isDirectory: &isDirL)
+        fm.fileExists(atPath: r.path(percentEncoded: false), isDirectory: &isDirR)
         if isDirL.boolValue, isDirR.boolValue {
             leftFolderURL = l
             rightFolderURL = r

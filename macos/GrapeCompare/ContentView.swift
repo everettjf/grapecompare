@@ -15,5 +15,6 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 860, minHeight: 560)
+        .onAppear { state.consumePendingArgs() }
     }
 }

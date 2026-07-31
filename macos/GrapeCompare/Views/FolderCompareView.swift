@@ -58,6 +58,7 @@ struct FolderCompareView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .frame(width: 300)
 
             Button { state.startFolderCompare() } label: {
