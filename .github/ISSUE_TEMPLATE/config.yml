@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/everettjf/GrapeCompare/security/advisories/new
+    about: Report security problems privately instead of opening a public issue.
+  - name: App Store support
+    url: https://github.com/everettjf/GrapeCompare/blob/main/SUPPORT.md
+    about: Read the support guide before opening an issue.
