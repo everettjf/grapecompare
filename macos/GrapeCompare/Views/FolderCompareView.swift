@@ -189,16 +189,11 @@ struct FolderCompareView: View {
     }
 
     private func descendantMatches(_ node: FolderNode) -> Bool {
-        guard node.isFolder else { return fileMatches(node.status) }
-        return (node.children ?? []).contains(where: descendantMatches)
-    }
-
-    private func fileMatches(_ status: CompareStatus) -> Bool {
         switch filter {
         case .all: return true
-        case .differences: return status != .same
-        case .onlyLeft: return status == .onlyLeft
-        case .onlyRight: return status == .onlyRight
+        case .differences: return node.status != .same
+        case .onlyLeft: return node.subtreeContains(.onlyLeft)
+        case .onlyRight: return node.subtreeContains(.onlyRight)
         }
     }
 
@@ -268,7 +263,7 @@ private struct FolderRow: View {
         HStack(spacing: 6) {
             Spacer().frame(width: CGFloat(depth * 18))
 
-            if node.isFolder, meta != nil {
+            if meta?.isDirectory == true {
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundStyle(.secondary)
@@ -277,9 +272,9 @@ private struct FolderRow: View {
                 Spacer().frame(width: 12)
             }
 
-            if meta != nil {
-                Image(systemName: node.isFolder ? "folder.fill" : fileIcon)
-                    .foregroundStyle(sideIconColor(isLeft: isLeft))
+            if let meta {
+                Image(systemName: meta.isDirectory ? "folder.fill" : fileIcon)
+                    .foregroundStyle(sideIconColor(isLeft: isLeft, isDirectory: meta.isDirectory))
                 Text(node.name)
                     .font(.system(size: 13))
                     .foregroundStyle(.primary)
@@ -291,7 +286,7 @@ private struct FolderRow: View {
             }
 
             Spacer(minLength: 8)
-            if !node.isFolder, let meta {
+            if let meta, !meta.isDirectory {
                 Text(sizeString(meta))
                     .foregroundStyle(.secondary)
             }
@@ -320,8 +315,8 @@ private struct FolderRow: View {
         }
     }
 
-    private func sideIconColor(isLeft: Bool) -> Color {
-        if node.isFolder { return isLeft ? .blue : .indigo }
+    private func sideIconColor(isLeft: Bool, isDirectory: Bool) -> Color {
+        if isDirectory { return isLeft ? .blue : .indigo }
         switch node.status {
         case .same: return .secondary
         case .different: return .orange

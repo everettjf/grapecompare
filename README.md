@@ -1,73 +1,106 @@
+<div align="center">
+
 # GrapeCompare
 
-[中文版 README](README.zh-CN.md)
+**Fast, accurate file and folder comparison for macOS.**<br>
+Native SwiftUI, no WebView, inspired by Beyond Compare.
 
-A native macOS file & folder comparison tool inspired by Beyond Compare — written in pure SwiftUI, no WebView.
+[Download on the App Store](https://apps.apple.com/app/id6796778424) · [中文说明](README.zh-CN.md) · [Support](https://github.com/everettjf/GrapeCompare/issues) · [Privacy](docs/privacy.html)
+
+</div>
+
+| Folder comparison | File comparison |
+| --- | --- |
+| ![Folder comparison](docs/assets/folder-diff.png) | ![File comparison](docs/assets/file-diff.png) |
+
+## Why GrapeCompare
+
+- **Accurate:** byte-exact folder validation, shortest edit scripts for normal changes, visible final-newline differences, and correct handling of symbolic links, packages, and file/folder conflicts.
+- **Fast at scale:** 100,000-line text comparisons complete in about 0.06 seconds; a 10,000-file folder benchmark completes in about 0.38 seconds on the development machine.
+- **Easy to read:** side-by-side lines, character-level highlights, aligned line numbers, difference counts, and previous/next navigation.
+- **Native and private:** a responsive macOS interface, Dark and Light appearances, local-only processing, and read-only access to user-selected files.
 
 ## Features
 
-### Folder Compare
-- Recursively compares two folders and shows the result as an expandable tree
-- Per-item status: **Same / Different / Left Only / Right Only**, with folder status rolled up from descendants
-- Filters (All / Differences / Left Only / Right Only), size columns, and a summary status bar
-- Folders containing differences are auto-expanded; double-click a file to open its diff
-- Files are compared by size first, then by streaming 1 MB chunk comparison — no large-file memory spikes
+### File comparison
 
-### File Compare
-- Side-by-side diff with line-level highlighting (red/green) and **in-line character-level highlighting** for modified lines
-- Line numbers, aligned blank placeholders, binary-file detection, and an "identical files" state
-- Difference statistics (`+added −removed ~modified`) and previous/next difference navigation
-- Myers O(ND) line diff with common prefix/suffix trimming and an edit-distance guard, so huge files with few changes diff in milliseconds (100k lines in ~0.05 s)
+- Adaptive Myers line diff with low-occurrence anchors for large rewrites
+- Character-level highlighting inside modified lines
+- Added, removed, and modified counts with keyboard-friendly navigation
+- CRLF/LF normalization, final-newline reporting, and binary-file detection
+- Memory-mapped input to avoid duplicating large files in memory
 
-### General
-- Polished UI in both Dark and Light mode, drag & drop or click-to-choose inputs
-- Command line usage, similar to `bcompare`:
+### Folder comparison
 
-  ```bash
-  GrapeCompare <left> <right>   # two folders → folder compare, otherwise → file compare
-  ```
+- Recursive expandable tree with **Same**, **Different**, **Left Only**, and **Right Only** states
+- All/Differences/Left Only/Right Only filters with automatic expansion of changed folders
+- Type and size prechecks followed by exact, bounded-parallel byte validation
+- Correct traversal of package directories and comparison of symbolic-link targets
+- Fast subtree filtering through pre-aggregated status indexes
 
-## Requirements
+## Performance
 
-- macOS 27+, Xcode 27+
+The repository includes a Release benchmark with reproducible generated fixtures. Representative results from the development machine:
 
-## Build & Run
+| Scenario | Result | Notes |
+| --- | ---: | --- |
+| 100k-line sparse edit | **0.060 s** | End-to-end: split, diff, inline ranges, rows |
+| 30k-line high churn | **0.070 s** | Retains all stable structural anchors |
+| 10k-file folder | **0.382 s** | Down from 2.385 s, about **6.2× faster** |
+| 50k-file folder | **3.917 s** | Full scan, validation, tree, sort, rollup |
 
-Open `macos/GrapeCompare.xcodeproj` in Xcode and run, or:
-
-```bash
-xcodebuild -project macos/GrapeCompare.xcodeproj -scheme GrapeCompare \
-    -destination 'platform=macOS' -configuration Debug build
-```
-
-## Tests
-
-The UI-independent core (`DiffEngine`, `FolderComparator`) has a self-contained test harness:
+Timings exclude fixture generation and vary by hardware and storage. Run them locally:
 
 ```bash
-macos/Tests/run-tests.sh   # compiles with swiftc and runs 29 assertions
+bash macos/Benchmarks/run-benchmarks.sh
+bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 ```
 
-## Project Layout
+The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF01840446) and the low-occurrence anchoring ideas documented in [Git's diff algorithms](https://git-scm.com/docs/diff-algorithm-option.html).
 
+## Install or build
+
+Install the signed release from the [Mac App Store](https://apps.apple.com/app/id6796778424), or build from source with macOS 27+ and Xcode 27+:
+
+```bash
+xcodebuild -project macos/GrapeCompare.xcodeproj \
+  -scheme GrapeCompare \
+  -destination 'platform=macOS' \
+  -configuration Debug build
 ```
+
+You can also open `macos/GrapeCompare.xcodeproj` in Xcode and press Run.
+
+## Command line
+
+```bash
+GrapeCompare <left> <right>
+```
+
+Two folders open the folder comparison; other inputs open the file comparison. The App Store build is sandboxed and cannot read arbitrary command-line paths. Build with App Sandbox disabled if this workflow is required.
+
+## Test
+
+```bash
+macos/Tests/run-tests.sh
+```
+
+The core suite contains 45 focused checks, 300 randomized shortest-edit-script cases, large-text stress cases, and folder edge cases. No UI or Xcode test runner is required.
+
+## Project structure
+
+```text
 macos/
 ├── GrapeCompare/
-│   ├── GrapeCompareApp.swift      # @main entry point
-│   ├── AppState.swift             # app state, compare orchestration, CLI args
 │   ├── Core/
-│   │   ├── DiffEngine.swift       # Myers line diff + aligned rows + in-line ranges
-│   │   └── FolderComparator.swift # recursive folder scan + streaming file compare
-│   └── Views/
-│       ├── HomeView.swift         # mode picker with drag & drop slots
-│       ├── FileDiffView.swift     # side-by-side diff
-│       ├── FolderCompareView.swift# folder tree
-│       └── Theme.swift            # shared colors & fonts
-└── Tests/
-    ├── main.swift                 # core test harness
-    └── run-tests.sh
+│   │   ├── DiffEngine.swift       # adaptive Myers + low-occurrence anchors
+│   │   └── FolderComparator.swift # POSIX scan + bounded exact validation
+│   ├── Views/                     # native SwiftUI file/folder interfaces
+│   └── AppState.swift             # comparison orchestration
+├── Tests/                         # deterministic correctness and stress tests
+└── Benchmarks/                    # repeatable large-file/folder benchmarks
 ```
 
-## Notes
+## Support
 
-- App Sandbox is enabled with read-only user-selected file access. Both input methods (open panel and drag & drop) work fully; dropped URLs are security-scoped and the app calls `startAccessingSecurityScopedResource()` on them. The CLI form (`GrapeCompare <left> <right>`) cannot read arbitrary paths under the sandbox and is silently ignored — disable the sandbox (same trade-off as Beyond Compare) if you need it.
+Use [GitHub Issues](https://github.com/everettjf/GrapeCompare/issues) for bugs and feature requests.

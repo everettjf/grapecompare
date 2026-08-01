@@ -47,6 +47,11 @@ struct FileDiffView: View {
                 Text("+\(r.addedCount)").foregroundStyle(.green).font(.callout).bold()
                 Text("−\(r.removedCount)").foregroundStyle(.red).font(.callout).bold()
                 Text("~\(r.modifiedCount)").foregroundStyle(.orange).font(.callout).bold()
+                if r.finalNewlineDiffers {
+                    Text("↵ final newline differs")
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                }
                 Text("· \(r.differenceCount) differing rows")
                     .font(.callout)
                     .foregroundStyle(.secondary)

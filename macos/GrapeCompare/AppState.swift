@@ -196,8 +196,9 @@ final class AppState: ObservableObject {
         Task {
             let outcome = await Task.detached(priority: .userInitiated) { () -> (FileDiffResult?, String?) in
                 do {
-                    let ld = try left.map { try Data(contentsOf: $0) }
-                    let rd = try right.map { try Data(contentsOf: $0) }
+                    // 映射大文件，避免在进入 diff 前就额外复制左右两份完整内容。
+                    let ld = try left.map { try Data(contentsOf: $0, options: .mappedIfSafe) }
+                    let rd = try right.map { try Data(contentsOf: $0, options: .mappedIfSafe) }
                     return (DiffEngine.compare(left: ld, right: rd), nil)
                 } catch {
                     return (nil, error.localizedDescription)
