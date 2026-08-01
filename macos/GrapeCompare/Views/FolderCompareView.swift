@@ -113,13 +113,25 @@ struct FolderCompareView: View {
     }
 
     private var columnHeader: some View {
-        HStack(spacing: 6) {
-            Text("Name")
-            Spacer()
-            Text("Left Size")
-                .frame(width: 90, alignment: .trailing)
-            Text("Right Size")
-                .frame(width: 90, alignment: .trailing)
+        HStack(spacing: 0) {
+            HStack {
+                Text("Left folder")
+                Spacer()
+                Text("Size")
+            }
+            .padding(.horizontal, 12)
+
+            Text("Status")
+                .frame(width: 86)
+                .padding(.vertical, 6)
+                .background(Color.primary.opacity(0.025))
+
+            HStack {
+                Text("Right folder")
+                Spacer()
+                Text("Size")
+            }
+            .padding(.horizontal, 12)
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -227,34 +239,15 @@ private struct FolderRow: View {
     let onOpen: () -> Void
 
     var body: some View {
-        HStack(spacing: 6) {
-            Spacer().frame(width: CGFloat(depth * 18))
+        HStack(spacing: 0) {
+            side(node.left, isLeft: true)
 
-            if node.isFolder {
-                Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 12)
-            } else {
-                Spacer().frame(width: 12)
-            }
+            statusIndicator
+                .frame(width: 86)
+                .frame(maxHeight: .infinity)
+                .background(Color.primary.opacity(0.025))
 
-            Image(systemName: node.isFolder ? "folder.fill" : fileIcon)
-                .foregroundStyle(iconColor)
-
-            Text(node.name)
-                .font(.system(size: 13))
-                .lineLimit(1)
-                .truncationMode(.middle)
-
-            statusBadge
-
-            Spacer()
-
-            Text(node.isFolder ? folderSummary(node.left, node.right) : sizeString(node.left))
-                .frame(width: 90, alignment: .trailing)
-            Text(node.isFolder ? "" : sizeString(node.right))
-                .frame(width: 90, alignment: .trailing)
+            side(node.right, isLeft: false)
         }
         .font(.system(size: 12, design: .monospaced))
         .foregroundStyle(.secondary)
@@ -268,6 +261,71 @@ private struct FolderRow: View {
         }
         .onTapGesture(count: 1) {
             if node.isFolder { onToggle() }
+        }
+    }
+
+    private func side(_ meta: FileMeta?, isLeft: Bool) -> some View {
+        HStack(spacing: 6) {
+            Spacer().frame(width: CGFloat(depth * 18))
+
+            if node.isFolder, meta != nil {
+                Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 12)
+            } else {
+                Spacer().frame(width: 12)
+            }
+
+            if meta != nil {
+                Image(systemName: node.isFolder ? "folder.fill" : fileIcon)
+                    .foregroundStyle(sideIconColor(isLeft: isLeft))
+                Text(node.name)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            } else {
+                Text("—")
+                    .foregroundStyle(.tertiary)
+            }
+
+            Spacer(minLength: 8)
+            if !node.isFolder, let meta {
+                Text(sizeString(meta))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var statusIndicator: some View {
+        switch node.status {
+        case .same:
+            Label("Same", systemImage: "equal")
+                .foregroundStyle(.secondary)
+        case .different:
+            Label("Changed", systemImage: "not.equal")
+                .foregroundStyle(.orange)
+        case .onlyLeft:
+            Image(systemName: "arrow.left")
+                .foregroundStyle(.blue)
+                .help("Only on the left")
+        case .onlyRight:
+            Image(systemName: "arrow.right")
+                .foregroundStyle(.blue)
+                .help("Only on the right")
+        }
+    }
+
+    private func sideIconColor(isLeft: Bool) -> Color {
+        if node.isFolder { return isLeft ? .blue : .indigo }
+        switch node.status {
+        case .same: return .secondary
+        case .different: return .orange
+        case .onlyLeft, .onlyRight: return .purple
         }
     }
 

@@ -65,6 +65,7 @@ final class AppState: ObservableObject {
     @Published var treeVersion = 0
 
     @Published var isComparing = false
+    @Published var demoError: String?
 
     /// 待处理的启动参数（`GrapeCompare <左> <右>`）
     private var pendingArgs: (left: URL, right: URL)?
@@ -153,6 +154,28 @@ final class AppState: ObservableObject {
 
     func goHome() {
         screen = .home
+    }
+
+    func loadFileDemo() {
+        do {
+            let pair = try DemoData.makeFilePair()
+            leftFileURL = pair.left
+            rightFileURL = pair.right
+            startFileCompare()
+        } catch {
+            demoError = error.localizedDescription
+        }
+    }
+
+    func loadFolderDemo() {
+        do {
+            let pair = try DemoData.makeFolderPair()
+            leftFolderURL = pair.left
+            rightFolderURL = pair.right
+            startFolderCompare()
+        } catch {
+            demoError = error.localizedDescription
+        }
     }
 
     func backFromDiff() {

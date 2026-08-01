@@ -116,13 +116,16 @@ struct FileDiffView: View {
 
             GeometryReader { geo in
                 ScrollViewReader { proxy in
-                    ScrollView([.horizontal, .vertical]) {
+                    ScrollView(.vertical) {
                         LazyVStack(spacing: 0) {
                             ForEach(r.rows) { row in
-                                DiffRowView(row: row)
+                                DiffRowView(
+                                    row: row,
+                                    columnWidth: max(0, (geo.size.width - 1) / 2)
+                                )
                             }
                         }
-                        .frame(minWidth: geo.size.width, alignment: .leading)
+                        .frame(width: geo.size.width, alignment: .leading)
                     }
                     .onChange(of: scrollRequest) {
                         if let target = scrollRequest {
@@ -164,15 +167,19 @@ struct FileDiffView: View {
 /// 并排 diff 中的一行
 struct DiffRowView: View {
     let row: DiffRow
+    let columnWidth: CGFloat
 
     var body: some View {
         HStack(spacing: 0) {
             sideView(row.left, isLeft: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: columnWidth, alignment: .leading)
+                .clipped()
             Rectangle().fill(Theme.gutterDivider).frame(width: 1)
             sideView(row.right, isLeft: false)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: columnWidth, alignment: .leading)
+                .clipped()
         }
+        .frame(width: columnWidth * 2 + 1, alignment: .leading)
         .font(Theme.mono)
     }
 

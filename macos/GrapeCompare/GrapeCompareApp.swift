@@ -45,5 +45,24 @@ struct GrapeCompareApp: App {
                 .pickerStyle(.inline)
             }
         }
+
+        Settings {
+            DemoSettingsView()
+        }
+    }
+}
+
+private struct DemoSettingsView: View {
+    @AppStorage("showDemoButton") private var showDemoButton = true
+
+    var body: some View {
+        Form {
+            Toggle("Show Load Demo button on the home screen", isOn: $showDemoButton)
+            Text("Demo data is generated locally and never leaves your Mac.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(24)
+        .frame(width: 430)
     }
 }

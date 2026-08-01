@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 /// 首页：选择比较模式并拖入/选择两侧的文件或文件夹
 struct HomeView: View {
     @EnvironmentObject var state: AppState
+    @AppStorage("showDemoButton") private var showDemoButton = true
 
     var body: some View {
         VStack(spacing: 36) {
@@ -44,6 +45,31 @@ struct HomeView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .bottomTrailing) {
+            if showDemoButton {
+                Menu {
+                    Button("Compare Swift Files", systemImage: "doc.text.magnifyingglass") {
+                        state.loadFileDemo()
+                    }
+                    Button("Compare Swift Project Folders", systemImage: "folder.badge.questionmark") {
+                        state.loadFolderDemo()
+                    }
+                } label: {
+                    Label("Load Demo", systemImage: "sparkles")
+                }
+                .menuStyle(.button)
+                .controlSize(.large)
+                .padding(20)
+            }
+        }
+        .alert("Unable to Load Demo", isPresented: Binding(
+            get: { state.demoError != nil },
+            set: { if !$0 { state.demoError = nil } }
+        )) {
+            Button("OK") { state.demoError = nil }
+        } message: {
+            Text(state.demoError ?? "Unknown error")
+        }
     }
 }
 
