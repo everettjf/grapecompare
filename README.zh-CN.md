@@ -1,17 +1,37 @@
 <div align="center">
+  <img src="macos/GrapeCompare/Assets.xcassets/GrapeIcon.imageset/grape-icon.png" width="112" alt="GrapeCompare 应用图标">
 
 # GrapeCompare
 
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
-原生 SwiftUI，不使用 WebView，灵感来自 Beyond Compare。
+原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
-[从 App Store 下载](https://apps.apple.com/app/id6796778424) · [English](README.md) · [问题反馈](https://github.com/everettjf/GrapeCompare/issues) · [隐私政策](docs/privacy.html)
+[![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
+[![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
+![macOS](https://img.shields.io/badge/macOS-27%2B-111827?style=flat-square&logo=apple)
+![Swift](https://img.shields.io/badge/Swift-5-F05138?style=flat-square&logo=swift&logoColor=white)
+
+[Mac App Store](https://apps.apple.com/app/id6796778424) · [官网](https://xnu.app/GrapeCompare/) · [English](README.md) · [更新记录](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
 
 </div>
 
-| 文件夹比较 | 文件比较 |
-| --- | --- |
-| ![文件夹比较](docs/assets/folder-diff.png) | ![文件比较](docs/assets/file-diff.png) |
+## 每一处差异都清晰可见
+
+### 文件夹比较
+
+在可筛选的递归目录树中查看结果，并从不同的文件直接进入文本对比。
+
+<p align="center">
+  <img src="docs/assets/folder-diff.png" width="100%" alt="GrapeCompare 文件夹比较界面，展示递归结果树和状态筛选">
+</p>
+
+### 文件比较
+
+左右对齐查看行差异、字符级修改、差异统计，以及上一处/下一处导航。
+
+<p align="center">
+  <img src="docs/assets/file-diff.png" width="100%" alt="GrapeCompare 左右并排文件比较界面和行内高亮">
+</p>
 
 ## 为什么选择 GrapeCompare
 
@@ -58,9 +78,11 @@ bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 
 Diff 设计基于 [Myers O(ND) 算法](https://doi.org/10.1007/BF01840446)，并采纳了 [Git diff 算法文档](https://git-scm.com/docs/diff-algorithm-option.html)中的低频元素锚定思路。
 
-## 安装或构建
+## 安装
 
-可以从 [Mac App Store](https://apps.apple.com/app/id6796778424) 安装已签名版本，也可以使用 macOS 27+ 和 Xcode 27+ 从源码构建：
+可以从 [Mac App Store](https://apps.apple.com/app/id6796778424) 安装已签名版本。
+
+从源码构建需要 macOS 27+ 和 Xcode 27+：
 
 ```bash
 xcodebuild -project macos/GrapeCompare.xcodeproj \
@@ -79,15 +101,15 @@ GrapeCompare <左侧路径> <右侧路径>
 
 两个输入都是文件夹时进入文件夹比较，其他情况进入文件比较。App Store 版本启用了沙盒，无法读取任意命令行路径；如需该工作流，请在自行构建时关闭 App Sandbox。
 
-## 测试
+## 开发
+
+无需打开 Xcode 即可运行平台无关的核心测试：
 
 ```bash
-macos/Tests/run-tests.sh
+bash macos/Tests/run-tests.sh
 ```
 
-核心套件包含 45 项针对性检查、300 组随机最短编辑脚本用例、大文本压力场景和文件夹边界场景，不依赖 UI 或 Xcode 测试运行器。
-
-## 项目结构
+测试套件包含 45 项针对性检查、300 组随机最短编辑脚本用例、大文本压力场景和文件夹边界场景；Pull Request 会在 GitHub Actions 中运行同一套测试。
 
 ```text
 macos/
@@ -101,6 +123,4 @@ macos/
 └── Benchmarks/                    # 可重复的大文件/文件夹性能基准
 ```
 
-## 支持
-
-Bug 和功能建议请提交到 [GitHub Issues](https://github.com/everettjf/GrapeCompare/issues)。
+欢迎参与贡献。提交 Pull Request 前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。问题与建议请使用 [GitHub Issues](https://github.com/everettjf/GrapeCompare/issues)；安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。参与本项目即表示同意遵守 [行为准则](CODE_OF_CONDUCT.md)。

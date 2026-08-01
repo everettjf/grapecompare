@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a reproducible problem in GrapeCompare
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve GrapeCompare. Please remove private information from paths, filenames, screenshots, and sample files before posting.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Tell us what you expected and what happened instead.
+      placeholder: A clear, concise description of the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Compare ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: GrapeCompare version
+      placeholder: "For example: 1.1.0 (5)"
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac model
+      placeholder: "For example: macOS 27.0, MacBook Pro with Apple silicon"
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Minimal sample or screenshot
+      description: Attach the smallest non-sensitive sample that reproduces the issue, if possible.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include logs, file counts, approximate file sizes, or anything else that may help.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I removed private or confidential data from this report.
+          required: true

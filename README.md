@@ -1,17 +1,37 @@
 <div align="center">
+  <img src="macos/GrapeCompare/Assets.xcassets/GrapeIcon.imageset/grape-icon.png" width="112" alt="GrapeCompare app icon">
 
 # GrapeCompare
 
 **Fast, accurate file and folder comparison for macOS.**<br>
-Native SwiftUI, no WebView, inspired by Beyond Compare.
+A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
-[Download on the App Store](https://apps.apple.com/app/id6796778424) · [中文说明](README.zh-CN.md) · [Support](https://github.com/everettjf/GrapeCompare/issues) · [Privacy](docs/privacy.html)
+[![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
+![macOS](https://img.shields.io/badge/macOS-27%2B-111827?style=flat-square&logo=apple)
+![Swift](https://img.shields.io/badge/Swift-5-F05138?style=flat-square&logo=swift&logoColor=white)
+
+[Mac App Store](https://apps.apple.com/app/id6796778424) · [Website](https://xnu.app/GrapeCompare/) · [中文说明](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
-| Folder comparison | File comparison |
-| --- | --- |
-| ![Folder comparison](docs/assets/folder-diff.png) | ![File comparison](docs/assets/file-diff.png) |
+## See every difference clearly
+
+### Folder comparison
+
+Browse a recursive, filterable tree and jump directly from a changed file into its text diff.
+
+<p align="center">
+  <img src="docs/assets/folder-diff.png" width="100%" alt="GrapeCompare folder comparison showing a recursive result tree and status filters">
+</p>
+
+### File comparison
+
+Review aligned lines, character-level edits, totals, and previous/next difference navigation side by side.
+
+<p align="center">
+  <img src="docs/assets/file-diff.png" width="100%" alt="GrapeCompare side-by-side file comparison with inline highlights">
+</p>
 
 ## Why GrapeCompare
 
@@ -58,9 +78,11 @@ bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 
 The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF01840446) and the low-occurrence anchoring ideas documented in [Git's diff algorithms](https://git-scm.com/docs/diff-algorithm-option.html).
 
-## Install or build
+## Install
 
-Install the signed release from the [Mac App Store](https://apps.apple.com/app/id6796778424), or build from source with macOS 27+ and Xcode 27+:
+Install the signed release from the [Mac App Store](https://apps.apple.com/app/id6796778424).
+
+To build from source, use macOS 27+ and Xcode 27+:
 
 ```bash
 xcodebuild -project macos/GrapeCompare.xcodeproj \
@@ -79,15 +101,15 @@ GrapeCompare <left> <right>
 
 Two folders open the folder comparison; other inputs open the file comparison. The App Store build is sandboxed and cannot read arbitrary command-line paths. Build with App Sandbox disabled if this workflow is required.
 
-## Test
+## Development
+
+Run the platform-independent core suite without launching Xcode:
 
 ```bash
-macos/Tests/run-tests.sh
+bash macos/Tests/run-tests.sh
 ```
 
-The core suite contains 45 focused checks, 300 randomized shortest-edit-script cases, large-text stress cases, and folder edge cases. No UI or Xcode test runner is required.
-
-## Project structure
+The suite contains 45 focused checks, 300 randomized shortest-edit-script cases, large-text stress cases, and folder edge cases. Pull requests run the same suite in GitHub Actions.
 
 ```text
 macos/
@@ -101,6 +123,4 @@ macos/
 └── Benchmarks/                    # repeatable large-file/folder benchmarks
 ```
 
-## Support
-
-Use [GitHub Issues](https://github.com/everettjf/GrapeCompare/issues) for bugs and feature requests.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. For help, use [GitHub Issues](https://github.com/everettjf/GrapeCompare/issues); report security problems according to [SECURITY.md](SECURITY.md). By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
