@@ -2,9 +2,15 @@ import SwiftUI
 
 /// 文件 diff 视图：左右并排、行级 + 行内高亮、差异导航
 struct FileDiffView: View {
-    @EnvironmentObject var state: AppState
+    @Environment(AppState.self) private var state
     @State private var currentDiff = 0
-    @State private var scrollRequest: Int?
+    @State private var scrollRequest: ScrollRequest?
+    @State private var scrollNonce = 0
+
+    private struct ScrollRequest: Equatable {
+        let row: Int
+        let nonce: Int
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,6 +27,7 @@ struct FileDiffView: View {
             Button { state.backFromDiff() } label: {
                 Label("Back", systemImage: "chevron.left")
             }
+            .keyboardShortcut(.cancelAction)
 
             Divider().frame(height: 20)
 
@@ -60,12 +67,14 @@ struct FileDiffView: View {
                     Button { jumpToDiff(-1) } label: { Image(systemName: "chevron.up") }
                         .disabled(r.differenceCount == 0)
                         .help("Previous difference")
+                        .keyboardShortcut(.upArrow, modifiers: [.command])
                     Text(r.differenceCount == 0 ? "0/0" : "\(min(currentDiff + 1, r.differenceCount))/\(r.differenceCount)")
                         .font(.callout).foregroundStyle(.secondary)
                         .frame(minWidth: 44)
                     Button { jumpToDiff(1) } label: { Image(systemName: "chevron.down") }
                         .disabled(r.differenceCount == 0)
                         .help("Next difference")
+                        .keyboardShortcut(.downArrow, modifiers: [.command])
                 }
             }
         }
@@ -77,26 +86,49 @@ struct FileDiffView: View {
 
     @ViewBuilder
     private var content: some View {
-        if state.isComparing {
+        if state.isComparingFile {
             VStack(spacing: 12) {
                 ProgressView()
                 Text("Comparing…").foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = state.fileError {
-            placeholder(icon: "exclamationmark.triangle", text: "Failed to read file: \(error)", color: .orange)
+            VStack(spacing: 14) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.orange)
+                Text("Failed to read file: \(error)")
+                    .font(.title3)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let r = state.fileDiff {
             if r.identical {
                 placeholder(icon: "checkmark.seal.fill", text: "Files are identical", color: .green)
             } else if r.isBinary {
                 placeholder(icon: "doc.questionmark", text: "Binary files differ; cannot show a text diff", color: .orange)
+            } else if r.isTooLarge {
+                placeholder(
+                    icon: "doc.badge.ellipsis",
+                    text: "Text diff is not rendered because a file exceeds 256 MB",
+                    color: .orange)
+            } else if r.rows.isEmpty, r.leftMissing || r.rightMissing {
+                placeholder(
+                    icon: "doc.badge.minus",
+                    text: r.leftMissing
+                        ? "The left file is missing; the right file is empty"
+                        : "The right file is missing; the left file is empty",
+                    color: .orange)
             } else {
                 diffTable(r)
             }
         }
     }
 
-    private func placeholder(icon: String, text: String, color: Color) -> some View {
+    private func placeholder(
+        icon: String,
+        text: LocalizedStringResource,
+        color: Color
+    ) -> some View {
         VStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 48))
@@ -120,22 +152,28 @@ struct FileDiffView: View {
             Divider()
 
             GeometryReader { geo in
+                let viewportColumnWidth = max(0, (geo.size.width - 1) / 2)
+                let contentColumnWidth = max(
+                    viewportColumnWidth,
+                    min(CGFloat(r.maxLineLength) * 7.3 + 60, 80_000))
                 ScrollViewReader { proxy in
-                    ScrollView(.vertical) {
+                    ScrollView([.horizontal, .vertical]) {
                         LazyVStack(spacing: 0) {
                             ForEach(r.rows) { row in
                                 DiffRowView(
                                     row: row,
-                                    columnWidth: max(0, (geo.size.width - 1) / 2)
+                                    columnWidth: contentColumnWidth
                                 )
                             }
                         }
-                        .frame(width: geo.size.width, alignment: .leading)
+                        .frame(
+                            width: contentColumnWidth * 2 + 1,
+                            alignment: .leading)
                     }
                     .onChange(of: scrollRequest) {
                         if let target = scrollRequest {
                             withAnimation(.easeInOut(duration: 0.15)) {
-                                proxy.scrollTo(target, anchor: .center)
+                                proxy.scrollTo(target.row, anchor: .center)
                             }
                         }
                     }
@@ -165,7 +203,10 @@ struct FileDiffView: View {
     private func jumpToDiff(_ delta: Int) {
         guard let r = state.fileDiff, r.differenceCount > 0 else { return }
         currentDiff = (currentDiff + delta + r.differenceCount) % r.differenceCount
-        scrollRequest = r.differenceRowIndices[currentDiff]
+        scrollNonce &+= 1
+        scrollRequest = ScrollRequest(
+            row: r.differenceRowIndices[currentDiff],
+            nonce: scrollNonce)
     }
 }
 

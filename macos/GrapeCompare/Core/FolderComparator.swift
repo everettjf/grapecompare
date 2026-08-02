@@ -65,6 +65,16 @@ nonisolated struct FolderCompareStats: Sendable {
     var onlyRight = 0
 }
 
+nonisolated struct FolderScanError: LocalizedError, Sendable {
+    let operation: String
+    let path: String
+    let code: Int32
+
+    var errorDescription: String? {
+        "Unable to \(operation) “\(path)”: \(String(cString: strerror(code)))"
+    }
+}
+
 nonisolated enum FolderComparator {
 
     private struct ScannedItem {
@@ -85,21 +95,25 @@ nonisolated enum FolderComparator {
         let kind: EntryKind
     }
 
+    private enum FileContentResult: Sendable {
+        case equal, different, failed(FolderScanError)
+    }
+
     private final class ComparisonResults: @unchecked Sendable {
         private let lock = NSLock()
-        private var values: [Bool]
+        private var values: [FileContentResult]
 
         init(count: Int) {
-            values = Array(repeating: false, count: count)
+            values = Array(repeating: .different, count: count)
         }
 
-        func merge(_ local: [(Int, Bool)]) {
+        func merge(_ local: [(Int, FileContentResult)]) {
             lock.lock()
             for (index, value) in local { values[index] = value }
             lock.unlock()
         }
 
-        func snapshot() -> [Bool] {
+        func snapshot() -> [FileContentResult] {
             lock.lock()
             defer { lock.unlock() }
             return values
@@ -108,8 +122,15 @@ nonisolated enum FolderComparator {
 
     /// 递归比较两个文件夹，返回树根（relativePath 为 ""）
     static func compare(leftRoot: URL, rightRoot: URL) -> FolderNode {
-        let leftItems = scan(root: leftRoot)
-        let rightItems = scan(root: rightRoot)
+        try! compareCancellable(leftRoot: leftRoot, rightRoot: rightRoot)
+    }
+
+    static func compareCancellable(
+        leftRoot: URL, rightRoot: URL,
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> FolderNode {
+        let leftItems = try scan(root: leftRoot, shouldCancel: shouldCancel)
+        let rightItems = try scan(root: rightRoot, shouldCancel: shouldCancel)
         let allPaths = Set(leftItems.keys).union(rightItems.keys).sorted()
 
         // 元数据能直接判定大部分状态；仅把同类型、同大小文件送入内容比较。
@@ -117,6 +138,7 @@ nonisolated enum FolderComparator {
         var comparisons: [FileComparison] = []
         comparisons.reserveCapacity(min(leftItems.count, rightItems.count))
         for (index, path) in allPaths.enumerated() {
+            if index & 0x3FFF == 0, shouldCancel() { throw CancellationError() }
             let left = leftItems[path]
             let right = rightItems[path]
             if left == nil {
@@ -127,6 +149,10 @@ nonisolated enum FolderComparator {
                 statuses[index] = .different
             } else if left!.isFolder {
                 statuses[index] = .same
+            } else if left!.kind == .other {
+                // Sockets, devices and other special entries cannot be compared
+                // safely as ordinary files. Never claim they are equal.
+                statuses[index] = .different
             } else if left!.meta.size != right!.meta.size {
                 statuses[index] = .different
             } else {
@@ -138,9 +164,16 @@ nonisolated enum FolderComparator {
             }
         }
 
-        let equalFiles = compareFileContents(comparisons, resultCount: allPaths.count)
-        for comparison in comparisons where !equalFiles[comparison.pathIndex] {
-            statuses[comparison.pathIndex] = .different
+        let contentResults = try compareFileContents(
+            comparisons,
+            resultCount: allPaths.count,
+            shouldCancel: shouldCancel)
+        for comparison in comparisons {
+            switch contentResults[comparison.pathIndex] {
+            case .equal: break
+            case .different: statuses[comparison.pathIndex] = .different
+            case .failed(let error): throw error
+            }
         }
 
         let root = FolderNode(name: leftRoot.lastPathComponent, relativePath: "",
@@ -228,7 +261,10 @@ nonisolated enum FolderComparator {
         node.children?.forEach(sortChildren)
     }
 
-    private static func scan(root: URL) -> [String: ScannedItem] {
+    private static func scan(
+        root: URL,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> [String: ScannedItem] {
         var result: [String: ScannedItem] = [:]
         result.reserveCapacity(4_096)
         var pendingDirectories: [(absolute: String, relative: String)] = [
@@ -236,9 +272,26 @@ nonisolated enum FolderComparator {
         ]
 
         while let directory = pendingDirectories.popLast() {
+            if shouldCancel() { throw CancellationError() }
             let stream = directory.absolute.withCString { opendir($0) }
-            guard let stream else { continue }
-            while let entry = readdir(stream) {
+            guard let stream else {
+                throw FolderScanError(
+                    operation: "open directory",
+                    path: directory.absolute,
+                    code: errno)
+            }
+            defer { closedir(stream) }
+            while true {
+                errno = 0
+                guard let entry = readdir(stream) else {
+                    if errno != 0 {
+                        throw FolderScanError(
+                            operation: "read directory",
+                            path: directory.absolute,
+                            code: errno)
+                    }
+                    break
+                }
                 let name = withUnsafePointer(to: &entry.pointee.d_name) { pointer in
                     pointer.withMemoryRebound(to: CChar.self, capacity: Int(MAXNAMLEN) + 1) {
                         String(cString: $0)
@@ -253,7 +306,12 @@ nonisolated enum FolderComparator {
                     ? name
                     : directory.relative + "/" + name
                 var info = stat()
-                guard absolutePath.withCString({ lstat($0, &info) }) == 0 else { continue }
+                guard absolutePath.withCString({ lstat($0, &info) }) == 0 else {
+                    throw FolderScanError(
+                        operation: "read metadata for",
+                        path: absolutePath,
+                        code: errno)
+                }
 
                 let type = info.st_mode & mode_t(S_IFMT)
                 let kind: EntryKind
@@ -276,16 +334,18 @@ nonisolated enum FolderComparator {
                     pendingDirectories.append((absolutePath, relativePath))
                 }
             }
-            closedir(stream)
         }
         return result
     }
 
     /// 有界并行比较：每个 worker 复用两个缓冲区，避免每个文件/分块产生 Data 和 FileHandle 对象。
     private static func compareFileContents(
-        _ comparisons: [FileComparison], resultCount: Int
-    ) -> [Bool] {
-        guard !comparisons.isEmpty else { return Array(repeating: false, count: resultCount) }
+        _ comparisons: [FileComparison], resultCount: Int,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> [FileContentResult] {
+        guard !comparisons.isEmpty else {
+            return Array(repeating: .different, count: resultCount)
+        }
         let results = ComparisonResults(count: resultCount)
         let workerCount = min(
             comparisons.count,
@@ -295,84 +355,116 @@ nonisolated enum FolderComparator {
             let chunkSize = 256 * 1024
             var leftBuffer = [UInt8](repeating: 0, count: chunkSize)
             var rightBuffer = [UInt8](repeating: 0, count: chunkSize)
-            var local: [(Int, Bool)] = []
+            var local: [(Int, FileContentResult)] = []
             local.reserveCapacity((comparisons.count + workerCount - 1) / workerCount)
             for comparisonIndex in stride(from: worker, to: comparisons.count, by: workerCount) {
+                if shouldCancel() { break }
                 let comparison = comparisons[comparisonIndex]
-                let equal: Bool
+                let result: FileContentResult
                 switch comparison.kind {
                 case .regularFile:
-                    equal = filesEqual(
+                    result = filesEqual(
                         comparison.leftPath, comparison.rightPath,
                         leftBuffer: &leftBuffer, rightBuffer: &rightBuffer)
                 case .symbolicLink:
-                    equal = linkTargetsEqual(comparison.leftPath, comparison.rightPath)
+                    result = linkTargetsEqual(comparison.leftPath, comparison.rightPath)
                 case .other:
-                    equal = true
+                    result = .different
                 case .directory:
-                    equal = false // 目录不会进入内容比较队列
+                    result = .different // 目录不会进入内容比较队列
                 }
-                local.append((comparison.pathIndex, equal))
+                local.append((comparison.pathIndex, result))
             }
             results.merge(local)
         }
+        if shouldCancel() { throw CancellationError() }
         return results.snapshot()
     }
 
     private static func filesEqual(
         _ leftPath: String, _ rightPath: String,
         leftBuffer: inout [UInt8], rightBuffer: inout [UInt8]
-    ) -> Bool {
+    ) -> FileContentResult {
         let leftDescriptor = leftPath.withCString { Darwin.open($0, O_RDONLY | O_CLOEXEC) }
-        guard leftDescriptor >= 0 else { return false }
+        guard leftDescriptor >= 0 else {
+            return .failed(FolderScanError(
+                operation: "open file", path: leftPath, code: errno))
+        }
         defer { Darwin.close(leftDescriptor) }
         let rightDescriptor = rightPath.withCString { Darwin.open($0, O_RDONLY | O_CLOEXEC) }
-        guard rightDescriptor >= 0 else { return false }
+        guard rightDescriptor >= 0 else {
+            return .failed(FolderScanError(
+                operation: "open file", path: rightPath, code: errno))
+        }
         defer { Darwin.close(rightDescriptor) }
 
         var leftInfo = stat()
         var rightInfo = stat()
-        guard fstat(leftDescriptor, &leftInfo) == 0,
-              fstat(rightDescriptor, &rightInfo) == 0,
-              leftInfo.st_size == rightInfo.st_size else { return false }
+        guard fstat(leftDescriptor, &leftInfo) == 0 else {
+            return .failed(FolderScanError(
+                operation: "read file metadata for", path: leftPath, code: errno))
+        }
+        guard fstat(rightDescriptor, &rightInfo) == 0 else {
+            return .failed(FolderScanError(
+                operation: "read file metadata for", path: rightPath, code: errno))
+        }
+        guard leftInfo.st_size == rightInfo.st_size else { return .different }
 
         var remaining = Int64(leftInfo.st_size)
         while remaining > 0 {
             let count = min(leftBuffer.count, Int(remaining))
-            let buffersEqual = leftBuffer.withUnsafeMutableBytes { leftBytes in
+            let chunkResult = leftBuffer.withUnsafeMutableBytes { leftBytes in
                 rightBuffer.withUnsafeMutableBytes { rightBytes in
                     guard let leftBase = leftBytes.baseAddress,
-                          let rightBase = rightBytes.baseAddress,
-                          readExactly(leftDescriptor, into: leftBase, count: count),
-                          readExactly(rightDescriptor, into: rightBase, count: count) else {
-                        return false
+                          let rightBase = rightBytes.baseAddress else {
+                        return FileContentResult.different
                     }
-                    return memcmp(leftBase, rightBase, count) == 0
+                    if let code = readExactly(leftDescriptor, into: leftBase, count: count) {
+                        return .failed(FolderScanError(
+                            operation: "read file", path: leftPath, code: code))
+                    }
+                    if let code = readExactly(rightDescriptor, into: rightBase, count: count) {
+                        return .failed(FolderScanError(
+                            operation: "read file", path: rightPath, code: code))
+                    }
+                    return memcmp(leftBase, rightBase, count) == 0 ? .equal : .different
                 }
             }
-            if !buffersEqual { return false }
+            if case .equal = chunkResult {
+                // Continue with the next chunk.
+            } else {
+                return chunkResult
+            }
             remaining -= Int64(count)
         }
-        return true
+        return .equal
     }
 
-    private static func linkTargetsEqual(_ leftPath: String, _ rightPath: String) -> Bool {
-        func target(of path: String) -> [UInt8]? {
+    private static func linkTargetsEqual(
+        _ leftPath: String, _ rightPath: String
+    ) -> FileContentResult {
+        func target(of path: String) -> Result<[UInt8], FolderScanError> {
             var buffer = [UInt8](repeating: 0, count: Int(PATH_MAX))
             let count = buffer.withUnsafeMutableBytes { bytes in
                 path.withCString { readlink($0, bytes.baseAddress, bytes.count) }
             }
-            guard count >= 0 else { return nil }
-            return Array(buffer.prefix(count))
+            guard count >= 0 else {
+                return .failure(FolderScanError(
+                    operation: "read symbolic link", path: path, code: errno))
+            }
+            return .success(Array(buffer.prefix(count)))
         }
-        guard let leftTarget = target(of: leftPath),
-              let rightTarget = target(of: rightPath) else { return false }
-        return leftTarget == rightTarget
+        switch (target(of: leftPath), target(of: rightPath)) {
+        case (.success(let left), .success(let right)):
+            return left == right ? .equal : .different
+        case (.failure(let error), _), (_, .failure(let error)):
+            return .failed(error)
+        }
     }
 
     private static func readExactly(
         _ descriptor: Int32, into buffer: UnsafeMutableRawPointer, count: Int
-    ) -> Bool {
+    ) -> Int32? {
         var completed = 0
         while completed < count {
             let result = Darwin.read(descriptor, buffer.advanced(by: completed), count - completed)
@@ -381,9 +473,9 @@ nonisolated enum FolderComparator {
             } else if result < 0, errno == EINTR {
                 continue
             } else {
-                return false
+                return result == 0 ? EIO : errno
             }
         }
-        return true
+        return nil
     }
 }

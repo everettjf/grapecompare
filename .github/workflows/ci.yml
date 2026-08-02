@@ -25,3 +25,23 @@ jobs:
 
       - name: Run core tests
         run: bash macos/Tests/run-tests.sh
+
+  app-build:
+    name: Build macOS app
+    runs-on: macos-26
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build release app without signing
+        run: >-
+          xcodebuild
+          -project macos/GrapeCompare.xcodeproj
+          -scheme GrapeCompare
+          -destination 'platform=macOS'
+          -configuration Release
+          -derivedDataPath "$RUNNER_TEMP/GrapeCompareDerivedData"
+          CODE_SIGNING_ALLOWED=NO
+          build

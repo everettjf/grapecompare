@@ -1,17 +1,30 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// 文件夹比较视图：树形结构、状态着色、筛选、双击打开文件 diff
 struct FolderCompareView: View {
-    @EnvironmentObject var state: AppState
+    @Environment(AppState.self) private var state
     @State private var filter: Filter = .all
     @State private var expanded: Set<String> = []
+    @State private var visibleItems: [VisibleItem] = []
+    @State private var selectedNodeIDs: Set<String> = []
+    @State private var isImportingPlan = false
+    @State private var isExportingPlan = false
+    @State private var exportDocument: FileOperationRecipeDocument?
+    @State private var planError: String?
 
-    enum Filter: String, CaseIterable, Identifiable {
-        case all = "All"
-        case differences = "Differences"
-        case onlyLeft = "Left Only"
-        case onlyRight = "Right Only"
+    enum Filter: CaseIterable, Identifiable {
+        case all, differences, onlyLeft, onlyRight
         var id: Self { self }
+
+        var title: LocalizedStringResource {
+            switch self {
+            case .all: "All"
+            case .differences: "Differences"
+            case .onlyLeft: "Left Only"
+            case .onlyRight: "Right Only"
+            }
+        }
     }
 
     var body: some View {
@@ -22,8 +35,33 @@ struct FolderCompareView: View {
             Divider()
             statusBar
         }
-        .onChange(of: state.treeVersion) {
+        .onChange(of: state.treeVersion, initial: true) {
             initExpansion()
+        }
+        .onChange(of: filter) {
+            rebuildVisibleItems()
+        }
+        .fileImporter(
+            isPresented: $isImportingPlan,
+            allowedContentTypes: [.grapeComparePlan, .json],
+            allowsMultipleSelection: false,
+            onCompletion: importPlan)
+        .fileExporter(
+            isPresented: $isExportingPlan,
+            document: exportDocument,
+            contentType: .grapeComparePlan,
+            defaultFilename: "GrapeCompare Plan"
+        ) { result in
+            if case .failure(let error) = result { planError = error.localizedDescription }
+            exportDocument = nil
+        }
+        .alert("Operation Plan Error", isPresented: Binding(
+            get: { planError != nil },
+            set: { if !$0 { planError = nil } }
+        )) {
+            Button("OK") { planError = nil }
+        } message: {
+            Text(planError ?? "Unknown error")
         }
     }
 
@@ -34,6 +72,7 @@ struct FolderCompareView: View {
             Button { state.goHome() } label: {
                 Label("Back", systemImage: "chevron.left")
             }
+            .keyboardShortcut(.cancelAction)
 
             Divider().frame(height: 20)
 
@@ -54,7 +93,7 @@ struct FolderCompareView: View {
 
             Picker("Filter", selection: $filter) {
                 ForEach(Filter.allCases) { f in
-                    Text(f.rawValue).tag(f)
+                    Text(f.title).tag(f)
                 }
             }
             .pickerStyle(.segmented)
@@ -65,6 +104,26 @@ struct FolderCompareView: View {
                 Image(systemName: "arrow.clockwise")
             }
             .help("Compare again")
+            .keyboardShortcut("r", modifiers: [.command])
+
+            operationMenu
+
+            Menu {
+                Button("Import Plan…", systemImage: "square.and.arrow.down") {
+                    isImportingPlan = true
+                }
+                Button("Export Current Plan…", systemImage: "square.and.arrow.up") {
+                    exportPlan()
+                }
+                .disabled(state.operations.drafts.isEmpty)
+                Divider()
+                Button("Operation History", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90") {
+                    state.operations.showHistory()
+                }
+            } label: {
+                Label("Plans", systemImage: "doc.badge.gearshape")
+            }
+            .help("Import, export, or inspect operation history")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
@@ -74,15 +133,27 @@ struct FolderCompareView: View {
 
     @ViewBuilder
     private var content: some View {
-        if state.isComparing {
+        if state.isComparingFolder {
             VStack(spacing: 12) {
                 ProgressView()
                 Text("Scanning and comparing folders…").foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if let root = state.folderRoot {
-            let nodes = visibleNodes(of: root)
-            if nodes.isEmpty {
+        } else if let error = state.folderError {
+            VStack(spacing: 14) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.orange)
+                Text("Folder comparison is incomplete")
+                    .font(.title3)
+                Text(error)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if state.folderRoot != nil {
+            if visibleItems.isEmpty {
                 VStack(spacing: 14) {
                     Image(systemName: filter == .all ? "checkmark.seal.fill" : "line.3.horizontal.decrease.circle")
                         .font(.system(size: 48))
@@ -95,18 +166,27 @@ struct FolderCompareView: View {
                 VStack(spacing: 0) {
                     columnHeader
                     Divider()
-                    List(nodes) { item in
+                    List(visibleItems, selection: $selectedNodeIDs) { item in
                         FolderRow(
                             node: item.node,
                             depth: item.depth,
                             isExpanded: expanded.contains(item.node.id),
                             onToggle: { toggle(item.node) },
-                            onOpen: { state.openDiff(for: item.node) })
+                            onOpen: { state.openDiff(for: item.node) },
+                            onQueueLeftToRight: canQueueCopy(item.node, direction: .leftToRight)
+                                ? { queue(nodes: [item.node], kind: .copy, direction: .leftToRight) }
+                                : nil,
+                            onQueueRightToLeft: canQueueCopy(item.node, direction: .rightToLeft)
+                                ? { queue(nodes: [item.node], kind: .copy, direction: .rightToLeft) }
+                                : nil)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets())
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
+                    .onKeyPress(.return) {
+                        openSelectedNode()
+                    }
                 }
             }
         }
@@ -121,8 +201,8 @@ struct FolderCompareView: View {
             }
             .padding(.horizontal, 12)
 
-            Text("Status")
-                .frame(width: 86)
+            Text("Action")
+                .frame(width: 118)
                 .padding(.vertical, 6)
                 .background(Color.primary.opacity(0.025))
 
@@ -157,6 +237,15 @@ struct FolderCompareView: View {
                     .foregroundStyle(.tertiary)
             }
             Spacer()
+            if !state.operations.drafts.isEmpty {
+                Label("\(state.operations.drafts.count) queued", systemImage: "list.bullet.clipboard")
+                    .foregroundStyle(.orange)
+                Button("Clear") { state.operations.clearDrafts() }
+                    .buttonStyle(.plain)
+                Button("Review Plan") { state.operations.showReview() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+            }
         }
         .font(.caption)
         .padding(.horizontal, 14)
@@ -204,6 +293,7 @@ struct FolderCompareView: View {
         } else {
             expanded.insert(node.id)
         }
+        rebuildVisibleItems()
     }
 
     /// 默认展开所有包含差异的文件夹
@@ -222,6 +312,197 @@ struct FolderCompareView: View {
             walk(root)
         }
         expanded = set
+        rebuildVisibleItems()
+    }
+
+    private func rebuildVisibleItems() {
+        guard let root = state.folderRoot else {
+            visibleItems = []
+            return
+        }
+        visibleItems = visibleNodes(of: root)
+        selectedNodeIDs.formIntersection(Set(visibleItems.map(\.id)))
+    }
+
+    private func openSelectedNode() -> KeyPress.Result {
+        guard selectedNodeIDs.count == 1,
+              let selectedNodeID = selectedNodeIDs.first,
+              let item = visibleItems.first(where: { $0.id == selectedNodeID }) else {
+            return .ignored
+        }
+        if item.node.isFolder {
+            toggle(item.node)
+        } else {
+            state.openDiff(for: item.node)
+        }
+        return .handled
+    }
+
+    // MARK: Operation planning
+
+    private enum Direction {
+        case leftToRight
+        case rightToLeft
+    }
+
+    private var selectedNodes: [FolderNode] {
+        visibleItems.filter { selectedNodeIDs.contains($0.id) }.map(\.node)
+    }
+
+    private var operationMenu: some View {
+        Menu {
+            Section("Copy or Replace") {
+                Button("Queue Left → Right") {
+                    queue(nodes: selectedNodes, kind: .copy, direction: .leftToRight)
+                }
+                .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .leftToRight) })
+                Button("Queue Right → Left") {
+                    queue(nodes: selectedNodes, kind: .copy, direction: .rightToLeft)
+                }
+                .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .rightToLeft) })
+            }
+            Section("Move — destination must be empty") {
+                Button("Move Left → Right") {
+                    queue(nodes: selectedNodes, kind: .move, direction: .leftToRight)
+                }
+                .disabled(!selectedNodes.contains { canQueueMove($0, direction: .leftToRight) })
+                Button("Move Right → Left") {
+                    queue(nodes: selectedNodes, kind: .move, direction: .rightToLeft)
+                }
+                .disabled(!selectedNodes.contains { canQueueMove($0, direction: .rightToLeft) })
+            }
+            Section("Move to Trash") {
+                Button("Trash Left Items", role: .destructive) {
+                    queue(nodes: selectedNodes, kind: .trash, direction: .leftToRight)
+                }
+                .disabled(!selectedNodes.contains { $0.left != nil })
+                Button("Trash Right Items", role: .destructive) {
+                    queue(nodes: selectedNodes, kind: .trash, direction: .rightToLeft)
+                }
+                .disabled(!selectedNodes.contains { $0.right != nil })
+            }
+        } label: {
+            Label("Actions", systemImage: "arrow.left.arrow.right.square")
+        }
+        .disabled(selectedNodeIDs.isEmpty || state.isComparingFolder)
+        .help("Queue an operation for the selected rows")
+    }
+
+    private func canQueueCopy(_ node: FolderNode, direction: Direction) -> Bool {
+        guard node.status != .same else { return false }
+        switch direction {
+        case .leftToRight: return node.left != nil
+        case .rightToLeft: return node.right != nil
+        }
+    }
+
+    private func canQueueMove(_ node: FolderNode, direction: Direction) -> Bool {
+        switch direction {
+        case .leftToRight: return node.left != nil && node.right == nil
+        case .rightToLeft: return node.right != nil && node.left == nil
+        }
+    }
+
+    private func queue(nodes: [FolderNode], kind requestedKind: FileOperationKind, direction: Direction) {
+        guard let leftRoot = state.leftFolderURL, let rightRoot = state.rightFolderURL else { return }
+        var drafts: [FileOperationDraft] = []
+        for node in nodes {
+            appendDrafts(
+                for: node,
+                requestedKind: requestedKind,
+                direction: direction,
+                leftRoot: leftRoot,
+                rightRoot: rightRoot,
+                into: &drafts)
+        }
+        state.operations.enqueue(drafts)
+    }
+
+    private func exportPlan() {
+        do {
+            exportDocument = FileOperationRecipeDocument(
+                recipe: try FileOperationRecipe(drafts: state.operations.drafts))
+            isExportingPlan = true
+        } catch {
+            planError = error.localizedDescription
+        }
+    }
+
+    private func importPlan(_ result: Result<[URL], Error>) {
+        do {
+            guard let url = try result.get().first,
+                  let leftRoot = state.leftFolderURL,
+                  let rightRoot = state.rightFolderURL else { return }
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+            let recipe = try FileOperationRecipe.decode(Data(contentsOf: url))
+            try state.operations.importRecipe(recipe, leftRoot: leftRoot, rightRoot: rightRoot)
+        } catch {
+            planError = error.localizedDescription
+        }
+    }
+
+    private func appendDrafts(
+        for node: FolderNode,
+        requestedKind: FileOperationKind,
+        direction: Direction,
+        leftRoot: URL,
+        rightRoot: URL,
+        into drafts: inout [FileOperationDraft]
+    ) {
+        let sourceSide: FileOperationSide = direction == .leftToRight ? .left : .right
+        let sourceMeta = direction == .leftToRight ? node.left : node.right
+        let destinationMeta = direction == .leftToRight ? node.right : node.left
+        let sourceRoot = direction == .leftToRight ? leftRoot : rightRoot
+        let destinationRoot = direction == .leftToRight ? rightRoot : leftRoot
+        guard sourceMeta != nil else { return }
+
+        if requestedKind == .trash {
+            drafts.append(FileOperationDraft(
+                kind: .trash,
+                relativePath: node.relativePath,
+                sourceSide: sourceSide,
+                sourceURL: sourceRoot.appending(path: node.relativePath)))
+            return
+        }
+
+        if requestedKind == .move {
+            guard destinationMeta == nil else { return }
+            drafts.append(FileOperationDraft(
+                kind: .move,
+                relativePath: node.relativePath,
+                sourceSide: sourceSide,
+                sourceURL: sourceRoot.appending(path: node.relativePath),
+                destinationURL: destinationRoot.appending(path: node.relativePath)))
+            return
+        }
+
+        guard node.status != .same else { return }
+        if destinationMeta == nil {
+            drafts.append(FileOperationDraft(
+                kind: .copy,
+                relativePath: node.relativePath,
+                sourceSide: sourceSide,
+                sourceURL: sourceRoot.appending(path: node.relativePath),
+                destinationURL: destinationRoot.appending(path: node.relativePath)))
+        } else if sourceMeta?.isDirectory == true, destinationMeta?.isDirectory == true {
+            for child in node.children ?? [] {
+                appendDrafts(
+                    for: child,
+                    requestedKind: .copy,
+                    direction: direction,
+                    leftRoot: leftRoot,
+                    rightRoot: rightRoot,
+                    into: &drafts)
+            }
+        } else {
+            drafts.append(FileOperationDraft(
+                kind: .replace,
+                relativePath: node.relativePath,
+                sourceSide: sourceSide,
+                sourceURL: sourceRoot.appending(path: node.relativePath),
+                destinationURL: destinationRoot.appending(path: node.relativePath)))
+        }
     }
 }
 
@@ -232,13 +513,15 @@ private struct FolderRow: View {
     let isExpanded: Bool
     let onToggle: () -> Void
     let onOpen: () -> Void
+    let onQueueLeftToRight: (() -> Void)?
+    let onQueueRightToLeft: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 0) {
             side(node.left, isLeft: true)
 
-            statusIndicator
-                .frame(width: 86)
+            actionIndicator
+                .frame(width: 118)
                 .frame(maxHeight: .infinity)
                 .background(Color.primary.opacity(0.025))
 
@@ -252,10 +535,12 @@ private struct FolderRow: View {
         .contentShape(Rectangle())
         .help(helpText)
         .onTapGesture(count: 2) {
-            if node.isFolder { onToggle() } else { onOpen() }
+            if !node.isFolder { onOpen() }
         }
-        .onTapGesture(count: 1) {
-            if node.isFolder { onToggle() }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(node.relativePath)
+        .accessibilityAction(named: node.isFolder ? "Toggle folder" : "Open file diff") {
+            node.isFolder ? onToggle() : onOpen()
         }
     }
 
@@ -264,10 +549,14 @@ private struct FolderRow: View {
             Spacer().frame(width: CGFloat(depth * 18))
 
             if meta?.isDirectory == true {
-                Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 12)
+                Button(action: onToggle) {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 12)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isExpanded ? "Collapse folder" : "Expand folder")
             } else {
                 Spacer().frame(width: 12)
             }
@@ -295,23 +584,36 @@ private struct FolderRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private var actionIndicator: some View {
+        HStack(spacing: 7) {
+            if let onQueueRightToLeft {
+                Button(action: onQueueRightToLeft) {
+                    Image(systemName: "arrow.left")
+                }
+                .buttonStyle(.borderless)
+                .help("Queue Right → Left")
+                .accessibilityLabel("Queue Right to Left")
+            }
+            statusBadge
+            if let onQueueLeftToRight {
+                Button(action: onQueueLeftToRight) {
+                    Image(systemName: "arrow.right")
+                }
+                .buttonStyle(.borderless)
+                .help("Queue Left → Right")
+                .accessibilityLabel("Queue Left to Right")
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     @ViewBuilder
-    private var statusIndicator: some View {
+    private var statusBadge: some View {
         switch node.status {
-        case .same:
-            Label("Same", systemImage: "equal")
-                .foregroundStyle(.secondary)
-        case .different:
-            Label("Changed", systemImage: "not.equal")
-                .foregroundStyle(.orange)
-        case .onlyLeft:
-            Image(systemName: "arrow.left")
-                .foregroundStyle(.blue)
-                .help("Only on the left")
-        case .onlyRight:
-            Image(systemName: "arrow.right")
-                .foregroundStyle(.blue)
-                .help("Only on the right")
+        case .same: Image(systemName: "equal").foregroundStyle(.secondary).help("Same")
+        case .different: Image(systemName: "not.equal").foregroundStyle(.orange).help("Changed")
+        case .onlyLeft: Image(systemName: "arrow.left.circle").foregroundStyle(.blue).help("Only on the left")
+        case .onlyRight: Image(systemName: "arrow.right.circle").foregroundStyle(.blue).help("Only on the right")
         }
     }
 
@@ -339,37 +641,6 @@ private struct FolderRow: View {
         }
     }
 
-    private var iconColor: Color {
-        switch node.status {
-        case .same: return node.isFolder ? .blue : .secondary
-        case .different: return .orange
-        case .onlyLeft, .onlyRight: return .purple
-        }
-    }
-
-    @ViewBuilder
-    private var statusBadge: some View {
-        switch node.status {
-        case .same:
-            EmptyView()
-        case .different:
-            badge("Different", .orange)
-        case .onlyLeft:
-            badge("Left only", .purple)
-        case .onlyRight:
-            badge("Right only", .purple)
-        }
-    }
-
-    private func badge(_ text: String, _ color: Color) -> some View {
-        Text(text)
-            .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(color)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 1.5)
-            .background(color.opacity(0.12), in: .capsule)
-    }
-
     private var rowTint: Color {
         switch node.status {
         case .same: return .clear
@@ -381,11 +652,6 @@ private struct FolderRow: View {
     private func sizeString(_ meta: FileMeta?) -> String {
         guard let meta else { return "—" }
         return ByteCountFormatter.string(fromByteCount: meta.size, countStyle: .file)
-    }
-
-    private func folderSummary(_ left: FileMeta?, _ right: FileMeta?) -> String {
-        guard left != nil, right != nil else { return "—" }
-        return ""
     }
 
     private var helpText: String {

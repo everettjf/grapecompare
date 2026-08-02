@@ -34,6 +34,10 @@ nonisolated struct FileDiffResult: Sendable {
     var modifiedCount = 0
     var isBinary = false
     var identical = false
+    var leftMissing = false
+    var rightMissing = false
+    var isTooLarge = false
+    var maxLineLength = 0
     /// 两侧是否仅在文件末尾换行符的存在性上不同（仍会标记最后一行便于导航）。
     var finalNewlineDiffers = false
     /// 所有差异行（kind != .equal）在 rows 中的下标，用于上一处/下一处导航
@@ -43,6 +47,9 @@ nonisolated struct FileDiffResult: Sendable {
 }
 
 nonisolated enum DiffEngine {
+    /// Above this size we still perform an exact mapped-data equality/binary check,
+    /// but avoid materializing multiple full-size Strings and row arrays.
+    static let maxTextDiffBytes = 256 * 1024 * 1024
     /// 先用很小的预算寻找精确 Myers 解；大改动会尽快转入锚点分段。
     private static let fastExactEditDistance = 256
     /// 单个无锚点片段的最大精确编辑距离，约束最坏情况的时间和轨迹内存。
@@ -53,24 +60,56 @@ nonisolated enum DiffEngine {
 
     /// 比较两份数据（nil 视为空文件，用于文件夹对比中"仅一侧存在"的情况）
     static func compare(left: Data?, right: Data?) -> FileDiffResult {
+        try! compareCancellable(left: left, right: right)
+    }
+
+    static func compareCancellable(
+        left: Data?, right: Data?,
+        textDiffByteLimit: Int = maxTextDiffBytes,
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> FileDiffResult {
+        try checkCancellation(shouldCancel)
+        let leftMissing = left == nil
+        let rightMissing = right == nil
         let ld = left ?? Data()
         let rd = right ?? Data()
-        if ld == rd {
+        if !leftMissing, !rightMissing, ld == rd {
             return FileDiffResult(identical: true)
         }
         if isBinary(ld) || isBinary(rd) {
-            return FileDiffResult(isBinary: true)
+            return FileDiffResult(
+                isBinary: true,
+                leftMissing: leftMissing,
+                rightMissing: rightMissing)
         }
+        if max(ld.count, rd.count) > textDiffByteLimit {
+            return FileDiffResult(
+                leftMissing: leftMissing,
+                rightMissing: rightMissing,
+                isTooLarge: true)
+        }
+        try checkCancellation(shouldCancel)
         let lt = String(decoding: ld, as: UTF8.self)
         let rt = String(decoding: rd, as: UTF8.self)
-        return diffText(left: lt, right: rt)
+        var result = try diffTextCancellable(left: lt, right: rt, shouldCancel: shouldCancel)
+        result.leftMissing = leftMissing
+        result.rightMissing = rightMissing
+        return result
     }
 
     static func diffText(left: String, right: String) -> FileDiffResult {
+        try! diffTextCancellable(left: left, right: right)
+    }
+
+    private static func diffTextCancellable(
+        left: String, right: String,
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> FileDiffResult {
+        try checkCancellation(shouldCancel)
         let a = splitLines(left)
         let b = splitLines(right)
-        let ops = diff(old: a, new: b)
-        var result = buildRows(ops)
+        let ops = try diffCancellable(old: a, new: b, shouldCancel: shouldCancel)
+        var result = try buildRowsCancellable(ops, shouldCancel: shouldCancel)
         if hasFinalNewline(left) != hasFinalNewline(right) {
             result.finalNewlineDiffers = true
             // 当内容行完全相同时，把最后一行纳入差异导航；标题会明确说明是末尾换行差异。
@@ -111,12 +150,19 @@ nonisolated enum DiffEngine {
     // MARK: - 自适应 Myers + 低频锚点 diff
 
     static func diff(old a: [String], new b: [String]) -> [LineOp] {
+        try! diffCancellable(old: a, new: b)
+    }
+
+    static func diffCancellable(
+        old a: [String], new b: [String],
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> [LineOp] {
         var ops: [LineOp] = []
         ops.reserveCapacity(max(a.count, b.count))
-        appendDiff(
+        try appendDiff(
             old: a, oldRange: 0..<a.count,
             new: b, newRange: 0..<b.count,
-            depth: 0, to: &ops)
+            depth: 0, shouldCancel: shouldCancel, to: &ops)
         return ops
     }
 
@@ -125,8 +171,10 @@ nonisolated enum DiffEngine {
     private static func appendDiff(
         old a: [String], oldRange: Range<Int>,
         new b: [String], newRange: Range<Int>,
-        depth: Int, to ops: inout [LineOp]
-    ) {
+        depth: Int, shouldCancel: @Sendable () -> Bool,
+        to ops: inout [LineOp]
+    ) throws {
+        try checkCancellation(shouldCancel)
         var oldStart = oldRange.lowerBound
         var newStart = newRange.lowerBound
         var oldEnd = oldRange.upperBound
@@ -158,38 +206,43 @@ nonisolated enum DiffEngine {
         let middleNew = newStart..<newEnd
         let totalLength = middleOld.count + middleNew.count
         let fastLimit = min(fastExactEditDistance, totalLength)
-        if let exact = myers(
+        if let exact = try myers(
             old: a, oldRange: middleOld,
             new: b, newRange: middleNew,
-            editDistanceLimit: fastLimit)
+            editDistanceLimit: fastLimit,
+            shouldCancel: shouldCancel)
         {
             ops.append(contentsOf: exact)
             for index in oldEnd..<oldRange.upperBound { ops.append(.equal(a[index])) }
             return
         }
 
-        let search = findAnchors(old: a, oldRange: middleOld, new: b, newRange: middleNew)
+        let search = try findAnchors(
+            old: a, oldRange: middleOld,
+            new: b, newRange: middleNew,
+            shouldCancel: shouldCancel)
         if !search.anchors.isEmpty, depth < 64 {
             var previousOld = oldStart
             var previousNew = newStart
             for anchor in search.anchors {
-                appendDiff(
+                try appendDiff(
                     old: a, oldRange: previousOld..<anchor.oldIndex,
                     new: b, newRange: previousNew..<anchor.newIndex,
-                    depth: depth + 1, to: &ops)
+                    depth: depth + 1, shouldCancel: shouldCancel, to: &ops)
                 ops.append(.equal(a[anchor.oldIndex]))
                 previousOld = anchor.oldIndex + 1
                 previousNew = anchor.newIndex + 1
             }
-            appendDiff(
+            try appendDiff(
                 old: a, oldRange: previousOld..<oldEnd,
                 new: b, newRange: previousNew..<newEnd,
-                depth: depth + 1, to: &ops)
+                depth: depth + 1, shouldCancel: shouldCancel, to: &ops)
         } else if search.hasCommonLine,
-                  let exact = myers(
+                  let exact = try myers(
                     old: a, oldRange: middleOld,
                     new: b, newRange: middleNew,
-                    editDistanceLimit: min(maxEditDistance, totalLength))
+                    editDistanceLimit: min(maxEditDistance, totalLength),
+                    shouldCancel: shouldCancel)
         {
             // 重复行过多、无法产生可靠锚点时，给 Myers 更大的精确预算。
             ops.append(contentsOf: exact)
@@ -249,17 +302,20 @@ nonisolated enum DiffEngine {
     /// patience/histogram 风格锚点：先找两边都唯一的行；若没有，再接受出现不超过四次的行。
     private static func findAnchors(
         old a: [String], oldRange: Range<Int>,
-        new b: [String], newRange: Range<Int>
-    ) -> AnchorSearch {
+        new b: [String], newRange: Range<Int>,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> AnchorSearch {
         var oldOccurrences: [String: Occurrences] = [:]
         var newOccurrences: [String: Occurrences] = [:]
         oldOccurrences.reserveCapacity(oldRange.count)
         newOccurrences.reserveCapacity(newRange.count)
 
         for index in oldRange {
+            if index & 0x3FFF == 0 { try checkCancellation(shouldCancel) }
             oldOccurrences[a[index], default: Occurrences()].add(index)
         }
         for index in newRange {
+            if index & 0x3FFF == 0 { try checkCancellation(shouldCancel) }
             newOccurrences[b[index], default: Occurrences()].add(index)
         }
 
@@ -353,8 +409,9 @@ nonisolated enum DiffEngine {
     private static func myers(
         old a: [String], oldRange: Range<Int>,
         new b: [String], newRange: Range<Int>,
-        editDistanceLimit: Int
-    ) -> [LineOp]? {
+        editDistanceLimit: Int,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> [LineOp]? {
         let n = oldRange.count
         let m = newRange.count
         let limit = min(editDistanceLimit, n + m)
@@ -366,6 +423,7 @@ nonisolated enum DiffEngine {
         trace.reserveCapacity(limit + 1)
 
         for distance in 0...limit {
+            if distance & 0x1F == 0 { try checkCancellation(shouldCancel) }
             trace.append(frontier)
             for diagonal in stride(from: -distance, through: distance, by: 2) {
                 let slot = offset + diagonal
@@ -458,6 +516,13 @@ nonisolated enum DiffEngine {
     // MARK: - 构建对齐行
 
     static func buildRows(_ ops: [LineOp]) -> FileDiffResult {
+        try! buildRowsCancellable(ops)
+    }
+
+    private static func buildRowsCancellable(
+        _ ops: [LineOp],
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> FileDiffResult {
         var result = FileDiffResult()
         result.rows.reserveCapacity(ops.count)
         var leftNo = 1
@@ -465,7 +530,9 @@ nonisolated enum DiffEngine {
         var i = 0
 
         while i < ops.count {
+            if i & 0x3FFF == 0 { try checkCancellation(shouldCancel) }
             if case .equal(let s) = ops[i] {
+                result.maxLineLength = max(result.maxLineLength, s.count)
                 result.rows.append(DiffRow(
                     id: result.rows.count, kind: .equal,
                     left: .init(number: leftNo, text: s, changedRange: nil),
@@ -489,6 +556,9 @@ nonisolated enum DiffEngine {
 
             let paired = min(deletes.count, inserts.count)
             for p in 0..<paired {
+                result.maxLineLength = max(
+                    result.maxLineLength,
+                    max(deletes[p].count, inserts[p].count))
                 let (lr, rr) = changedRanges(deletes[p], inserts[p])
                 result.differenceRowIndices.append(result.rows.count)
                 result.rows.append(DiffRow(
@@ -500,6 +570,7 @@ nonisolated enum DiffEngine {
                 result.modifiedCount += 1
             }
             for d in deletes.dropFirst(paired) {
+                result.maxLineLength = max(result.maxLineLength, d.count)
                 result.differenceRowIndices.append(result.rows.count)
                 result.rows.append(DiffRow(
                     id: result.rows.count, kind: .removed,
@@ -509,6 +580,7 @@ nonisolated enum DiffEngine {
                 result.removedCount += 1
             }
             for s in inserts.dropFirst(paired) {
+                result.maxLineLength = max(result.maxLineLength, s.count)
                 result.differenceRowIndices.append(result.rows.count)
                 result.rows.append(DiffRow(
                     id: result.rows.count, kind: .added,
@@ -520,6 +592,12 @@ nonisolated enum DiffEngine {
         }
 
         return result
+    }
+
+    private static func checkCancellation(
+        _ shouldCancel: @Sendable () -> Bool
+    ) throws {
+        if shouldCancel() { throw CancellationError() }
     }
 
     /// 计算两行之间的公共前缀/后缀，返回各自真正不同的区间（行内高亮）

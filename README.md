@@ -38,7 +38,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - **Accurate:** byte-exact folder validation, shortest edit scripts for normal changes, visible final-newline differences, and correct handling of symbolic links, packages, and file/folder conflicts.
 - **Fast at scale:** 100,000-line text comparisons complete in about 0.06 seconds; a 10,000-file folder benchmark completes in about 0.38 seconds on the development machine.
 - **Easy to read:** side-by-side lines, character-level highlights, aligned line numbers, difference counts, and previous/next navigation.
-- **Native and private:** a responsive macOS interface, Dark and Light appearances, local-only processing, and read-only access to user-selected files.
+- **Native and private:** a responsive macOS interface, local-only processing, and sandboxed read/write access limited to folders you explicitly select.
 
 ## Features
 
@@ -57,6 +57,14 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Type and size prechecks followed by exact, bounded-parallel byte validation
 - Correct traversal of package directories and comparison of symbolic-link targets
 - Fast subtree filtering through pre-aggregated status indexes
+- Per-item and multi-row **Left → Right / Right → Left** operation planning
+- Preflight review with real item/byte counts, overwrite warnings, progress, cancellation, and per-item results
+- Safe copy, backup-before-replace, destination-empty move, and recoverable **Move to Trash**
+- Durable undo history with changed-output protection, including across app relaunches; cross-volume moves are copied and byte-verified before the source enters Trash
+- Explicit stop/continue failure policies plus transfer speed and estimated remaining time during execution
+- Import/export of safe `.grapeplan` recipes that remap validated relative operations to the current folder pair
+
+The contracts and acceptance criteria are documented in [the v1.3 safe-operations plan](docs/v1.3-safe-operations.md) and [the v1.4 durable-workflows plan](docs/v1.4-durable-workflows.md).
 
 ## Performance
 
@@ -82,7 +90,7 @@ The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF018
 
 Install the signed release from the [Mac App Store](https://apps.apple.com/app/id6796778424).
 
-To build from source, use macOS 27+ and Xcode 27+:
+To build from source, use macOS 26+ and Xcode 26+:
 
 ```bash
 xcodebuild -project macos/GrapeCompare.xcodeproj \
@@ -109,14 +117,15 @@ Run the platform-independent core suite without launching Xcode:
 bash macos/Tests/run-tests.sh
 ```
 
-The suite contains 45 focused checks, 300 randomized shortest-edit-script cases, large-text stress cases, and folder edge cases. Pull requests run the same suite in GitHub Actions.
+The suite contains focused comparison and transaction checks, 300 randomized shortest-edit-script cases, large-text stress cases, and filesystem safety cases. Pull requests run the same suite in GitHub Actions.
 
 ```text
 macos/
 ├── GrapeCompare/
 │   ├── Core/
 │   │   ├── DiffEngine.swift       # adaptive Myers + low-occurrence anchors
-│   │   └── FolderComparator.swift # POSIX scan + bounded exact validation
+│   │   ├── FolderComparator.swift # POSIX scan + bounded exact validation
+│   │   └── FileOperations.swift   # preflight, transactions, verification + undo
 │   ├── Views/                     # native SwiftUI file/folder interfaces
 │   └── AppState.swift             # comparison orchestration
 ├── Tests/                         # deterministic correctness and stress tests

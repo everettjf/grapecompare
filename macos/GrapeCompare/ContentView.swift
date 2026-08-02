@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var state: AppState
+    @Environment(AppState.self) private var state
 
     var body: some View {
         Group {
@@ -16,5 +16,8 @@ struct ContentView: View {
         }
         .frame(minWidth: 860, minHeight: 560)
         .onAppear { state.consumePendingArgs() }
+        .onChange(of: state.operations.mutationVersion) {
+            state.handleFilesystemMutation()
+        }
     }
 }

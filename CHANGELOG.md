@@ -1,5 +1,65 @@
 # Changelog
 
+## 1.4.0 — 2026-08-02
+
+### Durable workflows
+
+- Added an atomic, versioned operation journal so safe undo history survives app relaunches while retaining the same changed-output and collision checks.
+- Added a native operation-history sheet with bounded retention and safe cleanup of private replacement backups; system Trash contents are never permanently deleted.
+- Added security-scoped bookmark restoration for journaled operations on user-selected folders.
+
+### Planning and progress
+
+- Added explicit **Stop on First Failure** and **Continue After Failures** batch policies to the preflight review.
+- Added throughput and estimated remaining time to execution and undo progress.
+- Added import/export of `.grapeplan` recipes containing only validated relative paths, operation kinds, and source sides; imported paths are remapped to the current folder pair.
+
+### Safety and quality
+
+- Reject recipe path traversal, absolute paths, duplicate operation IDs, unsupported schemas, and intermediate symbolic-link escapes before changing the queue.
+- Quarantine corrupt history files instead of overwriting them, serialize journal access across windows, and preserve newest-first stack semantics for undo.
+- Added automated coverage for relaunch undo, changed-output protection after reload, retention, corruption recovery, both failure policies, deterministic ETA, and recipe validation.
+- Added the complete v1.4 contract and acceptance gates in `docs/v1.4-durable-workflows.md`.
+
+## 1.3.0 — 2026-08-02
+
+### Safe file operations
+
+- Added per-row and multi-selection left-to-right/right-to-left planning for copy, replace, and move, plus recoverable Move to Trash actions.
+- Added a preflight review sheet with real hidden-item and byte counts, explicit destructive warnings, progress, cooperative cancellation, and per-item failures.
+- Added transaction undo through the review sheet and Edit menu; overwrite backups and Trash locations are retained for the current app session.
+
+### Safety
+
+- Revalidate source and destination content immediately before every commit, and refuse undo when an output changed or its original location is occupied.
+- Stage copies beside the destination, preserve symbolic links without following them, and remove incomplete staging data on cancellation.
+- Implement cross-volume move as copy, byte-for-byte verification, destination commit, then source-to-Trash; serialize commits from multiple windows.
+- Enabled read/write access only for folders explicitly selected by the user in the App Sandbox.
+
+### Quality
+
+- Added integration coverage for copy, replace, same- and cross-volume move, Trash, undo, stale plans, changed-output protection, hidden entries, symbolic links, and cancellation cleanup.
+- Added the complete v1.3 safety contract and acceptance gates in `docs/v1.3-safe-operations.md`.
+
+## 1.2.0 — 2026-08-02
+
+### Reliability
+
+- Cancelled superseded comparisons and prevented stale background work from overwriting newer results.
+- Distinguished missing files from empty files and surfaced incomplete folder scans instead of silently skipping unreadable entries.
+- Added a 256 MB text-materialization limit while preserving exact equality and binary checks.
+
+### Experience
+
+- Added horizontal navigation for long diff lines, repeatable difference jumps, keyboard navigation, and more accessible folder controls.
+- Reduced SwiftUI invalidation with Observation, per-window comparison state, and cached visible folder rows.
+- Added complete Simplified Chinese localization and stricter file/folder drop validation.
+
+### Quality
+
+- Added cancellation, missing/empty, size-limit, scan-error, and size-mismatch regression coverage.
+- Added a full unsigned macOS Release build to CI.
+
 ## 1.1.0 — 2026-08-01
 
 ### Highlights

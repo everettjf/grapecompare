@@ -4,10 +4,11 @@ import UniformTypeIdentifiers
 
 /// 首页：选择比较模式并拖入/选择两侧的文件或文件夹
 struct HomeView: View {
-    @EnvironmentObject var state: AppState
+    @Environment(AppState.self) private var state
     @AppStorage("showDemoButton") private var showDemoButton = true
 
     var body: some View {
+        @Bindable var state = state
         VStack(spacing: 36) {
             VStack(spacing: 10) {
                 Image("GrapeIcon")
@@ -74,9 +75,9 @@ struct HomeView: View {
 }
 
 private struct CompareCard: View {
-    let title: String
+    let title: LocalizedStringResource
     let icon: String
-    let description: String
+    let description: LocalizedStringResource
     let acceptsFolders: Bool
     @Binding var left: URL?
     @Binding var right: URL?
@@ -116,10 +117,11 @@ private struct CompareCard: View {
 
 /// 拖放/点选槽位
 struct DropSlot: View {
-    let label: String
+    let label: LocalizedStringResource
     let acceptsFolders: Bool
     @Binding var url: URL?
     @State private var isTargeted = false
+    @State private var invalidDropMessage: LocalizedStringResource?
 
     var body: some View {
         VStack(spacing: 6) {
@@ -143,11 +145,19 @@ struct DropSlot: View {
                 Image(systemName: "arrow.down.doc")
                     .font(.title3)
                     .foregroundStyle(.secondary)
-                Text("\(label): drop a \(acceptsFolders ? "folder" : "file") here")
-                    .font(.caption)
-                Text("or click to choose")
+                if acceptsFolders {
+                    Text("Drop a folder here")
+                        .font(.caption)
+                } else {
+                    Text("Drop a file here")
+                        .font(.caption)
+                }
+                Text("or choose below")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                Button("Choose…", action: pick)
+                    .buttonStyle(.link)
+                    .font(.caption)
             }
         }
         .padding(10)
@@ -159,18 +169,35 @@ struct DropSlot: View {
                 .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.4),
                               style: StrokeStyle(lineWidth: 1.5, dash: [6]))
         }
-        .contentShape(Rectangle())
-        .onTapGesture(perform: pick)
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             guard let provider = providers.first else { return false }
             _ = provider.loadObject(ofClass: URL.self) { item, _ in
                 DispatchQueue.main.async {
                     guard let item else { return }
-                    if self.acceptsFolders, !item.hasDirectoryPath { return }
+                    guard item.hasDirectoryPath == self.acceptsFolders else {
+                        if self.acceptsFolders {
+                            self.invalidDropMessage = "Please drop a folder."
+                        } else {
+                            self.invalidDropMessage = "Please drop a file."
+                        }
+                        return
+                    }
                     self.setURL(item)
                 }
             }
             return true
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(label))
+        .alert("Unsupported Item", isPresented: Binding(
+            get: { invalidDropMessage != nil },
+            set: { if !$0 { invalidDropMessage = nil } }
+        )) {
+            Button("OK") { invalidDropMessage = nil }
+        } message: {
+            if let invalidDropMessage {
+                Text(invalidDropMessage)
+            }
         }
     }
 
