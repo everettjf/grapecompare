@@ -169,6 +169,402 @@ do {
     check(false, "diff cancellation throws expected error")
 }
 
+// MARK: - Text snapshots, comparison rules, and hunk output
+
+let mixedTextData = Data("first\r\nsecond\rthird\nfourth".utf8)
+let mixedSnapshot = try! TextSnapshot(data: mixedTextData)
+check(mixedSnapshot.lines.map(\.ending) == [.crlf, .cr, .lf, .none],
+      "text snapshot preserves mixed line endings")
+check(try! mixedSnapshot.encodedData() == mixedTextData,
+      "UTF-8 snapshot round-trips byte for byte")
+
+var utf16Body = "grape 🍇\r\ncompare".data(using: .utf16LittleEndian)!
+utf16Body.insert(contentsOf: [0xFF, 0xFE], at: 0)
+let utf16Snapshot = try! TextSnapshot(data: utf16Body)
+check(utf16Snapshot.encoding == .utf16LittleEndian &&
+      (try! utf16Snapshot.encodedData()) == utf16Body,
+      "UTF-16 LE BOM snapshot round-trips byte for byte")
+
+do {
+    _ = try TextSnapshot(data: Data([0x66, 0x80]))
+    check(false, "invalid UTF-8 is rejected instead of replacement-decoded")
+} catch TextSnapshotError.unsupportedEncoding {
+    check(true, "invalid UTF-8 is rejected instead of replacement-decoded")
+} catch {
+    check(false, "invalid UTF-8 reports unsupported encoding")
+}
+
+let ruleLeft = try! TextSnapshot(data: Data("  Alpha  beta\r\nTail\n".utf8))
+let ruleRight = try! TextSnapshot(data: Data("alpha beta\nTAIL\n".utf8))
+let ruleExact = TextComparisonEngine.compare(left: ruleLeft, right: ruleRight)
+check(!ruleExact.equivalentUnderOptions && !ruleExact.exactIdentical,
+      "exact text comparison reports whitespace, case, and line-ending differences")
+let ignoredRules = TextComparisonOptions(
+    whitespace: .ignoreChanges,
+    ignoreCase: true,
+    ignoreLineEndingFormat: true)
+let ruleIgnored = TextComparisonEngine.compare(
+    left: ruleLeft, right: ruleRight, options: ignoredRules)
+check(ruleIgnored.equivalentUnderOptions && !ruleIgnored.exactIdentical,
+      "comparison rules distinguish equivalent content from byte identity")
+
+let allWhitespaceLeft = try! TextSnapshot(data: Data("a b\tc".utf8))
+let allWhitespaceRight = try! TextSnapshot(data: Data("abc".utf8))
+let allWhitespaceResult = TextComparisonEngine.compare(
+    left: allWhitespaceLeft,
+    right: allWhitespaceRight,
+    options: TextComparisonOptions(whitespace: .ignoreAll))
+check(allWhitespaceResult.equivalentUnderOptions,
+      "ignore-all-whitespace removes horizontal whitespace from matching keys")
+
+let newlineLeft = try! TextSnapshot(data: Data("same".utf8))
+let newlineRight = try! TextSnapshot(data: Data("same\r\n".utf8))
+let newlineVisible = TextComparisonEngine.compare(
+    left: newlineLeft,
+    right: newlineRight,
+    options: TextComparisonOptions(ignoreLineEndingFormat: true))
+check(!newlineVisible.equivalentUnderOptions,
+      "final newline remains a difference when only line-ending format is ignored")
+let newlineIgnored = TextComparisonEngine.compare(
+    left: newlineLeft,
+    right: newlineRight,
+    options: TextComparisonOptions(
+        ignoreLineEndingFormat: true,
+        ignoreFinalNewline: true))
+check(newlineIgnored.equivalentUnderOptions,
+      "final newline can be ignored independently")
+
+let hunkLeft = try! TextSnapshot(data: Data("one\ntwo\nthree\nfour\n".utf8))
+let hunkRight = try! TextSnapshot(data: Data("ONE\ntwo\ninserted\nthree\n".utf8))
+let hunkComparison = TextComparisonEngine.compare(left: hunkLeft, right: hunkRight)
+check(hunkComparison.hunks.count == 3,
+      "separated changes produce stable first-class hunks")
+check(hunkComparison.hunks[0].leftRange == 0..<1 &&
+      hunkComparison.hunks[0].rightRange == 0..<1,
+      "replacement hunk retains exact source ranges")
+check(hunkComparison.hunks[1].leftRange == 2..<2 &&
+      hunkComparison.hunks[1].rightRange == 2..<3 &&
+      hunkComparison.hunks[2].leftRange == 3..<4 &&
+      hunkComparison.hunks[2].rightRange == 4..<4,
+      "insert/delete hunks retain exact empty and non-empty source ranges")
+
+var outputFromRight = TextOutputSession(
+    left: hunkLeft,
+    right: hunkRight,
+    comparison: hunkComparison)
+for hunk in hunkComparison.hunks {
+    outputFromRight.accept(.left, hunkID: hunk.id)
+}
+check((try! (try! outputFromRight.snapshot()).encodedData()) == (try! hunkLeft.encodedData()),
+      "accepting every left hunk reconstructs the left snapshot exactly")
+
+var outputFromLeft = TextOutputSession(
+    left: hunkLeft,
+    right: hunkRight,
+    comparison: hunkComparison,
+    baseline: .left)
+for hunk in hunkComparison.hunks {
+    outputFromLeft.accept(.right, hunkID: hunk.id)
+}
+check((try! (try! outputFromLeft.snapshot()).encodedData()) == (try! hunkRight.encodedData()),
+      "accepting every right hunk reconstructs the right snapshot exactly")
+
+var randomHunksReconstruct = true
+for _ in 0..<200 {
+    let leftLines = (0..<random.next(30)).map { _ in "value-\(random.next(10))" }
+    let rightLines = (0..<random.next(30)).map { _ in "value-\(random.next(10))" }
+    let leftText = leftLines.joined(separator: "\n")
+    let rightText = rightLines.joined(separator: "\n")
+    let left = try! TextSnapshot(data: Data(leftText.utf8))
+    let right = try! TextSnapshot(data: Data(rightText.utf8))
+    let comparison = TextComparisonEngine.compare(left: left, right: right)
+    var session = TextOutputSession(left: left, right: right, comparison: comparison)
+    for hunk in comparison.hunks { session.accept(.left, hunkID: hunk.id) }
+    if (try! session.snapshot()).text != left.text {
+        randomHunksReconstruct = false
+        break
+    }
+}
+check(randomHunksReconstruct,
+      "200 randomized hunk sets reconstruct the opposite snapshot without offset drift")
+
+let editableLeft = try! TextSnapshot(text: "title\nleft choice\ntail\n")
+let editableRight = try! TextSnapshot(text: "title\nright choice\ntail\n")
+let editableComparison = TextComparisonEngine.compare(left: editableLeft, right: editableRight)
+var editableSession = TextOutputSession(
+    left: editableLeft, right: editableRight, comparison: editableComparison)
+let manuallyEdited = try! TextSnapshot(text: "custom title\nright choice\ntail\n")
+let preserved = try! editableSession.acceptPreservingManualEdits(
+    .left, hunkID: editableComparison.hunks[0].id, currentOutput: manuallyEdited)
+check(preserved.text == "custom title\nleft choice\ntail\n",
+      "accepting a hunk preserves independent manual output edits")
+
+var overlappingSession = TextOutputSession(
+    left: editableLeft, right: editableRight, comparison: editableComparison)
+let overlappingEdit = try! TextSnapshot(text: "title\nmanual choice\ntail\n")
+let overlappingResult = try! overlappingSession.acceptPreservingManualEdits(
+    .left, hunkID: editableComparison.hunks[0].id, currentOutput: overlappingEdit)
+check(overlappingResult.text == editableLeft.text,
+      "an explicit hunk choice wins over a manual edit in the same range")
+
+let patchLeft = try! TextSnapshot(data: Data("alpha\nbeta\ngamma".utf8))
+let patchRight = try! TextSnapshot(data: Data("alpha\nBETA\ngamma\ndelta\n".utf8))
+let patch = try! UnifiedDiffWriter.makePatch(
+    left: patchLeft,
+    right: patchRight,
+    leftPath: "a/sample.txt",
+    rightPath: "b/sample.txt")
+check(patch.hasPrefix("--- a/sample.txt\n+++ b/sample.txt\n@@ -1,3 +1,4 @@\n"),
+      "unified diff emits standard headers and hunk coordinates")
+check(patch.contains("-beta\n") && patch.contains("+BETA\n") && patch.contains("+delta\n"),
+      "unified diff emits exact deleted and inserted content")
+check(patch.contains("-gamma\n\\ No newline at end of file\n") &&
+      patch.contains("+gamma\n") && patch.contains("+delta\n"),
+      "unified diff emits the missing-final-newline marker on the correct source line")
+check((try! UnifiedDiffWriter.makePatch(
+    left: patchLeft,
+    right: patchLeft,
+    leftPath: "left",
+    rightPath: "right")).isEmpty,
+      "identical snapshots export an empty patch")
+check((try! UnifiedDiffWriter.makePatch(
+    left: patchLeft,
+    right: patchRight,
+    leftPath: "unsafe\tname\n.txt",
+    rightPath: "safe.txt")).hasPrefix("--- unsafe name .txt\n"),
+      "patch path labels cannot inject headers")
+
+// MARK: - Three-way merge
+
+func snapshot(_ text: String) -> TextSnapshot {
+    try! TextSnapshot(data: Data(text.utf8))
+}
+
+let mergeBase = snapshot("one\ntwo\nthree\n")
+let mergeOurs = snapshot("ONE\ntwo\nthree\n")
+let mergeTheirs = snapshot("one\ntwo\nTHREE\n")
+let independentMerge = ThreeWayMergeEngine.merge(
+    base: mergeBase, ours: mergeOurs, theirs: mergeTheirs)
+check(independentMerge.conflictCount == 0 &&
+      independentMerge.renderedLines()?.map(\.content) == ["ONE", "two", "THREE"],
+      "three-way merge combines independent changes from ours and theirs")
+
+let sameOurs = snapshot("one\nTWO\nthree\n")
+let sameTheirs = snapshot("one\nTWO\nthree\n")
+let sameMerge = ThreeWayMergeEngine.merge(
+    base: mergeBase, ours: sameOurs, theirs: sameTheirs)
+check(sameMerge.conflictCount == 0 &&
+      sameMerge.renderedLines()?.map(\.content) == ["one", "TWO", "three"],
+      "three-way merge auto-resolves identical edits")
+
+let conflictOurs = snapshot("one\nOURS\nthree\n")
+let conflictTheirs = snapshot("one\nTHEIRS\nthree\n")
+let conflictingMerge = ThreeWayMergeEngine.merge(
+    base: mergeBase, ours: conflictOurs, theirs: conflictTheirs)
+check(conflictingMerge.conflictCount == 1 && conflictingMerge.renderedLines() == nil,
+      "three-way merge exposes overlapping divergent edits as a conflict")
+if let conflict = conflictingMerge.conflicts.first {
+    check(conflictingMerge.renderedLines(resolving: [conflict.id: .ours])?.map(\.content) ==
+          ["one", "OURS", "three"],
+          "three-way conflict can be resolved with ours")
+    check(conflictingMerge.renderedLines(resolving: [conflict.id: .theirs])?.map(\.content) ==
+          ["one", "THEIRS", "three"],
+          "three-way conflict can be resolved with theirs")
+} else {
+    check(false, "three-way conflict has a stable identity")
+    check(false, "three-way conflict can be resolved with theirs")
+}
+
+let insertOurs = snapshot("one\nours inserted\ntwo\nthree\n")
+let insertTheirs = snapshot("one\ntheirs inserted\ntwo\nthree\n")
+let insertionConflict = ThreeWayMergeEngine.merge(
+    base: mergeBase, ours: insertOurs, theirs: insertTheirs)
+check(insertionConflict.conflictCount == 1,
+      "different insertions at the same base position conflict")
+
+let deleteOurs = snapshot("one\nthree\n")
+let modifyTheirs = snapshot("one\nTWO\nthree\n")
+let deleteModifyConflict = ThreeWayMergeEngine.merge(
+    base: mergeBase, ours: deleteOurs, theirs: modifyTheirs)
+check(deleteModifyConflict.conflictCount == 1,
+      "delete versus modify of the same base range conflicts")
+
+let externalMergeDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
+    .appending(path: "grapecompare-external-merge-\(UUID().uuidString)")
+try! FileManager.default.createDirectory(at: externalMergeDirectory, withIntermediateDirectories: true)
+defer { try? FileManager.default.removeItem(at: externalMergeDirectory) }
+let externalArguments = [
+    "GrapeCompare", "--merge",
+    externalMergeDirectory.appending(path: "base").path,
+    externalMergeDirectory.appending(path: "ours").path,
+    externalMergeDirectory.appending(path: "theirs").path,
+    externalMergeDirectory.appending(path: "merged").path,
+    externalMergeDirectory.appending(path: "resolved").path
+]
+if let request = ExternalMergeRequest(commandLineArguments: externalArguments) {
+    try! request.complete(with: snapshot("resolved\n"))
+    check((try? String(contentsOf: request.destinationURL, encoding: .utf8)) == "resolved\n" &&
+          FileManager.default.fileExists(atPath: request.sentinelURL.path),
+          "external mergetool handoff writes output and completion sentinel")
+} else {
+    check(false, "external mergetool command-line handoff parses")
+}
+check(ExternalMergeRequest(commandLineArguments: ["GrapeCompare", "--merge"]) == nil,
+      "external mergetool handoff rejects incomplete arguments")
+
+// MARK: - Structured data comparison
+
+let jsonLeft = Data(#"{"name":"Grape","settings":{"enabled":true,"count":2},"items":[1,2]}"#.utf8)
+let jsonRight = Data(#"{"items":[1,3,4],"settings":{"count":2,"enabled":true},"name":"Grape"}"#.utf8)
+let structuredLeft = try! StructuredDataComparator.decode(jsonLeft, format: .json)
+let structuredRight = try! StructuredDataComparator.decode(jsonRight, format: .json)
+let structuredDifferences = StructuredDataComparator.compare(
+    left: structuredLeft,
+    right: structuredRight)
+check(structuredDifferences.map(\.path) == ["$.items[1]", "$.items[2]"],
+      "JSON comparison ignores object key order and reports stable tree paths")
+check(structuredDifferences.map(\.kind) == [.changed, .added],
+      "JSON comparison distinguishes changed and added array values")
+
+let jsonTypeLeft = try! StructuredDataComparator.decode(Data(#"{"value":1}"#.utf8), format: .json)
+let jsonTypeRight = try! StructuredDataComparator.decode(Data(#"{"value":"1"}"#.utf8), format: .json)
+check(StructuredDataComparator.compare(left: jsonTypeLeft, right: jsonTypeRight).first?.kind == .typeChanged,
+      "structured comparison reports type changes separately")
+
+let plistLeftObject: [String: Any] = ["enabled": true, "nested": ["value": "old"]]
+let plistRightObject: [String: Any] = ["enabled": true, "nested": ["value": "new"]]
+let plistLeft = try! PropertyListSerialization.data(
+    fromPropertyList: plistLeftObject, format: .binary, options: 0)
+let plistRight = try! PropertyListSerialization.data(
+    fromPropertyList: plistRightObject, format: .xml, options: 0)
+let plistDifferences = StructuredDataComparator.compare(
+    left: try! StructuredDataComparator.decode(plistLeft, format: .propertyList),
+    right: try! StructuredDataComparator.decode(plistRight, format: .propertyList))
+check(plistDifferences.count == 1 && plistDifferences[0].path == "$.nested.value",
+      "binary and XML plist values share one semantic comparison model")
+
+// MARK: - Image comparison
+
+let imageLeft = try! ImageRaster(
+    width: 2,
+    height: 1,
+    rgba: Data([255, 0, 0, 255, 0, 255, 0, 255]))
+let imageSame = try! ImageRaster(
+    width: 2,
+    height: 1,
+    rgba: Data([255, 0, 0, 255, 0, 255, 0, 255]))
+let identicalImageResult = ImageComparisonEngine.compare(left: imageLeft, right: imageSame)
+check(identicalImageResult.identical && identicalImageResult.differingPixelCount == 0,
+      "image comparison recognizes identical RGBA pixels")
+
+let imageChanged = try! ImageRaster(
+    width: 2,
+    height: 1,
+    rgba: Data([255, 0, 0, 255, 0, 0, 255, 255]))
+let changedImageResult = ImageComparisonEngine.compare(left: imageLeft, right: imageChanged)
+check(changedImageResult.dimensionsMatch &&
+      changedImageResult.differingPixelCount == 1 &&
+      changedImageResult.maximumChannelDifference == 255,
+      "image comparison reports pixel and maximum channel differences")
+check(changedImageResult.heatmap.rgba == Data([255, 0, 0, 0, 255, 0, 0, 255]),
+      "image comparison produces a transparent-to-red difference heatmap")
+
+let imageLarger = try! ImageRaster(
+    width: 3,
+    height: 1,
+    rgba: Data([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 0, 255]))
+let resizedImageResult = ImageComparisonEngine.compare(left: imageLeft, right: imageLarger)
+check(!resizedImageResult.dimensionsMatch && resizedImageResult.differingPixelCount == 1,
+      "pixels outside the smaller image count as differences")
+
+let onePixelPNG = Data(base64Encoded:
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")!
+do {
+    _ = try ImageRaster.decode(onePixelPNG, maximumPixels: 0)
+    check(false, "image decode enforces the pixel budget before raster allocation")
+} catch ImageComparisonError.dimensionsTooLarge {
+    check(true, "image decode enforces the pixel budget before raster allocation")
+} catch {
+    check(false, "image decode reports the pixel-budget error consistently")
+}
+
+// MARK: - Git repository comparison
+
+@discardableResult
+func runGit(_ arguments: [String], in directory: URL) -> String {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+    process.arguments = arguments
+    process.currentDirectoryURL = directory
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    process.standardError = pipe
+    try! process.run()
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    if process.terminationStatus != 0 {
+        fatalError("git \(arguments) failed: \(String(decoding: data, as: UTF8.self))")
+    }
+    return String(decoding: data, as: UTF8.self)
+}
+
+let gitTmp = URL(fileURLWithPath: NSTemporaryDirectory())
+    .appending(path: "grapetest-git-\(UUID().uuidString)")
+try! FileManager.default.createDirectory(at: gitTmp, withIntermediateDirectories: true)
+runGit(["init", "-b", "main"], in: gitTmp)
+runGit(["config", "user.email", "tests@grapecompare.local"], in: gitTmp)
+runGit(["config", "user.name", "GrapeCompare Tests"], in: gitTmp)
+try! Data("base\n".utf8).write(to: gitTmp.appending(path: "tracked.txt"))
+runGit(["add", "tracked.txt"], in: gitTmp)
+runGit(["commit", "-m", "base"], in: gitTmp)
+runGit(["checkout", "-b", "feature"], in: gitTmp)
+try! Data("feature\n".utf8).write(to: gitTmp.appending(path: "tracked.txt"))
+runGit(["commit", "-am", "feature"], in: gitTmp)
+runGit(["checkout", "main"], in: gitTmp)
+
+let gitRoot = try! GitRepositoryComparator.repositoryRoot(at: gitTmp)
+check(gitRoot.resolvingSymlinksInPath().path == gitTmp.resolvingSymlinksInPath().path,
+      "Git comparison resolves the selected repository root")
+let gitReferences = try! GitRepositoryComparator.references(in: gitTmp)
+check(Set(gitReferences.map(\.name)).isSuperset(of: ["main", "feature"]),
+      "Git comparison lists local branches")
+let branchChanges = try! GitRepositoryComparator.changes(
+    in: gitTmp,
+    from: .revision("main"),
+    to: .revision("feature"))
+check(branchChanges == [GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)],
+      "Git comparison compares two branch tips")
+let featureData = try! GitRepositoryComparator.fileData(
+    in: gitTmp,
+    target: .revision("feature"),
+    path: "tracked.txt")
+check(featureData == Data("feature\n".utf8),
+      "Git comparison materializes a file from a commit without checkout")
+
+try! Data("working\n".utf8).write(to: gitTmp.appending(path: "tracked.txt"))
+try! Data("new\n".utf8).write(to: gitTmp.appending(path: "untracked.txt"))
+let workingChanges = try! GitRepositoryComparator.changes(
+    in: gitTmp,
+    from: .revision("HEAD"),
+    to: .workingTree)
+check(workingChanges.contains(GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)) &&
+      workingChanges.contains(GitChange(kind: .untracked, path: "untracked.txt", oldPath: nil)),
+      "Git working-tree comparison includes tracked and untracked changes")
+runGit(["add", "tracked.txt"], in: gitTmp)
+let indexChanges = try! GitRepositoryComparator.changes(
+    in: gitTmp, from: .revision("HEAD"), to: .index)
+check(indexChanges == [GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)] &&
+      (try! GitRepositoryComparator.fileData(
+        in: gitTmp, target: .index, path: "tracked.txt")) == Data("working\n".utf8),
+      "Git comparison reads staged index content")
+try! Data("unstaged\n".utf8).write(to: gitTmp.appending(path: "tracked.txt"))
+let indexToWorktree = try! GitRepositoryComparator.changes(
+    in: gitTmp, from: .index, to: .workingTree)
+check(indexToWorktree.contains(GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)) &&
+      indexToWorktree.contains(GitChange(kind: .untracked, path: "untracked.txt", oldPath: nil)),
+      "Git comparison distinguishes index from working-tree content")
+try! FileManager.default.removeItem(at: gitTmp)
+
 // MARK: - FolderComparator
 
 let tmp = URL(fileURLWithPath: NSTemporaryDirectory()).appending(path: "grapetest-\(UUID().uuidString)")

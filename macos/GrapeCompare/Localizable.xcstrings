@@ -1,183 +1,2873 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%lld items" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个项目" } } } },
-    "%lld of %lld operations" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已完成 %1$lld/%2$lld 项操作" } } } },
-    "%lld queued" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已排队 %lld 项" } } } },
-    "Action" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作" } } } },
-    "Actions" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作" } } } },
-    "Cancel" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } } } },
-    "Cancel Pending Work" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消待执行操作" } } } },
-    "Cancel stops before the next safe commit. Completed operations remain undoable." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消会在下一次安全提交前停止，已完成的操作仍可撤销。" } } } },
-    "Clear" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空" } } } },
-    "Close" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭" } } } },
-    "Copy · Left → Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制 · 左 → 右" } } } },
-    "Copy · Right → Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制 · 右 → 左" } } } },
-    "Copy or Replace" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制或覆盖" } } } },
-    "Counting hidden items, bytes, links, and current destinations." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在统计隐藏项目、字节、链接和当前目标。" } } } },
-    "Destinations to replace: %lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将覆盖的目标：%lld 个" } } } },
-    "Done" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "完成" } } } },
-    "Execute Plan" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "执行计划" } } } },
-    "Executing plan…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在执行计划…" } } } },
-    "filesystem items" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件系统项目" } } } },
-    "Inspect Again" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新检查" } } } },
-    "Inspecting the real filesystem…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在检查实际文件系统…" } } } },
-    "Items that could not be completed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未能完成的项目" } } } },
-    "Items to move to Trash: %lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将移入废纸篓：%lld 个" } } } },
-    "Move · Left → Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移动 · 左 → 右" } } } },
-    "Move · Right → Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移动 · 右 → 左" } } } },
-    "Move Left → Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "左 → 右移动" } } } },
-    "Move left item to Trash" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将左侧项目移入废纸篓" } } } },
-    "Move right item to Trash" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将右侧项目移入废纸篓" } } } },
-    "Move Right → Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "右 → 左移动" } } } },
-    "Move to Trash" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移入废纸篓" } } } },
-    "Move — destination must be empty" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移动 — 目标必须不存在" } } } },
-    "Nothing changes until you execute this reviewed plan." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在执行已审阅计划前，不会更改任何内容。" } } } },
-    "operations" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "项操作" } } } },
-    "Pending operations were cancelled. Any completed operations are listed in the transaction and can be undone." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "待执行操作已取消。已完成的操作仍记录在事务中并可撤销。" } } } },
-    "Pending work cancelled" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "待执行操作已取消" } } } },
-    "Plan complete" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "计划已完成" } } } },
-    "Plan completed with some failures" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "计划已完成，部分项目失败" } } } },
-    "Plan is no longer safe to execute" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此计划已无法安全执行" } } } },
-    "Preconditions are checked again immediately before each commit." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每次提交前都会再次检查前置条件。" } } } },
-    "Preparing plan…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在准备计划…" } } } },
-    "Queue Left to Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "排队左到右操作" } } } },
-    "Queue Left → Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "排队左 → 右" } } } },
-    "Queue Right to Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "排队右到左操作" } } } },
-    "Queue Right → Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "排队右 → 左" } } } },
-    "Queue an operation for the selected rows" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为选中的行排队操作" } } } },
-    "Replace with backup · Left → Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "备份后覆盖 · 左 → 右" } } } },
-    "Replace with backup · Right → Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "备份后覆盖 · 右 → 左" } } } },
-    "Review destructive changes carefully" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请仔细审阅破坏性更改" } } } },
-    "Review File Operation Plan" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅文件操作计划" } } } },
-    "Review Plan" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅计划" } } } },
-    "Sources to move: %lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将移动的源项目：%lld 个" } } } },
-    "The copied data could not be verified: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法验证复制的数据：%@" } } } },
-    "The destination already exists: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标已存在：%@" } } } },
-    "The destination cannot be inside the source." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "目标不能位于源项目内部。" } } } },
-    "The destination changed after the plan was reviewed: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅计划后目标已更改：%@" } } } },
-    "The item to replace no longer exists: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "要覆盖的项目已不存在：%@" } } } },
-    "The operation was cancelled." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作已取消。" } } } },
-    "The source changed after the plan was reviewed: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅计划后源项目已更改：%@" } } } },
-    "The source no longer exists: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "源项目已不存在：%@" } } } },
-    "This file type cannot be operated on safely: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法安全操作此文件类型：%@" } } } },
-    "This operation requires a destination." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此操作需要目标位置。" } } } },
-    "to process" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "待处理" } } } },
-    "Trash Left Items" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将左侧项目移入废纸篓" } } } },
-    "Trash Right Items" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将右侧项目移入废纸篓" } } } },
-    "Undo could not be completed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法完成撤销" } } } },
-    "Undo complete" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销已完成" } } } },
-    "Undo is available while this app session remains open." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在本次应用会话保持打开时可以撤销。" } } } },
-    "Undo Last File Operation" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销上次文件操作" } } } },
-    "Undo Last Operation" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销上次操作" } } } },
-    "Undo stopped because another item now exists here: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此处已有其他项目，撤销已停止：%@" } } } },
-    "Undo stopped because the output changed: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输出已更改，撤销已停止：%@" } } } },
-    "Undoing completed operations…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在撤销已完成的操作…" } } } },
-    "—" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "—" } } } },
-    "· %lld differing rows" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "· %lld 行存在差异" } } } },
-    "· Double-click a file to view its diff" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "· 双击文件查看差异" } } } },
-    "%lld different" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个不同" } } } },
-    "%lld left only" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个仅左侧" } } } },
-    "%lld right only" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个仅右侧" } } } },
-    "%lld same" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个相同" } } } },
-    "%lld/%lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld/%2$lld" } } } },
-    "↵ final newline differs" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "↵ 末尾换行不同" } } } },
-    "+%lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "+%lld" } } } },
-    "~%lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "~%lld" } } } },
-    "−%lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "−%lld" } } } },
-    "0/0" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "0/0" } } } },
-    "All" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部" } } } },
-    "Appearance" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "外观" } } } },
-    "Back" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "返回" } } } },
-    "Binary files differ; cannot show a text diff" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "二进制文件不同，无法显示文本差异" } } } },
-    "Changed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已更改" } } } },
-    "Choose…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择…" } } } },
-    "Collapse folder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "折叠文件夹" } } } },
-    "Compare" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较" } } } },
-    "Compare again" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新比较" } } } },
-    "Compare Files" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较文件" } } } },
-    "Compare Folders" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较文件夹" } } } },
-    "Compare Swift Files" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较 Swift 文件" } } } },
-    "Compare Swift Project Folders" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较 Swift 项目文件夹" } } } },
-    "Comparing…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在比较…" } } } },
-    "Dark" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "深色" } } } },
-    "Demo data is generated locally and never leaves your Mac." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "演示数据在本机生成，绝不会离开您的 Mac。" } } } },
-    "Differences" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "差异" } } } },
-    "Drop a file here" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将文件拖到这里" } } } },
-    "Drop a folder here" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将文件夹拖到这里" } } } },
-    "Expand folder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "展开文件夹" } } } },
-    "Failed to read file: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "读取文件失败：%@" } } } },
-    "Files are identical" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件完全相同" } } } },
-    "Filter" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "筛选" } } } },
-    "Folder comparison is incomplete" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件夹比较不完整" } } } },
-    "Folder is empty" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件夹为空" } } } },
-    "Follow System" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "跟随系统" } } } },
-    "GrapeCompare" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "GrapeCompare" } } } },
-    "Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "左侧" } } } },
-    "Left folder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "左侧文件夹" } } } },
-    "Left Only" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅左侧" } } } },
-    "Light" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "浅色" } } } },
-    "Load Demo" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "载入演示" } } } },
-    "Missing" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缺失" } } } },
-    "Native, fast, and professional file & folder comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "原生、快速、专业的文件与文件夹比较工具" } } } },
-    "Next difference" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下一处差异" } } } },
-    "No items match the current filter" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有项目符合当前筛选条件" } } } },
-    "OK" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "好" } } } },
-    "Only on the left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅存在于左侧" } } } },
-    "Only on the right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅存在于右侧" } } } },
-    "Open file diff" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开文件差异" } } } },
-    "or choose below" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "或在下方选择" } } } },
-    "Please drop a file." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请拖入一个文件。" } } } },
-    "Please drop a folder." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请拖入一个文件夹。" } } } },
-    "Previous difference" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上一处差异" } } } },
-    "Recursively compare folders to find added, missing, and modified files" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "递归比较文件夹，查找新增、缺失和修改的文件" } } } },
-    "Remove" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除" } } } },
-    "Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "右侧" } } } },
-    "Right folder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "右侧文件夹" } } } },
-    "Right Only" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅右侧" } } } },
-    "Same" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "相同" } } } },
-    "Scanning and comparing folders…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在扫描并比较文件夹…" } } } },
-    "Show Load Demo button on the home screen" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在主屏幕显示“载入演示”按钮" } } } },
-    "Side-by-side diff with line and in-line highlighting" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "并排显示差异，并提供行级与行内高亮" } } } },
-    "Size" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "大小" } } } },
-    "Status" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "状态" } } } },
-    "Swap sides" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "交换两侧" } } } },
-    "Swap sides and compare again" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "交换两侧并重新比较" } } } },
-    "Text diff is not rendered because a file exceeds 256 MB" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件超过 256 MB，未渲染文本差异" } } } },
-    "The left file is missing; the right file is empty" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "左侧文件缺失，右侧文件为空" } } } },
-    "The right file is missing; the left file is empty" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "右侧文件缺失，左侧文件为空" } } } },
-    "Toggle folder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换文件夹展开状态" } } } },
-    "%@/s" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@/秒" } } } },
-    "%lld operations" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 项操作" } } } },
-    "About %@ remaining" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "预计还需 %@" } } } },
-    "Clear all operation history?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清除全部操作历史？" } } } },
-    "Clear History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清除历史" } } } },
-    "Clear History…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清除历史…" } } } },
-    "Completed file operations will appear here." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已完成的文件操作会显示在这里。" } } } },
-    "Continue After Failures" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "失败后继续" } } } },
-    "Controls whether later reviewed items run after one item fails" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "控制某项失败后是否继续执行后续已审阅项目" } } } },
-    "Export Current Plan…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导出当前计划…" } } } },
-    "If an item fails" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "如果某项失败" } } } },
-    "Import Plan…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入计划…" } } } },
-    "Import, export, or inspect operation history" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "导入、导出或查看操作历史" } } } },
-    "Latest · Undoable" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最新 · 可撤销" } } } },
-    "No Operation History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂无操作历史" } } } },
-    "Operation completed, but its undo history could not be saved: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作已完成，但无法保存撤销历史：%@" } } } },
-    "Operation History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作历史" } } } },
-    "Operation Plan Error" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作计划错误" } } } },
-    "Plans" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "计划" } } } },
-    "Saved transactions remain protected by snapshot checks." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已保存的事务仍受快照检查保护。" } } } },
-    "Stop on First Failure" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "首次失败即停止" } } } },
-    "The operation plan contains an unsafe relative path: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作计划包含不安全的相对路径：%@" } } } },
-    "The operation plan does not contain any operations." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "操作计划不包含任何操作。" } } } },
-    "This operation history uses an unsupported format (version %lld)." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此操作历史使用了不支持的格式（版本 %lld）。" } } } },
-    "This operation plan uses an unsupported format (version %lld)." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此操作计划使用了不支持的格式（版本 %lld）。" } } } },
-    "This removes GrapeCompare’s private undo backups. Items already in the system Trash are not deleted." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "这会移除 GrapeCompare 的私有撤销备份，但不会删除系统废纸篓中的项目。" } } } },
-    "Undo completed, but the saved history could not be updated: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销已完成，但无法更新已保存的历史：%@" } } } },
-    "Undo is saved and remains available after relaunch while outputs stay unchanged." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销记录已保存；只要输出未改变，重启后仍可撤销。" } } } },
-    "Undo Latest" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销最新操作" } } } },
-    "Unable to Load Demo" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法载入演示" } } } },
-    "Unsupported Item" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "不支持的项目" } } } }
+    "" : {
+
+    },
+    "—" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "—"
+          }
+        }
+      }
+    },
+    "· %lld differing rows" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· %lld 行存在差异"
+          }
+        }
+      }
+    },
+    "· Double-click a file to view its diff" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· 双击文件查看差异"
+          }
+        }
+      }
+    },
+    "%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "%@/s" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@/秒"
+          }
+        }
+      }
+    },
+    "%lld / %lld pixels" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld / %2$lld pixels"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld 像素"
+          }
+        }
+      }
+    },
+    "%lld changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 项更改"
+          }
+        }
+      }
+    },
+    "%lld conflicts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个冲突"
+          }
+        }
+      }
+    },
+    "%lld different" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个不同"
+          }
+        }
+      }
+    },
+    "%lld items" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个项目"
+          }
+        }
+      }
+    },
+    "%lld left only" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个仅左侧"
+          }
+        }
+      }
+    },
+    "%lld of %lld operations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成 %1$lld/%2$lld 项操作"
+          }
+        }
+      }
+    },
+    "%lld operations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 项操作"
+          }
+        }
+      }
+    },
+    "%lld queued" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已排队 %lld 项"
+          }
+        }
+      }
+    },
+    "%lld right only" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个仅右侧"
+          }
+        }
+      }
+    },
+    "%lld same" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个相同"
+          }
+        }
+      }
+    },
+    "%lld structured differences" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 项结构化差异"
+          }
+        }
+      }
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "↵ final newline differs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↵ 末尾换行不同"
+          }
+        }
+      }
+    },
+    "+%lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld"
+          }
+        }
+      }
+    },
+    "~%lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~%lld"
+          }
+        }
+      }
+    },
+    "−%lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "−%lld"
+          }
+        }
+      }
+    },
+    "0/0" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0/0"
+          }
+        }
+      }
+    },
+    "A writable right-side file is required." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要可写的右侧文件。"
+          }
+        }
+      }
+    },
+    "About %@ remaining" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预计还需 %@"
+          }
+        }
+      }
+    },
+    "Action" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作"
+          }
+        }
+      }
+    },
+    "Actions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作"
+          }
+        }
+      }
+    },
+    "Added" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已添加"
+          }
+        }
+      }
+    },
+    "All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回"
+          }
+        }
+      }
+    },
+    "Base" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基准"
+          }
+        }
+      }
+    },
+    "Base lines %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基准第 %@ 行"
+          }
+        }
+      }
+    },
+    "Binary files differ; cannot show a text diff" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "二进制文件不同，无法显示文本差异"
+          }
+        }
+      }
+    },
+    "Both" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "两者"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Cancel Pending Work" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消待执行操作"
+          }
+        }
+      }
+    },
+    "Cancel stops before the next safe commit. Completed operations remain undoable." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消会在下一次安全提交前停止，已完成的操作仍可撤销。"
+          }
+        }
+      }
+    },
+    "Change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改"
+          }
+        }
+      }
+    },
+    "Changed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已更改"
+          }
+        }
+      }
+    },
+    "Choose exactly two files to compare." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择恰好两个文件进行比较。"
+          }
+        }
+      }
+    },
+    "Choose exactly two local files." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择恰好两个本地文件。"
+          }
+        }
+      }
+    },
+    "Choose…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择…"
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空"
+          }
+        }
+      }
+    },
+    "Clear all operation history?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除全部操作历史？"
+          }
+        }
+      }
+    },
+    "Clear History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除历史"
+          }
+        }
+      }
+    },
+    "Clear History…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除历史…"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        }
+      }
+    },
+    "Collapse folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折叠文件夹"
+          }
+        }
+      }
+    },
+    "Compare" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较"
+          }
+        }
+      }
+    },
+    "Compare ${files}" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 ${files}"
+          }
+        }
+      }
+    },
+    "Compare again" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新比较"
+          }
+        }
+      }
+    },
+    "Compare base, ours, and theirs; resolve conflicts into editable output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较基准、我方和对方版本，并将冲突解决到可编辑输出中"
+          }
+        }
+      }
+    },
+    "Compare branches, commits, index, and working tree without checkout" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无需检出即可比较分支、提交、索引和工作区"
+          }
+        }
+      }
+    },
+    "Compare Files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较文件"
+          }
+        }
+      }
+    },
+    "Compare Folders" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较文件夹"
+          }
+        }
+      }
+    },
+    "Compare Git Repository" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 Git 仓库"
+          }
+        }
+      }
+    },
+    "Compare Swift Files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 Swift 文件"
+          }
+        }
+      }
+    },
+    "Compare Swift Project Folders" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 Swift 项目文件夹"
+          }
+        }
+      }
+    },
+    "Comparing…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在比较…"
+          }
+        }
+      }
+    },
+    "Completed file operations will appear here." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成的文件操作会显示在这里。"
+          }
+        }
+      }
+    },
+    "Conflicts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "冲突"
+          }
+        }
+      }
+    },
+    "Continue After Failures" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "失败后继续"
+          }
+        }
+      }
+    },
+    "Controls whether later reviewed items run after one item fails" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "控制某项失败后是否继续执行后续已审阅项目"
+          }
+        }
+      }
+    },
+    "Copied" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已复制"
+          }
+        }
+      }
+    },
+    "Copy · Left → Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制 · 左 → 右"
+          }
+        }
+      }
+    },
+    "Copy · Right → Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制 · 右 → 左"
+          }
+        }
+      }
+    },
+    "Copy or Replace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制或覆盖"
+          }
+        }
+      }
+    },
+    "Counting hidden items, bytes, links, and current destinations." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在统计隐藏项目、字节、链接和当前目标。"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        }
+      }
+    },
+    "Deleted" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已删除"
+          }
+        }
+      }
+    },
+    "Demo data is generated locally and never leaves your Mac." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "演示数据在本机生成，绝不会离开您的 Mac。"
+          }
+        }
+      }
+    },
+    "Destinations to replace: %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将覆盖的目标：%lld 个"
+          }
+        }
+      }
+    },
+    "Difference Heatmap" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差异热图"
+          }
+        }
+      }
+    },
+    "Differences" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差异"
+          }
+        }
+      }
+    },
+    "Discard Changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃更改"
+          }
+        }
+      }
+    },
+    "Discard merge output?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃合并输出？"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "Drop a file here" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将文件拖到这里"
+          }
+        }
+      }
+    },
+    "Drop a folder here" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将文件夹拖到这里"
+          }
+        }
+      }
+    },
+    "Editable comparison output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可编辑的比较输出"
+          }
+        }
+      }
+    },
+    "Editable Merge Output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可编辑的合并输出"
+          }
+        }
+      }
+    },
+    "Editable Output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可编辑输出"
+          }
+        }
+      }
+    },
+    "Editable three-way merge output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可编辑的三方合并输出"
+          }
+        }
+      }
+    },
+    "Exact whitespace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "精确空白"
+          }
+        }
+      }
+    },
+    "Execute Plan" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "执行计划"
+          }
+        }
+      }
+    },
+    "Executing plan…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在执行计划…"
+          }
+        }
+      }
+    },
+    "Expand folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开文件夹"
+          }
+        }
+      }
+    },
+    "Export Current Plan…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出当前计划…"
+          }
+        }
+      }
+    },
+    "Export Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出失败"
+          }
+        }
+      }
+    },
+    "Export Result…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出结果…"
+          }
+        }
+      }
+    },
+    "Export the merge result before leaving if you want to keep it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "若要保留合并结果，请在离开前导出。"
+          }
+        }
+      }
+    },
+    "Failed to read file: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "读取文件失败：%@"
+          }
+        }
+      }
+    },
+    "File" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "Files are identical" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件完全相同"
+          }
+        }
+      }
+    },
+    "filesystem items" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件系统项目"
+          }
+        }
+      }
+    },
+    "Filter" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选"
+          }
+        }
+      }
+    },
+    "Filter paths" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选路径"
+          }
+        }
+      }
+    },
+    "Filter paths or values" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筛选路径或值"
+          }
+        }
+      }
+    },
+    "Folder comparison is incomplete" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹比较不完整"
+          }
+        }
+      }
+    },
+    "Folder is empty" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹为空"
+          }
+        }
+      }
+    },
+    "Follow System" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "from %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自 %@"
+          }
+        }
+      }
+    },
+    "From revision" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "起始版本"
+          }
+        }
+      }
+    },
+    "Git Comparison Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git 比较失败"
+          }
+        }
+      }
+    },
+    "Go to line" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳转到行"
+          }
+        }
+      }
+    },
+    "GrapeCompare" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GrapeCompare"
+          }
+        }
+      }
+    },
+    "Hide output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏输出"
+          }
+        }
+      }
+    },
+    "Hunk %lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hunk %1$lld/%2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差异块 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "If an item fails" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果某项失败"
+          }
+        }
+      }
+    },
+    "Ignore all whitespace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略所有空白"
+          }
+        }
+      }
+    },
+    "Ignore case" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略大小写"
+          }
+        }
+      }
+    },
+    "Ignore final newline" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略末尾换行"
+          }
+        }
+      }
+    },
+    "Ignore line-ending format" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略行尾格式"
+          }
+        }
+      }
+    },
+    "Ignore whitespace changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略空白变化"
+          }
+        }
+      }
+    },
+    "Image difference heatmap" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片差异热图"
+          }
+        }
+      }
+    },
+    "Image display" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片显示"
+          }
+        }
+      }
+    },
+    "Images are identical" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片完全相同"
+          }
+        }
+      }
+    },
+    "Images differ" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片存在差异"
+          }
+        }
+      }
+    },
+    "Import Plan…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入计划…"
+          }
+        }
+      }
+    },
+    "Import, export, or inspect operation history" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入、导出或查看操作历史"
+          }
+        }
+      }
+    },
+    "Independent and identical changes were merged automatically." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "独立更改和相同更改已自动合并。"
+          }
+        }
+      }
+    },
+    "Inspect Again" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新检查"
+          }
+        }
+      }
+    },
+    "Inspecting the real filesystem…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查实际文件系统…"
+          }
+        }
+      }
+    },
+    "Items that could not be completed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未能完成的项目"
+          }
+        }
+      }
+    },
+    "Items to move to Trash: %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将移入废纸篓：%lld 个"
+          }
+        }
+      }
+    },
+    "Latest · Undoable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新 · 可撤销"
+          }
+        }
+      }
+    },
+    "Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左侧"
+          }
+        }
+      }
+    },
+    "Left folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左侧文件夹"
+          }
+        }
+      }
+    },
+    "Left image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左侧图片"
+          }
+        }
+      }
+    },
+    "Left Only" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅左侧"
+          }
+        }
+      }
+    },
+    "Left: %lld×%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Left: %1$lld×%2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左侧：%1$lld×%2$lld"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
+          }
+        }
+      }
+    },
+    "Line" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行"
+          }
+        }
+      }
+    },
+    "Load Demo" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入演示"
+          }
+        }
+      }
+    },
+    "Maximum channel difference: %u" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最大通道差异：%u"
+          }
+        }
+      }
+    },
+    "Merge" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并"
+          }
+        }
+      }
+    },
+    "Merge Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并失败"
+          }
+        }
+      }
+    },
+    "Merging…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在合并…"
+          }
+        }
+      }
+    },
+    "Missing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺失"
+          }
+        }
+      }
+    },
+    "Modified" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已修改"
+          }
+        }
+      }
+    },
+    "Move — destination must be empty" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移动 — 目标必须不存在"
+          }
+        }
+      }
+    },
+    "Move · Left → Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移动 · 左 → 右"
+          }
+        }
+      }
+    },
+    "Move · Right → Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移动 · 右 → 左"
+          }
+        }
+      }
+    },
+    "Move Left → Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左 → 右移动"
+          }
+        }
+      }
+    },
+    "Move left item to Trash" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将左侧项目移入废纸篓"
+          }
+        }
+      }
+    },
+    "Move Right → Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右 → 左移动"
+          }
+        }
+      }
+    },
+    "Move right item to Trash" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将右侧项目移入废纸篓"
+          }
+        }
+      }
+    },
+    "Move to Trash" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移入废纸篓"
+          }
+        }
+      }
+    },
+    "Native, fast, and professional file & folder comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原生、快速、专业的文件与文件夹比较工具"
+          }
+        }
+      }
+    },
+    "Next difference" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一处差异"
+          }
+        }
+      }
+    },
+    "Next hunk" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一个差异块"
+          }
+        }
+      }
+    },
+    "Next search result" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一个搜索结果"
+          }
+        }
+      }
+    },
+    "No Conflicts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有冲突"
+          }
+        }
+      }
+    },
+    "No Git Differences" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有 Git 差异"
+          }
+        }
+      }
+    },
+    "No items match the current filter" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有项目符合当前筛选条件"
+          }
+        }
+      }
+    },
+    "No Operation History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂无操作历史"
+          }
+        }
+      }
+    },
+    "Nothing changes until you execute this reviewed plan." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在执行已审阅计划前，不会更改任何内容。"
+          }
+        }
+      }
+    },
+    "Object key order and serialization format are ignored." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对象键顺序和序列化格式将被忽略。"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
+    "Only on the left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅存在于左侧"
+          }
+        }
+      }
+    },
+    "Only on the right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅存在于右侧"
+          }
+        }
+      }
+    },
+    "Open file diff" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开文件差异"
+          }
+        }
+      }
+    },
+    "Open Repository" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开仓库"
+          }
+        }
+      }
+    },
+    "Open two files in GrapeCompare and compare them." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 GrapeCompare 中打开并比较两个文件。"
+          }
+        }
+      }
+    },
+    "Operation completed, but its undo history could not be saved: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作已完成，但无法保存撤销历史：%@"
+          }
+        }
+      }
+    },
+    "Operation History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作历史"
+          }
+        }
+      }
+    },
+    "Operation Plan Error" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作计划错误"
+          }
+        }
+      }
+    },
+    "operations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项操作"
+          }
+        }
+      }
+    },
+    "or choose below" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "或在下方选择"
+          }
+        }
+      }
+    },
+    "Ours" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我方"
+          }
+        }
+      }
+    },
+    "Output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输出"
+          }
+        }
+      }
+    },
+    "Overlay" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "叠加"
+          }
+        }
+      }
+    },
+    "Patch" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "补丁"
+          }
+        }
+      }
+    },
+    "Path" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "路径"
+          }
+        }
+      }
+    },
+    "Pending operations were cancelled. Any completed operations are listed in the transaction and can be undone." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待执行操作已取消。已完成的操作仍记录在事务中并可撤销。"
+          }
+        }
+      }
+    },
+    "Pending work cancelled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待执行操作已取消"
+          }
+        }
+      }
+    },
+    "Plan complete" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计划已完成"
+          }
+        }
+      }
+    },
+    "Plan completed with some failures" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计划已完成，部分项目失败"
+          }
+        }
+      }
+    },
+    "Plan is no longer safe to execute" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此计划已无法安全执行"
+          }
+        }
+      }
+    },
+    "Plans" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "计划"
+          }
+        }
+      }
+    },
+    "Please drop a file." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请拖入一个文件。"
+          }
+        }
+      }
+    },
+    "Please drop a folder." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请拖入一个文件夹。"
+          }
+        }
+      }
+    },
+    "Preconditions are checked again immediately before each commit." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每次提交前都会再次检查前置条件。"
+          }
+        }
+      }
+    },
+    "Preparing plan…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在准备计划…"
+          }
+        }
+      }
+    },
+    "Previous difference" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一处差异"
+          }
+        }
+      }
+    },
+    "Previous hunk" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一个差异块"
+          }
+        }
+      }
+    },
+    "Previous search result" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一个搜索结果"
+          }
+        }
+      }
+    },
+    "Queue an operation for the selected rows" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为选中的行排队操作"
+          }
+        }
+      }
+    },
+    "Queue Left → Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排队左 → 右"
+          }
+        }
+      }
+    },
+    "Queue Left to Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排队左到右操作"
+          }
+        }
+      }
+    },
+    "Queue Right → Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排队右 → 左"
+          }
+        }
+      }
+    },
+    "Queue Right to Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "排队右到左操作"
+          }
+        }
+      }
+    },
+    "Reading Git repository…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取 Git 仓库…"
+          }
+        }
+      }
+    },
+    "Recursively compare folders to find added, missing, and modified files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "递归比较文件夹，查找新增、缺失和修改的文件"
+          }
+        }
+      }
+    },
+    "References" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引用"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
+      }
+    },
+    "Removed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已移除"
+          }
+        }
+      }
+    },
+    "Renamed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已重命名"
+          }
+        }
+      }
+    },
+    "Replace with backup · Left → Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "备份后覆盖 · 左 → 右"
+          }
+        }
+      }
+    },
+    "Replace with backup · Right → Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "备份后覆盖 · 右 → 左"
+          }
+        }
+      }
+    },
+    "Repository" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仓库"
+          }
+        }
+      }
+    },
+    "Reset" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置"
+          }
+        }
+      }
+    },
+    "Resolve every conflict before export" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出前请解决所有冲突"
+          }
+        }
+      }
+    },
+    "Review destructive changes carefully" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请仔细审阅破坏性更改"
+          }
+        }
+      }
+    },
+    "Review File Operation Plan" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅文件操作计划"
+          }
+        }
+      }
+    },
+    "Review Plan" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅计划"
+          }
+        }
+      }
+    },
+    "Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右侧"
+          }
+        }
+      }
+    },
+    "Right folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右侧文件夹"
+          }
+        }
+      }
+    },
+    "Right image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右侧图片"
+          }
+        }
+      }
+    },
+    "Right image opacity" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右侧图片不透明度"
+          }
+        }
+      }
+    },
+    "Right Only" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅右侧"
+          }
+        }
+      }
+    },
+    "Right: %lld×%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Right: %1$lld×%2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右侧：%1$lld×%2$lld"
+          }
+        }
+      }
+    },
+    "Rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "规则"
+          }
+        }
+      }
+    },
+    "Same" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相同"
+          }
+        }
+      }
+    },
+    "Save and Continue" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存并继续"
+          }
+        }
+      }
+    },
+    "Save changes before leaving?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "离开前保存更改？"
+          }
+        }
+      }
+    },
+    "Save Merge and Close" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存合并并关闭"
+          }
+        }
+      }
+    },
+    "Save Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存失败"
+          }
+        }
+      }
+    },
+    "Save Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存到右侧"
+          }
+        }
+      }
+    },
+    "Saved transactions remain protected by snapshot checks." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存的事务仍受快照检查保护。"
+          }
+        }
+      }
+    },
+    "Scanning and comparing folders…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在扫描并比较文件夹…"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索"
+          }
+        }
+      }
+    },
+    "Search both files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索两侧文件"
+          }
+        }
+      }
+    },
+    "Show Load Demo button on the home screen" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在主屏幕显示“载入演示”按钮"
+          }
+        }
+      }
+    },
+    "Side by Side" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "并排"
+          }
+        }
+      }
+    },
+    "Side-by-side diff with line and in-line highlighting" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "并排显示差异，并提供行级与行内高亮"
+          }
+        }
+      }
+    },
+    "Size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大小"
+          }
+        }
+      }
+    },
+    "Sources to move: %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将移动的源项目：%lld 个"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "状态"
+          }
+        }
+      }
+    },
+    "Stop on First Failure" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首次失败即停止"
+          }
+        }
+      }
+    },
+    "Structured Values Are Equivalent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结构化值等价"
+          }
+        }
+      }
+    },
+    "Swap sides" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交换两侧"
+          }
+        }
+      }
+    },
+    "Swap sides and compare again" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交换两侧并重新比较"
+          }
+        }
+      }
+    },
+    "Text diff is not rendered because a file exceeds 256 MB" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件超过 256 MB，未渲染文本差异"
+          }
+        }
+      }
+    },
+    "The copied data could not be verified: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法验证复制的数据：%@"
+          }
+        }
+      }
+    },
+    "The destination already exists: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标已存在：%@"
+          }
+        }
+      }
+    },
+    "The destination cannot be inside the source." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标不能位于源项目内部。"
+          }
+        }
+      }
+    },
+    "The destination changed after the plan was reviewed: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅计划后目标已更改：%@"
+          }
+        }
+      }
+    },
+    "The editable output contains changes that have not been saved." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可编辑输出包含尚未保存的更改。"
+          }
+        }
+      }
+    },
+    "The item to replace no longer exists: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要覆盖的项目已不存在：%@"
+          }
+        }
+      }
+    },
+    "The left file is missing; the right file is empty" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左侧文件缺失，右侧文件为空"
+          }
+        }
+      }
+    },
+    "The operation plan contains an unsafe relative path: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作计划包含不安全的相对路径：%@"
+          }
+        }
+      }
+    },
+    "The operation plan does not contain any operations." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作计划不包含任何操作。"
+          }
+        }
+      }
+    },
+    "The operation was cancelled." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作已取消。"
+          }
+        }
+      }
+    },
+    "The right file is missing; the left file is empty" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右侧文件缺失，左侧文件为空"
+          }
+        }
+      }
+    },
+    "The right-side file changed on disk. Compare again before saving." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "磁盘上的右侧文件已更改，请重新比较后再保存。"
+          }
+        }
+      }
+    },
+    "The selected repository states are equivalent." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选仓库状态等价。"
+          }
+        }
+      }
+    },
+    "The source changed after the plan was reviewed: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅计划后源项目已更改：%@"
+          }
+        }
+      }
+    },
+    "The source no longer exists: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "源项目已不存在：%@"
+          }
+        }
+      }
+    },
+    "Theirs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对方"
+          }
+        }
+      }
+    },
+    "This file type cannot be operated on safely: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法安全操作此文件类型：%@"
+          }
+        }
+      }
+    },
+    "This operation history uses an unsupported format (version %lld)." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作历史使用了不支持的格式（版本 %lld）。"
+          }
+        }
+      }
+    },
+    "This operation plan uses an unsupported format (version %lld)." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作计划使用了不支持的格式（版本 %lld）。"
+          }
+        }
+      }
+    },
+    "This operation requires a destination." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作需要目标位置。"
+          }
+        }
+      }
+    },
+    "This removes GrapeCompare’s private undo backups. Items already in the system Trash are not deleted." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会移除 GrapeCompare 的私有撤销备份，但不会删除系统废纸篓中的项目。"
+          }
+        }
+      }
+    },
+    "Three-Way Merge" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "三方合并"
+          }
+        }
+      }
+    },
+    "to process" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待处理"
+          }
+        }
+      }
+    },
+    "To revision, INDEX, or WORKTREE" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标版本、INDEX 或 WORKTREE"
+          }
+        }
+      }
+    },
+    "Toggle folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换文件夹展开状态"
+          }
+        }
+      }
+    },
+    "Trash Left Items" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将左侧项目移入废纸篓"
+          }
+        }
+      }
+    },
+    "Trash Right Items" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将右侧项目移入废纸篓"
+          }
+        }
+      }
+    },
+    "Type Changed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "类型已更改"
+          }
+        }
+      }
+    },
+    "Unable to Load Demo" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法载入演示"
+          }
+        }
+      }
+    },
+    "Unable to Load Image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法载入图片"
+          }
+        }
+      }
+    },
+    "Undo complete" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销已完成"
+          }
+        }
+      }
+    },
+    "Undo completed, but the saved history could not be updated: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销已完成，但无法更新已保存的历史：%@"
+          }
+        }
+      }
+    },
+    "Undo could not be completed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法完成撤销"
+          }
+        }
+      }
+    },
+    "Undo is available while this app session remains open." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在本次应用会话保持打开时可以撤销。"
+          }
+        }
+      }
+    },
+    "Undo is saved and remains available after relaunch while outputs stay unchanged." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销记录已保存；只要输出未改变，重启后仍可撤销。"
+          }
+        }
+      }
+    },
+    "Undo Last File Operation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销上次文件操作"
+          }
+        }
+      }
+    },
+    "Undo Last Operation" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销上次操作"
+          }
+        }
+      }
+    },
+    "Undo Latest" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销最新操作"
+          }
+        }
+      }
+    },
+    "Undo stopped because another item now exists here: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此处已有其他项目，撤销已停止：%@"
+          }
+        }
+      }
+    },
+    "Undo stopped because the output changed: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输出已更改，撤销已停止：%@"
+          }
+        }
+      }
+    },
+    "Undoing completed operations…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在撤销已完成的操作…"
+          }
+        }
+      }
+    },
+    "Unmerged" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未合并"
+          }
+        }
+      }
+    },
+    "Unsupported Item" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不支持的项目"
+          }
+        }
+      }
+    },
+    "Untracked" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未跟踪"
+          }
+        }
+      }
+    },
+    "Use Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用左侧"
+          }
+        }
+      }
+    },
+    "Use Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用右侧"
+          }
+        }
+      }
+    },
+    "Whitespace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空白"
+          }
+        }
+      }
+    },
+    "Wrap" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动换行"
+          }
+        }
+      }
+    }
   },
   "version" : "1.4"
 }

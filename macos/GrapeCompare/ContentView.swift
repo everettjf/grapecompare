@@ -12,6 +12,10 @@ struct ContentView: View {
                 FileDiffView()
             case .folderCompare:
                 FolderCompareView()
+            case .merge:
+                MergeView()
+            case .git:
+                GitCompareView()
             }
         }
         .frame(minWidth: 860, minHeight: 560)

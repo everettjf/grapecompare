@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.8.0 — 2026-08-02
+
+### Text actions and merge
+
+- Added search, line navigation, whitespace/case/line-ending rules, hunk-level left/right acceptance, editable output, safe changed-on-disk detection, unified patch export, wrapping, and source syntax colors.
+- Added three-way base/ours/theirs merging with deterministic conflict blocks and explicit ours/theirs/both resolution.
+
+### Developer and system integration
+
+- Added a standalone `grapecompare` CLI for text diff/patch, merge, Git, image, JSON, and plist comparisons, including stable exit statuses and printable difftool/mergetool configuration.
+- Added local branch, commit, index, and working-tree comparisons, including untracked files, without checkout or repository mutation.
+- Added a two-file App Intent that can be exposed as a Finder Quick Action through Shortcuts.
+
+### Images and structured data
+
+- Added image side-by-side, overlay, and pixel heatmap views with size and difference metrics.
+- Added semantic JSON and plist comparison with stable tree paths and key-order-independent object comparison.
+- Added deterministic and randomized core coverage plus CLI integration tests for the new workflows.
+
 ## 1.4.0 — 2026-08-02
 
 ### Durable workflows

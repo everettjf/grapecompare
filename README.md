@@ -46,9 +46,23 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 
 - Adaptive Myers line diff with low-occurrence anchors for large rewrites
 - Character-level highlighting inside modified lines
+- Search and line navigation, comparison rules, syntax colors, and optional line wrapping
+- Hunk-level left/right acceptance, editable output, and unified diff/patch export
 - Added, removed, and modified counts with keyboard-friendly navigation
 - CRLF/LF normalization, final-newline reporting, and binary-file detection
 - Memory-mapped input to avoid duplicating large files in memory
+
+### Merge and developer workflows
+
+- Three-way base/ours/theirs merge with explicit conflict resolution
+- Branch, commit, index, and working-tree comparison without changing repository state
+- Standalone CLI plus Git difftool/mergetool configuration
+- Finder Quick Action support through the built-in Compare Files shortcut
+
+### Images and structured data
+
+- Image side-by-side, opacity overlay, dimensions, pixel metrics, and difference heatmap
+- Semantic JSON and plist comparison with stable paths and object-key-order independence
 
 ### Folder comparison
 
@@ -64,7 +78,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Explicit stop/continue failure policies plus transfer speed and estimated remaining time during execution
 - Import/export of safe `.grapeplan` recipes that remap validated relative operations to the current folder pair
 
-The contracts and acceptance criteria are documented in [the v1.3 safe-operations plan](docs/v1.3-safe-operations.md) and [the v1.4 durable-workflows plan](docs/v1.4-durable-workflows.md).
+The contracts and acceptance criteria are documented in [the v1.3 safe-operations plan](docs/v1.3-safe-operations.md), [the v1.4 durable-workflows plan](docs/v1.4-durable-workflows.md), [the v1.5 text-actions plan](docs/v1.5-text-actions.md), and [the v1.6–v1.8 integration contract](docs/v1.6-v1.8-integration.md).
 
 ## Performance
 
@@ -104,8 +118,13 @@ You can also open `macos/GrapeCompare.xcodeproj` in Xcode and press Run.
 ## Command line
 
 ```bash
-GrapeCompare <left> <right>
+bash macos/CLI/build.sh
+macos/CLI/.build/grapecompare diff left.txt right.txt --patch
+macos/CLI/.build/grapecompare merge base.txt ours.txt theirs.txt merged.txt
+macos/CLI/.build/grapecompare git-config
 ```
+
+The printed Git mergetool configuration launches the GUI and reports success only after the merged output is saved. Arbitrary Git temporary paths require a directly distributed build with suitable filesystem access; the App Store sandbox only grants access to files selected through system UI.
 
 Two folders open the folder comparison; other inputs open the file comparison. The App Store build is sandboxed and cannot read arbitrary command-line paths. Build with App Sandbox disabled if this workflow is required.
 
@@ -115,6 +134,7 @@ Run the platform-independent core suite without launching Xcode:
 
 ```bash
 bash macos/Tests/run-tests.sh
+bash macos/CLI/run-tests.sh
 ```
 
 The suite contains focused comparison and transaction checks, 300 randomized shortest-edit-script cases, large-text stress cases, and filesystem safety cases. Pull requests run the same suite in GitHub Actions.

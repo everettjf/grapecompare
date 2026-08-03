@@ -59,10 +59,21 @@ struct GrapeCompareApp: App {
 
 private struct WindowRootView: View {
     @State private var state = AppState()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ContentView()
             .environment(state)
+            .onAppear {
+                state.consumePendingArgs()
+                state.consumeQuickAction()
+            }
+            .onChange(of: scenePhase) {
+                if scenePhase == .active { state.consumeQuickAction() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .compareFilesIntentReceived)) { _ in
+                state.consumeQuickAction()
+            }
             .focusedSceneValue(\.fileOperationController, state.operations)
             .sheet(isPresented: Binding(
                 get: { state.operations.historyPresented },

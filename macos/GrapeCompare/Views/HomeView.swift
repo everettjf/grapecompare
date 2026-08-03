@@ -9,6 +9,7 @@ struct HomeView: View {
 
     var body: some View {
         @Bindable var state = state
+        ScrollView {
         VStack(spacing: 36) {
             VStack(spacing: 10) {
                 Image("GrapeIcon")
@@ -43,7 +44,14 @@ struct HomeView: View {
             }
             .padding(.horizontal, 48)
 
+            MergeCard()
+                .padding(.horizontal, 48)
+
+            GitCard()
+                .padding(.horizontal, 48)
+
             Spacer()
+        }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .bottomTrailing) {
@@ -71,6 +79,70 @@ struct HomeView: View {
         } message: {
             Text(state.demoError ?? "Unknown error")
         }
+    }
+}
+
+private struct GitCard: View {
+    @Environment(AppState.self) private var state
+
+    var body: some View {
+        @Bindable var state = state
+        HStack(spacing: 16) {
+            Image(systemName: "arrow.triangle.branch")
+                .font(.title2)
+                .foregroundStyle(.tint)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Compare Git Repository").font(.headline)
+                Text("Compare branches, commits, index, and working tree without checkout")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            DropSlot(
+                label: "Repository",
+                acceptsFolders: true,
+                url: $state.gitRepositoryURL)
+                .frame(maxWidth: 300)
+            Button("Open Repository") { state.startGitComparison() }
+                .buttonStyle(.borderedProminent)
+                .disabled(state.gitRepositoryURL == nil)
+        }
+        .padding(18)
+        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+    }
+}
+
+private struct MergeCard: View {
+    @Environment(AppState.self) private var state
+
+    var body: some View {
+        @Bindable var state = state
+        VStack(spacing: 14) {
+            HStack {
+                Image(systemName: "arrow.triangle.branch")
+                    .font(.title2)
+                    .foregroundStyle(.tint)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Three-Way Merge").font(.headline)
+                    Text("Compare base, ours, and theirs; resolve conflicts into editable output")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Merge") { state.startThreeWayMerge() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(state.baseFileURL == nil || state.oursFileURL == nil || state.theirsFileURL == nil)
+            }
+            HStack(spacing: 10) {
+                DropSlot(label: "Base", acceptsFolders: false, url: $state.baseFileURL)
+                DropSlot(label: "Ours", acceptsFolders: false, url: $state.oursFileURL)
+                DropSlot(label: "Theirs", acceptsFolders: false, url: $state.theirsFileURL)
+            }
+        }
+        .padding(18)
+        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
     }
 }
 
