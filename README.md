@@ -153,3 +153,7 @@ macos/
 ```
 
 Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. For help, use [GitHub Issues](https://github.com/everettjf/GrapeCompare/issues); report security problems according to [SECURITY.md](SECURITY.md). By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=everettjf/grapecompare&type=Date)](https://star-history.com/#everettjf/grapecompare&Date)
