@@ -120,6 +120,27 @@ nonisolated enum FolderComparator {
         }
     }
 
+    private final class ScanResults: @unchecked Sendable {
+        private let lock = NSLock()
+        private var left: Result<[String: ScannedItem], Error>?
+        private var right: Result<[String: ScannedItem], Error>?
+
+        func store(_ result: Result<[String: ScannedItem], Error>, onLeft: Bool) {
+            lock.lock()
+            if onLeft { left = result } else { right = result }
+            lock.unlock()
+        }
+
+        func snapshots() -> (
+            Result<[String: ScannedItem], Error>,
+            Result<[String: ScannedItem], Error>
+        ) {
+            lock.lock()
+            defer { lock.unlock() }
+            return (left!, right!)
+        }
+    }
+
     /// 递归比较两个文件夹，返回树根（relativePath 为 ""）
     static func compare(leftRoot: URL, rightRoot: URL) -> FolderNode {
         try! compareCancellable(leftRoot: leftRoot, rightRoot: rightRoot)
@@ -129,8 +150,17 @@ nonisolated enum FolderComparator {
         leftRoot: URL, rightRoot: URL,
         shouldCancel: @Sendable () -> Bool = { false }
     ) throws -> FolderNode {
-        let leftItems = try scan(root: leftRoot, shouldCancel: shouldCancel)
-        let rightItems = try scan(root: rightRoot, shouldCancel: shouldCancel)
+        // Directory metadata walks are independent and usually I/O-bound. Scan
+        // both roots together so very large comparisons do not pay two full,
+        // serial tree walks before content comparison can begin.
+        let scans = ScanResults()
+        DispatchQueue.concurrentPerform(iterations: 2) { side in
+            let root = side == 0 ? leftRoot : rightRoot
+            scans.store(Result { try scan(root: root, shouldCancel: shouldCancel) }, onLeft: side == 0)
+        }
+        let (leftResult, rightResult) = scans.snapshots()
+        let leftItems = try leftResult.get()
+        let rightItems = try rightResult.get()
         let allPaths = Set(leftItems.keys).union(rightItems.keys).sorted()
 
         // 元数据能直接判定大部分状态；仅把同类型、同大小文件送入内容比较。

@@ -680,6 +680,34 @@ check(findNode("changed-link", in: edgeTree)?.status == .different,
 let edgeStats = FolderComparator.stats(for: edgeTree)
 check(edgeStats.different == 3, "folder stats include file/directory and link target differences")
 
+// A directory symlink loop must remain a leaf. Following it would recurse
+// forever and could escape the selected comparison root.
+try! FileManager.default.createSymbolicLink(
+    at: edgeL.appending(path: "loop"), withDestinationURL: URL(fileURLWithPath: "."))
+try! FileManager.default.createSymbolicLink(
+    at: edgeR.appending(path: "loop"), withDestinationURL: URL(fileURLWithPath: "."))
+let loopTree = FolderComparator.compare(leftRoot: edgeL, rightRoot: edgeR)
+let loopNode = findNode("loop", in: loopTree)
+check(loopNode?.status == .same && loopNode?.isFolder == false && loopNode?.children == nil,
+      "directory symlink loops are compared as links and never followed")
+
+// Large binary files are compared as bounded chunks instead of loading both
+// payloads into memory. Exercise equality and a late-byte mismatch.
+let binaryL = edgeL.appending(path: "large.bin")
+let binaryR = edgeR.appending(path: "large.bin")
+var binaryPayload = Data(repeating: 0xA5, count: 8 * 1_024 * 1_024)
+binaryPayload[17] = 0
+try! binaryPayload.write(to: binaryL)
+try! binaryPayload.write(to: binaryR)
+let equalBinaryTree = FolderComparator.compare(leftRoot: edgeL, rightRoot: edgeR)
+check(findNode("large.bin", in: equalBinaryTree)?.status == .same,
+      "large equal binary files compare exactly")
+binaryPayload[binaryPayload.count - 1] = 0x5A
+try! binaryPayload.write(to: binaryR)
+let changedBinaryTree = FolderComparator.compare(leftRoot: edgeL, rightRoot: edgeR)
+check(findNode("large.bin", in: changedBinaryTree)?.status == .different,
+      "late mismatch in a large binary file is detected")
+
 // MARK: - Safe file operations
 
 let operationRoot = tmp.appending(path: "operations")

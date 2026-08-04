@@ -109,6 +109,14 @@ private func makeFolderScenario(fileCount: Int) -> (root: URL, left: URL, right:
     return (root, left, right)
 }
 
+private func addLargeBinaryPair(left: URL, right: URL, byteCount: Int) {
+    var payload = Data(repeating: 0xA5, count: byteCount)
+    payload[17] = 0
+    try! payload.write(to: left.appending(path: "large-binary.bin"))
+    payload[payload.count - 1] = 0x5A
+    try! payload.write(to: right.appending(path: "large-binary.bin"))
+}
+
 let arguments = CommandLine.arguments.dropFirst()
 let lineCount = arguments.first.flatMap(Int.init) ?? 100_000
 let folderFileCount = arguments.dropFirst().first.flatMap(Int.init) ?? 10_000
@@ -152,6 +160,7 @@ precondition(churnResult.differenceCount == churnCount - churnCount / 100)
 print("Preparing \(folderFileCount)-file folder scenario…")
 let folders = makeFolderScenario(fileCount: folderFileCount)
 defer { try? FileManager.default.removeItem(at: folders.root) }
+addLargeBinaryPair(left: folders.left, right: folders.right, byteCount: 64 * 1_024 * 1_024)
 var folderStats = FolderCompareStats()
 measurements.append(measure("large folder", detail: "\(folderFileCount) logical files") {
     let result = FolderComparator.compare(leftRoot: folders.left, rightRoot: folders.right)
@@ -160,7 +169,7 @@ measurements.append(measure("large folder", detail: "\(folderFileCount) logical 
 let expectedBucket = folderFileCount / 100
 precondition(folderStats.onlyLeft == expectedBucket)
 precondition(folderStats.onlyRight == expectedBucket)
-precondition(folderStats.different == expectedBucket * 2)
+precondition(folderStats.different == expectedBucket * 2 + 1)
 precondition(folderStats.same == folderFileCount - expectedBucket * 4)
 
 print("\nPerformance results (Release, lower is better)")
