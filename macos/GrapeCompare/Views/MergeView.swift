@@ -5,6 +5,7 @@ struct MergeView: View {
     @Environment(AppState.self) private var state
     @State private var exportsResult = false
     @State private var resultDocument = TextPatchDocument(text: "")
+    @State private var resultText = ""
     @State private var exportError: String?
     @State private var confirmsDiscard = false
 
@@ -29,13 +30,14 @@ struct MergeView: View {
                 }
             }
         }
-        .fileExporter(
+        .modifier(TextPatchExportModifier(
             isPresented: $exportsResult,
-            document: resultDocument,
+            legacyDocument: resultDocument,
+            text: resultText,
             contentType: .plainText,
             defaultFilename: "merged.txt") { result in
                 if case .failure(let error) = result { exportError = error.localizedDescription }
-            }
+            })
         .alert("Export Failed", isPresented: Binding(
             get: { exportError != nil },
             set: { if !$0 { exportError = nil } }
@@ -86,7 +88,8 @@ struct MergeView: View {
                         .disabled(state.mergeChoices.count < result.conflictCount)
                 } else {
                     Button("Export Result…") {
-                        resultDocument = TextPatchDocument(text: state.mergeOutputText)
+                        resultText = state.mergeOutputText
+                        resultDocument = TextPatchDocument(text: resultText)
                         exportsResult = true
                     }
                     .disabled(state.mergeChoices.count < result.conflictCount)

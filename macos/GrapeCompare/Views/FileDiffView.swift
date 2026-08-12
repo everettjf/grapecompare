@@ -13,6 +13,7 @@ struct FileDiffView: View {
     @State private var wrapsLines = false
     @State private var exportsPatch = false
     @State private var patchDocument = TextPatchDocument(text: "")
+    @State private var patchText = ""
     @State private var exportError: String?
     @State private var pendingNavigation: PendingNavigation?
 
@@ -35,15 +36,16 @@ struct FileDiffView: View {
             Divider()
             content
         }
-        .fileExporter(
+        .modifier(TextPatchExportModifier(
             isPresented: $exportsPatch,
-            document: patchDocument,
+            legacyDocument: patchDocument,
+            text: patchText,
             contentType: .plainText,
             defaultFilename: "changes.patch") { result in
                 if case .failure(let error) = result {
                     exportError = error.localizedDescription
                 }
-            }
+            })
         .alert("Export Failed", isPresented: Binding(
             get: { exportError != nil },
             set: { if !$0 { exportError = nil } }
@@ -143,7 +145,8 @@ struct FileDiffView: View {
 
             Button {
                 do {
-                    patchDocument = TextPatchDocument(text: try state.makePatch())
+                    patchText = try state.makePatch()
+                    patchDocument = TextPatchDocument(text: patchText)
                     exportsPatch = true
                 } catch {
                     exportError = error.localizedDescription

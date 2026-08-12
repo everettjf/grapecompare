@@ -11,6 +11,7 @@ struct FolderCompareView: View {
     @State private var isImportingPlan = false
     @State private var isExportingPlan = false
     @State private var exportDocument: FileOperationRecipeDocument?
+    @State private var exportRecipe: FileOperationRecipe?
     @State private var planError: String?
 
     enum Filter: CaseIterable, Identifiable {
@@ -46,15 +47,15 @@ struct FolderCompareView: View {
             allowedContentTypes: [.grapeComparePlan, .json],
             allowsMultipleSelection: false,
             onCompletion: importPlan)
-        .fileExporter(
+        .modifier(RecipeExportModifier(
             isPresented: $isExportingPlan,
-            document: exportDocument,
-            contentType: .grapeComparePlan,
-            defaultFilename: "GrapeCompare Plan"
+            legacyDocument: exportDocument,
+            recipe: exportRecipe
         ) { result in
             if case .failure(let error) = result { planError = error.localizedDescription }
             exportDocument = nil
-        }
+            exportRecipe = nil
+        })
         .alert("Operation Plan Error", isPresented: Binding(
             get: { planError != nil },
             set: { if !$0 { planError = nil } }
@@ -420,8 +421,8 @@ struct FolderCompareView: View {
 
     private func exportPlan() {
         do {
-            exportDocument = FileOperationRecipeDocument(
-                recipe: try FileOperationRecipe(drafts: state.operations.drafts))
+            exportRecipe = try FileOperationRecipe(drafts: state.operations.drafts)
+            exportDocument = exportRecipe.map(FileOperationRecipeDocument.init(recipe:))
             isExportingPlan = true
         } catch {
             planError = error.localizedDescription
