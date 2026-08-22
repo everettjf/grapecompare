@@ -1,0 +1,80 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version without the v prefix
+        required: true
+        default: '1.8.0'
+        type: string
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-26
+    env:
+      RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
+      HAS_SIGNING_CERTIFICATE: ${{ secrets.DEVELOPER_ID_APPLICATION_P12 != '' }}
+      HAS_NOTARY_CREDENTIALS: ${{ secrets.APPLE_ID != '' && secrets.APPLE_TEAM_ID != '' && secrets.APPLE_SPECIFIC_PASSWORD != '' }}
+      HAS_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import Developer ID certificate
+        if: env.HAS_SIGNING_CERTIFICATE == 'true'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.DEVELOPER_ID_APPLICATION_P12 }}
+          p12-password: ${{ secrets.DEVELOPER_ID_APPLICATION_PASSWORD }}
+      - name: Select signing identity
+        if: env.HAS_SIGNING_CERTIFICATE == 'true'
+        run: |
+          identity=$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application:[^"]*\)".*/\1/p' | head -1)
+          test -n "$identity"
+          echo "GRAPECOMPARE_SIGNING_IDENTITY=$identity" >> "$GITHUB_ENV"
+      - name: Build direct-distribution archive
+        run: |
+          chmod +x scripts/build-release.sh
+          scripts/build-release.sh "$RELEASE_VERSION" "$RUNNER_TEMP/release"
+      - name: Upload candidate build
+        if: env.HAS_SIGNING_CERTIFICATE != 'true' || env.HAS_NOTARY_CREDENTIALS != 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: GrapeCompare-${{ env.RELEASE_VERSION }}
+          path: ${{ runner.temp }}/release/*
+      - name: Notarize release archive
+        if: startsWith(github.ref, 'refs/tags/') && env.HAS_SIGNING_CERTIFICATE == 'true' && env.HAS_NOTARY_CREDENTIALS == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_SPECIFIC_PASSWORD: ${{ secrets.APPLE_SPECIFIC_PASSWORD }}
+        run: |
+          version="${RELEASE_VERSION#v}"
+          xcrun notarytool submit "$RUNNER_TEMP/release/GrapeCompare-$version.zip" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_SPECIFIC_PASSWORD" --wait
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') && env.HAS_SIGNING_CERTIFICATE == 'true' && env.HAS_NOTARY_CREDENTIALS == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${RELEASE_VERSION#v}"
+          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/release/GrapeCompare-$version.zip" "$RUNNER_TEMP/release/GrapeCompare-$version.zip.sha256" --verify-tag --generate-notes --title "GrapeCompare $version"
+      - name: Check out Homebrew tap
+        if: startsWith(github.ref, 'refs/tags/') && env.HAS_SIGNING_CERTIFICATE == 'true' && env.HAS_NOTARY_CREDENTIALS == 'true' && env.HAS_TAP_TOKEN == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: everettjf/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+      - name: Publish Homebrew Cask
+        if: startsWith(github.ref, 'refs/tags/') && env.HAS_SIGNING_CERTIFICATE == 'true' && env.HAS_NOTARY_CREDENTIALS == 'true' && env.HAS_TAP_TOKEN == 'true'
+        run: |
+          version="${RELEASE_VERSION#v}"
+          ruby scripts/update-cask.rb "$version" "$RUNNER_TEMP/release/GrapeCompare-$version.zip" Casks/grapecompare.rb homebrew-tap/Casks/grapecompare.rb
+          ruby -c homebrew-tap/Casks/grapecompare.rb
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/grapecompare.rb
+          git commit -m "Update GrapeCompare to $version"
+          git push

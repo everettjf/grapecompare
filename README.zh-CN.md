@@ -11,7 +11,7 @@
 ![macOS](https://img.shields.io/badge/macOS-27%2B-111827?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-5-F05138?style=flat-square&logo=swift&logoColor=white)
 
-[Mac App Store](https://apps.apple.com/app/id6796778424) · [官网](https://xnu.app/GrapeCompare/) · [English](README.md) · [更新记录](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
+[Homebrew](#安装) · [官网](https://xnu.app/grapecompare/) · [English](README.md) · [更新记录](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
 
 </div>
 
@@ -88,7 +88,11 @@ Diff 设计基于 [Myers O(ND) 算法](https://doi.org/10.1007/BF01840446)，并
 
 ## 安装
 
-可以从 [Mac App Store](https://apps.apple.com/app/id6796778424) 安装已签名版本。
+通过 Homebrew 安装经过签名和 Apple notarization 的直接分发版本：
+
+```bash
+brew install --cask everettjf/tap/grapecompare
+```
 
 从源码构建需要 macOS 26+ 和 Xcode 26+：
 
@@ -107,7 +111,7 @@ xcodebuild -project macos/GrapeCompare.xcodeproj \
 GrapeCompare <左侧路径> <右侧路径>
 ```
 
-两个输入都是文件夹时进入文件夹比较，其他情况进入文件比较。App Store 版本启用了沙盒，无法读取任意命令行路径；如需该工作流，请在自行构建时关闭 App Sandbox。
+两个输入都是文件夹时进入文件夹比较，其他情况进入文件比较。Homebrew 版本不受 App Store 沙盒限制，可以直接读取 Git 等工具传入的任意临时路径。
 
 ## 开发
 
