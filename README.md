@@ -3,6 +3,8 @@
 
 # GrapeCompare
 
+Repository: <https://github.com/everettjf/grapecompare>
+
 **Fast, accurate file and folder comparison for macOS.**<br>
 A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
