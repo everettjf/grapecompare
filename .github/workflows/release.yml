@@ -13,7 +13,7 @@ permissions:
   contents: write
 jobs:
   release:
-    runs-on: macos-26
+    runs-on: xcode-27
     env:
       RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
       HAS_SIGNING_CERTIFICATE: ${{ secrets.DEVELOPER_ID_APPLICATION_P12 != '' }}
