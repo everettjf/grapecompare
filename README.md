@@ -13,7 +13,7 @@ A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 ![macOS](https://img.shields.io/badge/macOS-27%2B-111827?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-5-F05138?style=flat-square&logo=swift&logoColor=white)
 
-[Mac App Store](https://apps.apple.com/app/id6796778424) · [Website](https://xnu.app/GrapeCompare/) · [中文说明](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
+[Homebrew](#install) · [Website](https://xnu.app/grapecompare/) · [中文说明](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -104,7 +104,11 @@ The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF018
 
 ## Install
 
-Install the signed release from the [Mac App Store](https://apps.apple.com/app/id6796778424).
+Install the signed and notarized direct-distribution build with Homebrew:
+
+```bash
+brew install --cask everettjf/tap/grapecompare
+```
 
 To build from source, use macOS 26+ and Xcode 26+:
 
@@ -126,9 +130,9 @@ macos/CLI/.build/grapecompare merge base.txt ours.txt theirs.txt merged.txt
 macos/CLI/.build/grapecompare git-config
 ```
 
-The printed Git mergetool configuration launches the GUI and reports success only after the merged output is saved. Arbitrary Git temporary paths require a directly distributed build with suitable filesystem access; the App Store sandbox only grants access to files selected through system UI.
+The printed Git mergetool configuration launches the GUI and reports success only after the merged output is saved. The Homebrew build is distributed outside the App Store sandbox so it can access the arbitrary temporary paths supplied by Git.
 
-Two folders open the folder comparison; other inputs open the file comparison. The App Store build is sandboxed and cannot read arbitrary command-line paths. Build with App Sandbox disabled if this workflow is required.
+Two folders open the folder comparison; other inputs open the file comparison. The Homebrew build supports these arbitrary command-line paths directly.
 
 ## Development
 
