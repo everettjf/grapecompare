@@ -39,6 +39,7 @@ struct GrapeCompareApp: App {
         .commands {
             FileOperationCommands()
             MergeCommands()
+            WorkspaceCommands()
             CommandMenu("Appearance") {
                 Picker("Appearance", selection: Binding(
                     get: { appearance.mode },
@@ -59,12 +60,13 @@ struct GrapeCompareApp: App {
 }
 
 private struct WindowRootView: View {
-    @State private var state = AppState()
+    @State private var workspace = WorkspaceController()
     @Environment(\.scenePhase) private var scenePhase
 
+    private var state: AppState { workspace.selectedState }
+
     var body: some View {
-        ContentView()
-            .environment(state)
+        WorkspaceView(workspace: workspace)
             .onAppear {
                 state.consumePendingArgs()
                 state.consumeQuickAction()
@@ -77,6 +79,7 @@ private struct WindowRootView: View {
             }
             .focusedSceneValue(\.fileOperationController, state.operations)
             .focusedSceneValue(\.appState, state)
+            .focusedSceneValue(\.workspaceController, workspace)
             .sheet(isPresented: Binding(
                 get: { state.operations.historyPresented },
                 set: { state.operations.historyPresented = $0 }
@@ -99,6 +102,27 @@ private struct WindowRootView: View {
 extension FocusedValues {
     @Entry var fileOperationController: FileOperationController?
     @Entry var appState: AppState?
+    @Entry var workspaceController: WorkspaceController?
+}
+
+private struct WorkspaceCommands: Commands {
+    @FocusedValue(\.workspaceController) private var workspace
+
+    var body: some Commands {
+        CommandGroup(after: .newItem) {
+            Button("New Comparison") { workspace?.addComparison() }
+                .keyboardShortcut("n", modifiers: [.command])
+                .disabled(workspace == nil)
+        }
+        CommandGroup(before: .windowArrangement) {
+            Button("Close Comparison") {
+                guard let workspace else { return }
+                workspace.close(workspace.selectedID)
+            }
+            .keyboardShortcut("w", modifiers: [.command, .option])
+            .disabled(workspace?.selectedState.canCloseWorkspaceItem != true)
+        }
+    }
 }
 
 private struct MergeCommands: Commands {

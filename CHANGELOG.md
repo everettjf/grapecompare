@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.12.0 — 2026-08-22
+
+### Comparison workspaces
+
+- Added window-local workspaces containing multiple independent file, folder, merge, or Git comparison tasks.
+- Preserve each task's comparison state, output draft, merge decisions, cancellation, and file-operation controller while switching tasks.
+- Protect unsaved output with an explicit discard confirmation and prevent closing tasks during active comparisons or file operations.
+- Added accessible workspace tabs and menu commands for creating and closing comparison tasks.
+
 ## 1.11.0 — 2026-08-22
 
 ### Recent comparisons and safe resume

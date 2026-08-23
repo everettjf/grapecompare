@@ -42,7 +42,8 @@ if codesign --display --entitlements :- "$app_path" 2>/dev/null | grep -q 'com.a
 fi
 mkdir -p "$staging_dir"
 ditto "$app_path" "$staged_app"
-lipo -verify_arch arm64 x86_64 "$staged_app/Contents/MacOS/GrapeCompare"
+lipo -verify_arch arm64 "$staged_app/Contents/MacOS/GrapeCompare"
+lipo -verify_arch x86_64 "$staged_app/Contents/MacOS/GrapeCompare"
 minimum_version="$(vtool -show-build "$staged_app/Contents/MacOS/GrapeCompare" | awk '/minos/{print $2; exit}')"
 if [[ "$minimum_version" != "14.0" ]]; then
   echo "unexpected minimum macOS version: ${minimum_version:-unknown}" >&2

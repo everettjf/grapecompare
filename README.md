@@ -53,6 +53,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Search and line navigation, comparison rules, syntax colors, and optional line wrapping
 - Hunk-level left/right acceptance, editable output, and unified diff/patch export
 - Added, removed, and modified counts with keyboard-friendly navigation
+- Window workspaces with multiple independent comparison tasks and safe close protection
 - CRLF/LF normalization, final-newline reporting, and binary-file detection
 - Memory-mapped input to avoid duplicating large files in memory
 

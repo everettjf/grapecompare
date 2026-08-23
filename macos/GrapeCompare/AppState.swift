@@ -168,6 +168,33 @@ final class AppState {
     var isComparingMerge: Bool { comparisonPhase == .merge }
     var isComparingGit: Bool { comparisonPhase == .git }
 
+    var workspaceHasUnsavedOutput: Bool { outputIsDirty || mergeOutputIsDirty }
+    var workspaceIsBusy: Bool {
+        comparisonPhase != .idle || operations.phase == .executing || operations.phase == .undoing
+    }
+    var canCloseWorkspaceItem: Bool { !workspaceIsBusy && !workspaceHasUnsavedOutput }
+
+    var workspaceTitle: String {
+        switch screen {
+        case .home: return String(localized: "New Comparison")
+        case .fileDiff: return "\(leftFileName) ↔ \(rightFileName)"
+        case .folderCompare:
+            return "\(leftFolderURL?.lastPathComponent ?? "Left") ↔ \(rightFolderURL?.lastPathComponent ?? "Right")"
+        case .merge: return oursFileURL?.lastPathComponent ?? String(localized: "Merge")
+        case .git: return gitRepositoryURL?.lastPathComponent ?? String(localized: "Git")
+        }
+    }
+
+    var workspaceIcon: String {
+        switch screen {
+        case .home: "plus.square"
+        case .fileDiff: "doc.text.magnifyingglass"
+        case .folderCompare: "folder.badge.questionmark"
+        case .merge: "arrow.triangle.branch"
+        case .git: "point.3.connected.trianglepath.dotted"
+        }
+    }
+
     /// 待处理的启动参数（`GrapeCompare <左> <右>`）
     private var pendingArgs: (left: URL, right: URL)?
     @ObservationIgnored private var comparisonTask: Task<Void, Never>?
@@ -181,10 +208,11 @@ final class AppState {
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
-    init() {
+    init(processLaunchArguments: Bool = true) {
         let savedSessions = sessionStore.load()
         recentComparisons = savedSessions.recents
         resumableSession = savedSessions.current
+        guard processLaunchArguments else { return }
         let args = ProcessInfo.processInfo.arguments
         if let request = ExternalMergeRequest(commandLineArguments: args) {
             baseFileURL = request.baseURL
@@ -614,6 +642,11 @@ final class AppState {
         } catch {
             sessionError = error.localizedDescription
         }
+    }
+
+    func discardWorkspaceOutput() {
+        outputIsDirty = false
+        mergeOutputIsDirty = false
     }
 
     func loadFileDemo() {
