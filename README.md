@@ -10,7 +10,7 @@ Repository: <https://github.com/everettjf/grapecompare>
 **Fast, accurate file and folder comparison for macOS.**<br>
 A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
-**1.0.8 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
+**1.0.9 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -73,7 +73,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 
 ### Images and structured data
 
-- Image Two-Up, One-Up, Split, Blink, and Difference modes with synchronized zoom/pan, metadata inspection, lockable RGBA/HSB/Lab pixel sampling, thresholds, channel isolation, bounded local alignment, and SVG support
+- Image Two-Up, One-Up, Split, Blink, and Difference modes with synchronized zoom/pan, metadata inspection, lockable RGBA/HSB/Lab pixel sampling and crosshair, absolute/proportional configurable difference rendering, thresholds, channel isolation, bounded local alignment, and SVG support
 - Semantic JSON, plist, `.xcstrings`, and section-aware `.pbxproj` comparison with stable paths and object-key-order independence
 - App Bundle, nested code, code-signature, entitlement, provisioning-profile, Mach-O architecture, and Asset Catalog inspection without launching bundled code
 

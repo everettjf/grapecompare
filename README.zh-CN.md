@@ -6,7 +6,7 @@
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
 原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
-**1.0.8 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+**1.0.9 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -69,7 +69,7 @@
 
 ### 图片与结构化数据
 
-- Two-Up、One-Up、Split、Blink 和 Difference 图片模式，共享缩放/平移、图像元数据、可锁定的 RGBA/HSB/Lab 像素采样、阈值、通道隔离、本地对齐和 SVG 支持
+- Two-Up、One-Up、Split、Blink 和 Difference 图片模式，共享缩放/平移、图像元数据、带十字线的可锁定 RGBA/HSB/Lab 像素采样、绝对/按比例且颜色可配置的差异渲染、阈值、通道隔离、本地对齐和 SVG 支持
 - JSON、plist、`.xcstrings` 和 `.pbxproj` 语义比较，路径稳定且不受对象键顺序影响
 - App Bundle、嵌套代码、代码签名、Entitlements、Provisioning Profile、Mach-O 架构和 Asset Catalog 检查，全程不会启动被检查的代码
 

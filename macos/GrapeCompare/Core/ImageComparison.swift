@@ -204,11 +204,29 @@ nonisolated struct ImageComparisonChannels: OptionSet, Equatable, Sendable {
     static let all: Self = [.red, .green, .blue, .alpha]
 }
 
+nonisolated enum ImageDifferenceRendering: String, CaseIterable, Equatable, Sendable {
+    case absolute
+    case proportional
+}
+
+nonisolated struct ImageDifferenceColor: Equatable, Sendable {
+    var red: UInt8
+    var green: UInt8
+    var blue: UInt8
+    var alpha: UInt8
+
+    static let red = Self(red: 255, green: 0, blue: 0, alpha: 255)
+    static let clear = Self(red: 0, green: 0, blue: 0, alpha: 0)
+}
+
 nonisolated struct ImageComparisonOptions: Equatable, Sendable {
     var threshold: UInt8 = 0
     var channels: ImageComparisonChannels = .all
     var rightOffsetX = 0
     var rightOffsetY = 0
+    var rendering: ImageDifferenceRendering = .proportional
+    var differingColor: ImageDifferenceColor = .red
+    var identicalColor: ImageDifferenceColor = .clear
 }
 
 nonisolated enum ImageComparisonEngine {
@@ -269,10 +287,17 @@ nonisolated enum ImageComparisonEngine {
                             if pixelMaximum <= options.threshold { pixelMaximum = 0 }
                             if pixelMaximum > 0 { differingPixels += 1 }
                             maximumDifference = max(maximumDifference, pixelMaximum)
-                            output[outputOffset] = 255
-                            output[outputOffset + 1] = 0
-                            output[outputOffset + 2] = 0
-                            output[outputOffset + 3] = pixelMaximum
+                            let color = pixelMaximum > 0 ? options.differingColor : options.identicalColor
+                            let intensity: UInt8 = if pixelMaximum == 0 || options.rendering == .absolute {
+                                255
+                            } else {
+                                pixelMaximum
+                            }
+                            output[outputOffset] = color.red
+                            output[outputOffset + 1] = color.green
+                            output[outputOffset + 2] = color.blue
+                            output[outputOffset + 3] = UInt8(
+                                min(255, Int(color.alpha) * Int(intensity) / 255))
                         }
                     }
                 }

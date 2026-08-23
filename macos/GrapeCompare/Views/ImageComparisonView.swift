@@ -27,6 +27,9 @@ struct ImageComparisonView: View {
     @State private var split = 0.5
     @State private var threshold = 0.0
     @State private var channels = ImageComparisonChannels.all
+    @State private var differenceRendering = ImageDifferenceRendering.proportional
+    @State private var differingColor = Color.red
+    @State private var identicalColor = Color.clear
     @State private var offsetX = 0
     @State private var offsetY = 0
     @State private var leftRaster: ImageRaster?
@@ -57,7 +60,7 @@ struct ImageComparisonView: View {
             status
         }
         .task(id: "\(leftURL?.path ?? "")|\(rightURL?.path ?? "")") { await load() }
-        .task(id: "\(Int(threshold))|\(channels.rawValue)|\(offsetX)|\(offsetY)") {
+        .task(id: differenceOptionsKey) {
             try? await Task.sleep(for: .milliseconds(80))
             await recomputeDifference()
         }
@@ -89,6 +92,15 @@ struct ImageComparisonView: View {
             Menu("Channels") {
                 channelButton("Red", .red); channelButton("Green", .green)
                 channelButton("Blue", .blue); channelButton("Alpha", .alpha)
+            }
+            Menu("Difference Rendering") {
+                Picker("Intensity", selection: $differenceRendering) {
+                    Text("Absolute").tag(ImageDifferenceRendering.absolute)
+                    Text("Proportional").tag(ImageDifferenceRendering.proportional)
+                }
+                Divider()
+                ColorPicker("Different Pixels", selection: $differingColor, supportsOpacity: true)
+                ColorPicker("Identical Pixels", selection: $identicalColor, supportsOpacity: true)
             }
             Text("Threshold")
             Slider(value: $threshold, in: 0...255, step: 1).frame(width: 90)
@@ -156,7 +168,14 @@ struct ImageComparisonView: View {
         aligned: Bool = false
     ) -> some View {
         GeometryReader { proxy in
-            transformed(image, aligned: aligned).frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack {
+                transformed(image, aligned: aligned)
+                if let lockedPixel,
+                   let point = samplePoint(lockedPixel, raster: raster, size: proxy.size, aligned: aligned) {
+                    PixelCrosshair().position(point)
+                }
+            }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(.rect)
                 .gesture(DragGesture()
                     .updating($dragTranslation) { value, state, _ in state = value.translation }
@@ -250,7 +269,10 @@ struct ImageComparisonView: View {
         guard let leftRaster, let rightRaster else { return }
         let options = ImageComparisonOptions(
             threshold: UInt8(threshold), channels: channels,
-            rightOffsetX: offsetX, rightOffsetY: offsetY)
+            rightOffsetX: offsetX, rightOffsetY: offsetY,
+            rendering: differenceRendering,
+            differingColor: imageDifferenceColor(differingColor),
+            identicalColor: imageDifferenceColor(identicalColor))
         isComputingDifference = true
         let value = await Task.detached(priority: .userInitiated) {
             ImageComparisonEngine.compare(left: leftRaster, right: rightRaster, options: options)
@@ -301,6 +323,39 @@ struct ImageComparisonView: View {
         }
     }
 
+    private var differenceOptionsKey: String {
+        let changed = imageDifferenceColor(differingColor)
+        let same = imageDifferenceColor(identicalColor)
+        return "\(Int(threshold))|\(channels.rawValue)|\(offsetX)|\(offsetY)|" +
+            "\(differenceRendering.rawValue)|\(changed)|\(same)"
+    }
+
+    private func imageDifferenceColor(_ color: Color) -> ImageDifferenceColor {
+        let converted = NSColor(color).usingColorSpace(.sRGB) ?? NSColor(color)
+        func byte(_ value: CGFloat) -> UInt8 {
+            UInt8(max(0, min(255, Int((value * 255).rounded()))))
+        }
+        return ImageDifferenceColor(
+            red: byte(converted.redComponent), green: byte(converted.greenComponent),
+            blue: byte(converted.blueComponent), alpha: byte(converted.alphaComponent))
+    }
+
+    private func samplePoint(
+        _ sample: PixelInspection, raster: ImageRaster?, size: CGSize, aligned: Bool
+    ) -> CGPoint? {
+        guard let raster, raster.width > 0, raster.height > 0 else { return nil }
+        let fit = min(size.width / Double(raster.width), size.height / Double(raster.height))
+        let width = Double(raster.width) * fit * zoom
+        let height = Double(raster.height) * fit * zoom
+        return CGPoint(
+            x: (size.width - width) / 2 + pan.width + dragTranslation.width +
+                (aligned ? Double(offsetX) * zoom : 0) +
+                (Double(sample.x) + 0.5) / Double(raster.width) * width,
+            y: (size.height - height) / 2 + pan.height + dragTranslation.height +
+                (aligned ? Double(offsetY) * zoom : 0) +
+                (Double(sample.y) + 0.5) / Double(raster.height) * height)
+    }
+
     private func makeImage(_ raster: ImageRaster) -> NSImage? {
         guard raster.width > 0, raster.height > 0,
               let provider = CGDataProvider(data: raster.rgba as CFData),
@@ -311,6 +366,19 @@ struct ImageComparisonView: View {
                                     .union(.byteOrder32Big), provider: provider, decode: nil,
                                   shouldInterpolate: false, intent: .defaultIntent) else { return nil }
         return NSImage(cgImage: image, size: NSSize(width: raster.width, height: raster.height))
+    }
+}
+
+private struct PixelCrosshair: View {
+    var body: some View {
+        ZStack {
+            Rectangle().fill(.white).frame(width: 17, height: 1)
+            Rectangle().fill(.white).frame(width: 1, height: 17)
+            Circle().stroke(.black, lineWidth: 1).frame(width: 9, height: 9)
+        }
+        .shadow(color: .black.opacity(0.8), radius: 1)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

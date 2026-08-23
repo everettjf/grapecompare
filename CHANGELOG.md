@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.9 — 2026-08-23
+
+### Image comparison precision
+
+- Render image differences at absolute intensity or proportionally to the measured channel change.
+- Configure the colors and opacity used for different and identical pixels without changing deterministic difference counts.
+- Keep a visible crosshair on a locked pixel sample while zooming, panning, or changing image views.
+- Preserve 1,024×1,024 RGBA comparison performance at approximately 0.005 seconds in the release benchmark.
+
 ## 1.0.8 — 2026-08-23
 
 ### Automation and verifiable quality

@@ -604,8 +604,24 @@ check(changedImageResult.dimensionsMatch &&
       changedImageResult.differingPixelCount == 1 &&
       changedImageResult.maximumChannelDifference == 255,
       "image comparison reports pixel and maximum channel differences")
-check(changedImageResult.heatmap.rgba == Data([255, 0, 0, 0, 255, 0, 0, 255]),
+check(changedImageResult.heatmap.rgba == Data([0, 0, 0, 0, 255, 0, 0, 255]),
       "image comparison produces a transparent-to-red difference heatmap")
+let imageSubtle = try! ImageRaster(
+    width: 2,
+    height: 1,
+    rgba: Data([255, 0, 0, 255, 0, 245, 0, 255]))
+let absoluteImageResult = ImageComparisonEngine.compare(
+    left: imageLeft, right: imageSubtle,
+    options: ImageComparisonOptions(
+        rendering: .absolute,
+        differingColor: ImageDifferenceColor(red: 0, green: 255, blue: 255, alpha: 200)))
+check(absoluteImageResult.heatmap.rgba.suffix(4) == Data([0, 255, 255, 200]),
+      "absolute image rendering shows any detected change at full configured intensity")
+let proportionalImageResult = ImageComparisonEngine.compare(
+    left: imageLeft, right: imageSubtle,
+    options: ImageComparisonOptions(rendering: .proportional))
+check(proportionalImageResult.heatmap.rgba.suffix(4) == Data([255, 0, 0, 10]),
+      "proportional image rendering scales configured color alpha by pixel difference")
 let thresholdImageResult = ImageComparisonEngine.compare(
     left: imageLeft, right: imageChanged,
     options: ImageComparisonOptions(threshold: 255, channels: .all))
