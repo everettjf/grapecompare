@@ -3009,6 +3009,15 @@
     "The merge output still contains conflict markers." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "合并输出中仍包含冲突标记。" } } } },
     "%lld of %lld resolved" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已解决 %lld / %lld" } } } },
     "Conflict markers remain in the output" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输出中仍有冲突标记" } } } },
+    "Changes in Last 24 Hours" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 24 小时的变更" } } } },
+    "Changes in Last 7 Days" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 7 天的变更" } } } },
+    "Changes in Last 30 Days" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 30 天的变更" } } } },
+    "No commit exists before the selected time range." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所选时间范围之前没有提交。" } } } },
+    "Open Commit Changeset" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开提交变更集" } } } },
+    "Open Repository in Terminal" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在终端中打开仓库" } } } },
+    "Partially Staged" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "部分暂存" } } } },
+    "Repository Actions" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仓库操作" } } } },
+    "Reveal Repository in Finder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在访达中显示仓库" } } } },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {

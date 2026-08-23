@@ -556,6 +556,60 @@ final class AppState {
         startGitComparison()
     }
 
+    func compareGitChanges(since interval: TimeInterval) {
+        guard let repository = gitRepositoryURL, interval > 0 else { return }
+        let cutoff = Date().addingTimeInterval(-interval)
+        let (request, cancellation) = beginComparison(.git)
+        gitError = nil
+        comparisonTask = Task { [weak self] in
+            let result = await Task.detached(priority: .userInitiated) {
+                Result {
+                    try GitRepositoryComparator.revision(
+                        in: repository,
+                        before: cutoff,
+                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
+                }
+            }.value
+            guard let self,
+                  !Task.isCancelled,
+                  self.requestGeneration == request,
+                  !cancellation.isCancelled else { return }
+            switch result {
+            case .success(let revision):
+                guard let revision else {
+                    self.gitError = String(localized: "No commit exists before the selected time range.")
+                    self.finishComparison(request)
+                    return
+                }
+                self.gitLeftTarget = revision
+                self.gitRightTarget = "WORKTREE"
+                self.finishComparison(request)
+                self.startGitComparison()
+            case .failure(let error):
+                if !(error is CancellationError) { self.gitError = error.localizedDescription }
+                self.finishComparison(request)
+            }
+        }
+    }
+
+    func openGitCommitChangeset(_ commit: GitCommit) {
+        guard let parent = commit.parentIDs.first else { return }
+        useGitComparisonShortcut(left: parent, right: commit.objectID)
+    }
+
+    func revealGitRepositoryInFinder() {
+        guard let repository = gitRepositoryURL else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([repository])
+    }
+
+    func openGitRepositoryInTerminal() {
+        guard let repository = gitRepositoryURL else { return }
+        NSWorkspace.shared.open(
+            [repository],
+            withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
+            configuration: NSWorkspace.OpenConfiguration())
+    }
+
     func openGitRepositoryLibraryEntry(_ entry: GitRepositoryLibraryEntry) {
         do {
             let resolved = try gitRepositoryLibraryStore.resolve(entry)

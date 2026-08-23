@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.6 — 2026-08-23
+
+### Git workflow
+
+- Compare the current working tree with the repository state from 24 hours, 7 days, or 30 days ago.
+- Identify files that have both staged and unstaged changes as partially staged.
+- Open a commit-wide changeset directly from file history or the commit graph.
+- Reveal the active repository in Finder or open it in Terminal.
+
 ## 1.0.5 — 2026-08-23
 
 ### Real-world performance validation

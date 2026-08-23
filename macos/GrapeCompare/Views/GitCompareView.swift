@@ -26,6 +26,12 @@ struct GitCompareView: View {
         }
     }
 
+    private var partiallyStagedPaths: Set<String> {
+        let staged = Set(state.gitChanges.filter { $0.stage == .staged }.map(\.path))
+        let unstaged = Set(state.gitChanges.filter { $0.stage == .unstaged }.map(\.path))
+        return staged.intersection(unstaged)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -110,6 +116,16 @@ struct GitCompareView: View {
                 Button("INDEX ↔ WORKTREE") {
                     state.useGitComparisonShortcut(left: "INDEX", right: "WORKTREE")
                 }
+                Divider()
+                Button("Changes in Last 24 Hours") {
+                    state.compareGitChanges(since: 24 * 60 * 60)
+                }
+                Button("Changes in Last 7 Days") {
+                    state.compareGitChanges(since: 7 * 24 * 60 * 60)
+                }
+                Button("Changes in Last 30 Days") {
+                    state.compareGitChanges(since: 30 * 24 * 60 * 60)
+                }
             }
             if state.gitWorktrees.count > 1 {
                 Menu("Worktrees") {
@@ -128,6 +144,12 @@ struct GitCompareView: View {
                 state.startGitComparison()
             }
             .buttonStyle(.borderedProminent)
+            Menu {
+                Button("Reveal Repository in Finder") { state.revealGitRepositoryInFinder() }
+                Button("Open Repository in Terminal") { state.openGitRepositoryInTerminal() }
+            } label: {
+                Label("Repository Actions", systemImage: "folder")
+            }
             Spacer()
             Picker("Changeset layout", selection: $browserMode) {
                 ForEach(ChangesetBrowserMode.allCases) { mode in
@@ -232,7 +254,12 @@ struct GitCompareView: View {
     private var changesTable: some View {
         Table(filteredChanges, selection: $selection) {
             TableColumn("Stage") { change in
-                Label(change.stage.localizedTitle, systemImage: change.stage.symbol)
+                Label(
+                    partiallyStagedPaths.contains(change.path)
+                        ? LocalizedStringResource("Partially Staged")
+                        : change.stage.localizedTitle,
+                    systemImage: partiallyStagedPaths.contains(change.path)
+                        ? "circle.lefthalf.filled" : change.stage.symbol)
             }.width(min: 90, ideal: 110)
             TableColumn("Status") { change in
                 Label(change.kind.localizedTitle, systemImage: change.kind.symbol)
@@ -432,6 +459,11 @@ struct GitCompareView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(10)
                             .contextMenu {
+                                if !row.commit.parentIDs.isEmpty {
+                                    Button("Open Commit Changeset") {
+                                        state.openGitCommitChangeset(row.commit)
+                                    }
+                                }
                                 Button("Compare with HEAD") {
                                     state.useGitComparisonShortcut(left: row.commit.objectID, right: "HEAD")
                                 }
@@ -497,6 +529,11 @@ struct GitCompareView: View {
             Button("Use as A") { historyA = revision.id }
             Button("Use as B") { historyB = revision.id }
             Button("Compare with Previous") { state.compareGitRevisionWithPrevious(revision) }
+            if !revision.commit.parentIDs.isEmpty {
+                Button("Open Commit Changeset") {
+                    state.openGitCommitChangeset(revision.commit)
+                }
+            }
         }
     }
 

@@ -697,6 +697,13 @@ let commitGraphNextPage = try! GitRepositoryComparator.commitGraph(in: gitTmp, l
 check(commitGraphPage.count == 1 && commitGraphNextPage.count == 1 &&
       commitGraphPage[0].id != commitGraphNextPage[0].id,
       "Git workspace commit graph paginates with stable identities")
+let revisionBeforeFuture = try! GitRepositoryComparator.revision(
+    in: gitTmp, before: Date().addingTimeInterval(60))
+let revisionBeforeHistory = try! GitRepositoryComparator.revision(
+    in: gitTmp, before: Date(timeIntervalSince1970: 0))
+let headCommit = try! GitRepositoryComparator.commit(in: gitTmp, revision: "HEAD")
+check(revisionBeforeFuture == headCommit.objectID && revisionBeforeHistory == nil,
+      "Git workspace resolves bounded time-range comparison revisions")
 let worktreeTmp = URL(fileURLWithPath: NSTemporaryDirectory())
     .appending(path: "grapetest-worktree-\(UUID().uuidString)")
 runGit(["worktree", "add", "--detach", worktreeTmp.path, "feature"], in: gitTmp)

@@ -206,6 +206,20 @@ nonisolated final class GitRepositoryLibraryStore: @unchecked Sendable {
 }
 
 extension GitRepositoryComparator {
+    nonisolated static func revision(
+        in repository: URL,
+        before date: Date,
+        policy: GitCommandPolicy = .standard
+    ) throws -> String? {
+        let formatter = ISO8601DateFormatter()
+        let data = try run([
+            "rev-list", "--max-count=1", "--before=\(formatter.string(from: date))", "HEAD", "--"
+        ], in: repository, policy: policy)
+        let revision = String(decoding: data, as: UTF8.self)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return revision.isEmpty ? nil : revision
+    }
+
     nonisolated static func worktrees(
         in repository: URL,
         policy: GitCommandPolicy = .standard
