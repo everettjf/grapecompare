@@ -10,7 +10,7 @@ Repository: <https://github.com/everettjf/grapecompare>
 **Fast, accurate file and folder comparison for macOS.**<br>
 A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
-**1.0.4 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
+**1.0.5 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -116,7 +116,10 @@ bash macos/Benchmarks/run-benchmarks.sh
 bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-benchmarks.sh 100000 10000
 GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-git-benchmarks.sh 10000 200
+bash macos/Benchmarks/run-real-folder-benchmark.sh /path/to/older-tree /path/to/newer-tree
 ```
+
+The [LLVM real-world benchmark](docs/llvm-real-world-benchmark.md) records a verified comparison of trees containing up to roughly 170,000 leaves and 2.3 GiB of extracted data.
 
 The CI gate fails when either end-to-end text scenario exceeds 0.25 seconds, the 1024×1024 image comparison or 10k-file sync planner exceeds 0.25 seconds, the 10k-file folder scenario exceeds 2 seconds, a 10k-file mixed staged/unstaged Git changeset exceeds 4 seconds, a 200-commit file history exceeds 2 seconds, or the applicable peak-memory budget is exceeded. CI also builds and audits the universal macOS 14+ release archive.
 

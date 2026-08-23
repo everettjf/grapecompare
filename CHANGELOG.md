@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.5 — 2026-08-23
+
+### Real-world performance validation
+
+- Add a reusable benchmark for comparing arbitrary, already-extracted directory trees.
+- Validate exact comparison of LLVM 21.1.8 and 22.1.8 source trees: up to roughly 170,000 leaves and 2.3 GiB per tree in about 9.6 seconds with stable results.
+- Cross-check all LLVM comparison counts with an independent chunk comparator.
+
 ## 1.0.4 — 2026-08-23
 
 ### Polish and performance
