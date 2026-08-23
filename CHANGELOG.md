@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.12 — 2026-08-23
+
+### Printable and shareable comparison reports
+
+- Print file, folder, merge, and Git comparisons through the native macOS print panel.
+- Export the same paginated report as PDF or send it through the system sharing picker.
+- Include comparison targets, deterministic summaries, and detailed rows without relying on a screenshot of the current viewport.
+- Bound report generation to 20,000 lines and 8 MiB, and mark truncated reports explicitly for safe large-input behavior.
+
 ## 1.0.11 — 2026-08-23
 
 ### Live Git review and contextual actions

@@ -31,6 +31,14 @@ struct WorkspaceView: View {
         } message: {
             Text("Export or save the edited output before closing if you want to keep it.")
         }
+        .alert("Report Failed", isPresented: Binding(
+            get: { workspace.selectedState.reportActionError != nil },
+            set: { if !$0 { workspace.selectedState.reportActionError = nil } }
+        )) {
+            Button("OK") { workspace.selectedState.reportActionError = nil }
+        } message: {
+            Text(workspace.selectedState.reportActionError ?? "")
+        }
     }
 
     private var tabBar: some View {

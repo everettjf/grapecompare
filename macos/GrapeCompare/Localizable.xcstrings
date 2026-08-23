@@ -3075,6 +3075,11 @@
     "Updating image difference" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在更新图像差异" } } } },
     "Yes" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "是" } } } },
     "Zoom: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缩放：%@" } } } },
+    "Export Comparison as PDF…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将比较导出为 PDF…" } } } },
+    "Print Comparison…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打印比较…" } } } },
+    "Report Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "报告操作失败" } } } },
+    "Share Comparison…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分享比较…" } } } },
+    "The PDF report could not be created." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法创建 PDF 报告。" } } } },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {

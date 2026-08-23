@@ -51,6 +51,7 @@ struct GrapeCompareApp: App {
             MergeCommands()
             GitCommands()
             WorkspaceCommands()
+            ReportCommands()
             CommandMenu("Appearance") {
                 Picker("Appearance", selection: Binding(
                     get: { appearance.mode },
@@ -66,6 +67,25 @@ struct GrapeCompareApp: App {
 
         Settings {
             DemoSettingsView()
+        }
+    }
+}
+
+private struct ReportCommands: Commands {
+    @FocusedValue(\.appState) private var state
+
+    var body: some Commands {
+        CommandGroup(after: .saveItem) {
+            Button("Export Comparison as PDF…") { state?.exportComparisonReportPDF() }
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .disabled(state?.canCreateComparisonReport != true)
+            Button("Share Comparison…") { state?.shareComparisonReport() }
+                .disabled(state?.canCreateComparisonReport != true)
+        }
+        CommandGroup(replacing: .printItem) {
+            Button("Print Comparison…") { state?.printComparisonReport() }
+                .keyboardShortcut("p", modifiers: [.command])
+                .disabled(state?.canCreateComparisonReport != true)
         }
     }
 }

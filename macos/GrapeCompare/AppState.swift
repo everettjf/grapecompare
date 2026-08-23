@@ -1,6 +1,7 @@
 import AppKit
 import Observation
 import SwiftUI
+import UniformTypeIdentifiers
 import UserNotifications
 
 /// Appearance preference: follow system, force light, or force dark.
@@ -194,6 +195,7 @@ final class AppState {
     var resumableSession: ComparisonSession?
     var sessionError: String?
     var gitActionError: String?
+    var reportActionError: String?
 
     var isComparingFile: Bool { comparisonPhase == .file }
     var isComparingFolder: Bool { comparisonPhase == .folder }
@@ -254,6 +256,185 @@ final class AppState {
     @ObservationIgnored private let liveUpdatesDefaultsKey = "liveUpdatesEnabled.v1"
     @ObservationIgnored private let liveNotificationsDefaultsKey = "liveNotificationsEnabled.v1"
     @ObservationIgnored private var pendingLiveEventCount = 0
+    @ObservationIgnored private var sharedReportURL: URL?
+    @ObservationIgnored private var sharingPicker: NSSharingServicePicker?
+
+    var canCreateComparisonReport: Bool {
+        switch screen {
+        case .home: false
+        case .fileDiff: fileDiff != nil
+        case .folderCompare: folderRoot != nil
+        case .merge: mergeResult != nil
+        case .git: gitRepositoryURL != nil && gitError == nil
+        }
+    }
+
+    func printComparisonReport() {
+        guard let report = makeComparisonReport() else { return }
+        let view = printableReportView(report)
+        let operation = NSPrintOperation(view: view)
+        operation.jobTitle = workspaceTitle
+        operation.showsPrintPanel = true
+        operation.showsProgressPanel = true
+        operation.run()
+    }
+
+    func exportComparisonReportPDF() {
+        guard let report = makeComparisonReport() else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.nameFieldStringValue = sanitizedReportFilename + ".pdf"
+        guard panel.runModal() == .OK, let destination = panel.url else { return }
+        let view = printableReportView(report)
+        let info = NSPrintInfo.shared.copy() as! NSPrintInfo
+        info.jobDisposition = .save
+        let savingURLKey = NSPrintInfo.AttributeKey.jobSavingURL
+        info.dictionary()[savingURLKey] = destination
+        let operation = NSPrintOperation(view: view, printInfo: info)
+        operation.jobTitle = workspaceTitle
+        operation.showsPrintPanel = false
+        operation.showsProgressPanel = true
+        if !operation.run() {
+            reportActionError = String(localized: "The PDF report could not be created.")
+        }
+    }
+
+    func shareComparisonReport() {
+        guard let report = makeComparisonReport(),
+              let contentView = NSApp.keyWindow?.contentView else { return }
+        do {
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("GrapeCompare-Shared-Reports", isDirectory: true)
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            try FileManager.default.createDirectory(
+                at: directory, withIntermediateDirectories: true,
+                attributes: [.posixPermissions: 0o700])
+            let destination = directory.appendingPathComponent(sanitizedReportFilename + ".pdf")
+            let view = printableReportView(report)
+            let info = NSPrintInfo.shared.copy() as! NSPrintInfo
+            info.jobDisposition = .save
+            let savingURLKey = NSPrintInfo.AttributeKey.jobSavingURL
+            info.dictionary()[savingURLKey] = destination
+            let operation = NSPrintOperation(view: view, printInfo: info)
+            operation.jobTitle = workspaceTitle
+            operation.showsPrintPanel = false
+            operation.showsProgressPanel = false
+            guard operation.run() else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            sharedReportURL = destination
+            let picker = NSSharingServicePicker(items: [destination])
+            sharingPicker = picker
+            picker.show(
+                relativeTo: contentView.bounds, of: contentView, preferredEdge: .minY)
+        } catch {
+            reportActionError = error.localizedDescription
+        }
+    }
+
+    private var sanitizedReportFilename: String {
+        let invalid = CharacterSet(charactersIn: "/:")
+        let parts = workspaceTitle.components(separatedBy: invalid).filter { !$0.isEmpty }
+        return (parts.joined(separator: "-").isEmpty ? "GrapeCompare" : parts.joined(separator: "-"))
+            + "-comparison"
+    }
+
+    private func printableReportView(_ report: NSAttributedString) -> NSTextView {
+        let width: CGFloat = 720
+        let storage = NSTextStorage(attributedString: report)
+        let layout = NSLayoutManager()
+        let container = NSTextContainer(containerSize: NSSize(width: width, height: .greatestFiniteMagnitude))
+        container.widthTracksTextView = true
+        storage.addLayoutManager(layout)
+        layout.addTextContainer(container)
+        let view = NSTextView(frame: NSRect(x: 0, y: 0, width: width, height: 900), textContainer: container)
+        view.isEditable = false
+        view.isSelectable = true
+        view.textContainerInset = NSSize(width: 28, height: 28)
+        layout.ensureLayout(for: container)
+        view.frame.size.height = max(900, layout.usedRect(for: container).height + 56)
+        return view
+    }
+
+    private func makeComparisonReport() -> NSAttributedString? {
+        guard canCreateComparisonReport else { return nil }
+        let maximumLines = 20_000
+        let maximumCharacters = 8 * 1_024 * 1_024
+        var lines: [String] = ["GrapeCompare", workspaceTitle, Date().formatted(date: .long, time: .standard), ""]
+        var characterBytes = lines.reduce(0) { $0 + $1.utf8.count + 1 }
+        var truncated = false
+
+        func append(_ line: String) {
+            let lineBytes = line.utf8.count + 1
+            guard lines.count < maximumLines, characterBytes + lineBytes <= maximumCharacters else {
+                truncated = true
+                return
+            }
+            lines.append(line)
+            characterBytes += lineBytes
+        }
+
+        switch screen {
+        case .fileDiff:
+            if let diff = fileDiff {
+                append("Added: \(diff.addedCount)    Removed: \(diff.removedCount)    Modified: \(diff.modifiedCount)")
+                append("")
+                for row in diff.rows {
+                    if truncated { break }
+                    let marker = switch row.kind {
+                    case .equal: " "
+                    case .added: "+"
+                    case .removed: "−"
+                    case .modified: "±"
+                    }
+                    append("\(marker) L\(row.left?.number.description ?? "-") R\(row.right?.number.description ?? "-")  \(row.left?.text ?? row.right?.text ?? "")")
+                    if row.kind == .modified, let right = row.right?.text { append("  → \(right)") }
+                }
+            }
+        case .folderCompare:
+            if let stats = folderStats {
+                append("Same: \(stats.same)    Different: \(stats.different)    Left only: \(stats.onlyLeft)    Right only: \(stats.onlyRight)")
+            }
+            append("")
+            func walk(_ node: FolderNode) {
+                guard !truncated else { return }
+                if !node.relativePath.isEmpty { append("[\(node.status.rawValue)] \(node.relativePath)") }
+                node.children?.forEach(walk)
+            }
+            if let folderRoot { walk(folderRoot) }
+        case .merge:
+            if let result = mergeResult {
+                append("Conflicts: \(result.conflictCount)    Resolved: \(mergeChoices.count)")
+                append("")
+                mergeOutputText.prefix(maximumCharacters)
+                    .split(separator: "\n", omittingEmptySubsequences: false)
+                    .forEach { append(String($0)) }
+            }
+        case .git:
+            append("Repository: \(gitRepositoryURL?.path ?? "")")
+            append("Range: \(gitLeftTarget) ↔ \(gitRightTarget)    Changes: \(gitChanges.count)")
+            append("")
+            for change in gitChanges {
+                if truncated { break }
+                append("[\(change.stage.rawValue)] \(change.kind.rawValue)  \(change.oldPath.map { $0 + " → " } ?? "")\(change.path)")
+            }
+        case .home:
+            return nil
+        }
+        if truncated { lines.append(""); lines.append("Report truncated at the safe export limit.") }
+
+        let body = lines.joined(separator: "\n")
+        let result = NSMutableAttributedString(string: body, attributes: [
+            .font: NSFont.monospacedSystemFont(ofSize: 10, weight: .regular),
+            .foregroundColor: NSColor.labelColor
+        ])
+        if let firstBreak = body.firstIndex(of: "\n") {
+            result.addAttributes([
+                .font: NSFont.systemFont(ofSize: 20, weight: .bold)
+            ], range: NSRange(body.startIndex..<firstBreak, in: body))
+        }
+        return result
+    }
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
