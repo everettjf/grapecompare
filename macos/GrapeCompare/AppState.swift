@@ -63,6 +63,7 @@ nonisolated private struct FileComparisonPayload: Sendable {
     let textComparison: TextComparisonResult?
     let imageComparison: ImageDifferenceResult?
     let structuredDifferences: [StructuredDifference]?
+    let structuredError: String?
 }
 
 nonisolated private struct MergePayload: Sendable {
@@ -114,6 +115,7 @@ final class AppState {
     var textComparison: TextComparisonResult?
     var imageComparison: ImageDifferenceResult?
     var structuredDifferences: [StructuredDifference]?
+    var structuredError: String?
     var textComparisonOptions = TextComparisonOptions()
     var outputText = ""
     var outputVisible = false
@@ -1028,6 +1030,7 @@ final class AppState {
         textComparison = nil
         imageComparison = nil
         structuredDifferences = nil
+        structuredError = nil
         hunkChoices.removeAll()
         outputError = nil
         let textOptions = textComparisonOptions
@@ -1078,7 +1081,8 @@ final class AppState {
                 } else {
                     structuredFormat = nil
                 }
-                let structuredDifferences: [StructuredDifference]?
+                var structuredDifferences: [StructuredDifference]?
+                var structuredError: String?
                 let maximumStructuredBytes = 64 * 1024 * 1024
                 if extensions.allSatisfy({ $0 == "pbxproj" }), let ld, let rd,
                    max(ld.count, rd.count) <= maximumStructuredBytes,
@@ -1094,12 +1098,20 @@ final class AppState {
                         left: MachOInspector.structuredValue(leftMachO),
                         right: MachOInspector.structuredValue(rightMachO))
                 } else if let structuredFormat, let ld, let rd,
-                   max(ld.count, rd.count) <= maximumStructuredBytes,
-                   let leftValue = try? StructuredDataComparator.decode(ld, format: structuredFormat),
-                   let rightValue = try? StructuredDataComparator.decode(rd, format: structuredFormat) {
-                    structuredDifferences = StructuredDataComparator.compare(
-                        left: leftValue,
-                        right: rightValue)
+                          max(ld.count, rd.count) <= maximumStructuredBytes {
+                    do {
+                        let leftValue = try StructuredDataComparator.decode(ld, format: structuredFormat)
+                        do {
+                            let rightValue = try StructuredDataComparator.decode(rd, format: structuredFormat)
+                            structuredDifferences = StructuredDataComparator.compare(
+                                left: leftValue,
+                                right: rightValue)
+                        } catch {
+                            structuredError = "Invalid \(structuredFormat.displayName) in the right file: \(error.localizedDescription)"
+                        }
+                    } catch {
+                        structuredError = "Invalid \(structuredFormat.displayName) in the left file: \(error.localizedDescription)"
+                    }
                 } else {
                     structuredDifferences = nil
                 }
@@ -1109,7 +1121,8 @@ final class AppState {
                     rightText: rightText,
                     textComparison: textComparison,
                     imageComparison: imageComparison,
-                    structuredDifferences: structuredDifferences)
+                    structuredDifferences: structuredDifferences,
+                    structuredError: structuredError)
             }
             let result = await withTaskCancellationHandler {
                 await worker.result
@@ -1128,6 +1141,7 @@ final class AppState {
                 self.textComparison = payload.textComparison
                 self.imageComparison = payload.imageComparison
                 self.structuredDifferences = payload.structuredDifferences
+                self.structuredError = payload.structuredError
                 self.outputText = payload.rightText?.text ?? ""
                 self.outputIsDirty = false
             case .failure(let error):

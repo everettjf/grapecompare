@@ -4,6 +4,13 @@ import Foundation
 nonisolated enum StructuredFormat: String, Sendable {
     case json
     case propertyList
+
+    var displayName: String {
+        switch self {
+        case .json: "JSON"
+        case .propertyList: "property list"
+        }
+    }
 }
 
 nonisolated enum StructuredValue: Equatable, Sendable {
@@ -63,8 +70,9 @@ nonisolated enum StructuredDataComparator {
         let object: Any
         switch format {
         case .json:
+            let normalized = normalizeJSONQuotes(in: data)
             object = try JSONSerialization.jsonObject(
-                with: data,
+                with: normalized,
                 options: [.fragmentsAllowed])
         case .propertyList:
             object = try PropertyListSerialization.propertyList(
@@ -73,6 +81,18 @@ nonisolated enum StructuredDataComparator {
                 format: nil)
         }
         return try convert(object)
+    }
+
+    /// Preserve JSON Compare's forgiving paste behavior without changing the
+    /// semantics of valid JSON files. Invalid UTF-8 remains a parser error.
+    private static func normalizeJSONQuotes(in data: Data) -> Data {
+        guard var source = String(data: data, encoding: .utf8) else { return data }
+        source = source
+            .replacingOccurrences(of: "“", with: "\"")
+            .replacingOccurrences(of: "”", with: "\"")
+            .replacingOccurrences(of: "‘", with: "'")
+            .replacingOccurrences(of: "’", with: "'")
+        return Data(source.utf8)
     }
 
     static func compare(

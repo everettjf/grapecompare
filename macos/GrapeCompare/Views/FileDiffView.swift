@@ -247,6 +247,11 @@ struct FileDiffView: View {
                 result: imageComparison)
         } else if let structuredDifferences = state.structuredDifferences {
             StructuredComparisonView(differences: structuredDifferences)
+        } else if let structuredError = state.structuredError {
+            ContentUnavailableView(
+                "Invalid Structured Document",
+                systemImage: "curlybraces.square",
+                description: Text(structuredError))
         } else if state.isComparingFile {
             VStack(spacing: 12) {
                 ProgressView()

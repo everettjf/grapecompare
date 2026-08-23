@@ -432,6 +432,68 @@ let jsonTypeRight = try! StructuredDataComparator.decode(Data(#"{"value":"1"}"#.
 check(StructuredDataComparator.compare(left: jsonTypeLeft, right: jsonTypeRight).first?.kind == .typeChanged,
       "structured comparison reports type changes separately")
 
+let jsonFragmentLeft = try! StructuredDataComparator.decode(Data("42".utf8), format: .json)
+let jsonFragmentRight = try! StructuredDataComparator.decode(Data("43".utf8), format: .json)
+check(StructuredDataComparator.compare(left: jsonFragmentLeft, right: jsonFragmentRight).map(\.path) == ["$"],
+      "top-level JSON fragments compare at the root path")
+
+let smartQuoteJSON = try! StructuredDataComparator.decode(Data("{“value”: 1}".utf8), format: .json)
+let straightQuoteJSON = try! StructuredDataComparator.decode(Data(#"{"value":1}"#.utf8), format: .json)
+check(smartQuoteJSON == straightQuoteJSON,
+      "JSON comparison preserves forgiving smart-quote normalization")
+
+do {
+    _ = try StructuredDataComparator.decode(Data("{".utf8), format: .json)
+    check(false, "invalid JSON reports a parser error")
+} catch {
+    check(!error.localizedDescription.isEmpty, "invalid JSON reports a parser error")
+}
+
+let reorderedArrayLeft = try! StructuredDataComparator.decode(
+    Data(#"{"items":["a","b","c"]}"#.utf8), format: .json)
+let reorderedArrayRight = try! StructuredDataComparator.decode(
+    Data(#"{"items":["b","a","c"]}"#.utf8), format: .json)
+check(StructuredDataComparator.compare(left: reorderedArrayLeft, right: reorderedArrayRight).map(\.path) ==
+      ["$.items[0]", "$.items[1]"],
+      "JSON array order remains significant and index based")
+
+let insertedPropertyLeft = try! StructuredDataComparator.decode(
+    Data(#"{"a":1,"c":3}"#.utf8), format: .json)
+let insertedPropertyRight = try! StructuredDataComparator.decode(
+    Data(#"{"a":1,"b":2,"c":3}"#.utf8), format: .json)
+let insertedPropertyDifferences = StructuredDataComparator.compare(
+    left: insertedPropertyLeft, right: insertedPropertyRight)
+check(insertedPropertyDifferences.count == 1 &&
+      insertedPropertyDifferences.first?.path == "$.b" &&
+      insertedPropertyDifferences.first?.kind == .added,
+      "an inserted JSON property does not disturb its neighbors")
+
+let formattingNoiseLeft = try! StructuredDataComparator.decode(
+    Data("{\n  \"url\": \"https:\\/\\/xnu.app\", \"enabled\": true\n}".utf8), format: .json)
+let formattingNoiseRight = try! StructuredDataComparator.decode(
+    Data(#"{"enabled":true,"url":"https://xnu.app"}"#.utf8), format: .json)
+check(StructuredDataComparator.compare(left: formattingNoiseLeft, right: formattingNoiseRight).isEmpty,
+      "JSON formatting, escaped slashes, and object order do not create differences")
+
+let decimalJSON = try! StructuredDataComparator.decode(
+    Data(#"{"price":19.99,"weight":2.5}"#.utf8), format: .json)
+if case .object(let decimalValues) = decimalJSON {
+    check(decimalValues["price"]?.summary == "19.99" && decimalValues["weight"]?.summary == "2.5",
+          "JSON decimal summaries retain practical source precision")
+} else {
+    check(false, "JSON decimal summaries retain practical source precision")
+}
+
+let largeJSONEntries = (0..<40_000).map { #""key\#($0)":\#($0)"# }.joined(separator: ",")
+let largeJSON = Data("{\(largeJSONEntries)}".utf8)
+let largeJSONStart = Date()
+let largeJSONLeft = try! StructuredDataComparator.decode(largeJSON, format: .json)
+let largeJSONRight = try! StructuredDataComparator.decode(largeJSON, format: .json)
+check(StructuredDataComparator.compare(left: largeJSONLeft, right: largeJSONRight).isEmpty,
+      "multi-megabyte equivalent JSON documents compare identically")
+check(Date().timeIntervalSince(largeJSONStart) < 8,
+      "multi-megabyte JSON comparison stays within the regression budget")
+
 let plistLeftObject: [String: Any] = ["enabled": true, "nested": ["value": "old"]]
 let plistRightObject: [String: Any] = ["enabled": true, "nested": ["value": "new"]]
 let plistLeft = try! PropertyListSerialization.data(
