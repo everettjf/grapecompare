@@ -271,7 +271,11 @@ nonisolated final class FileOperationJournalStore: @unchecked Sendable {
             at: journalURL.deletingLastPathComponent(),
             withIntermediateDirectories: true)
         let data = try JSONEncoder.grapeCompare.encode(envelope)
-        try data.write(to: journalURL, options: [.atomic, .completeFileProtectionUnlessOpen])
+        // Atomic replacement protects the journal from partial writes. The
+        // complete-file-protection option is not reliable for ordinary macOS
+        // app-support and temporary paths (macOS 27 can make the replacement
+        // unreadable to the creating process), which would destroy undo state.
+        try data.write(to: journalURL, options: .atomic)
     }
 
     private func quarantineCorruptJournal() {

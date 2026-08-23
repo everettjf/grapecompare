@@ -61,7 +61,8 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 ### Merge and developer workflows
 
 - Three-way base/ours/theirs merge with explicit conflict resolution
-- Branch, commit, index, and working-tree comparison without changing repository state
+- Branch, commit, index, and working-tree changesets with filters, commit context, and live refresh
+- Rename-aware per-file history with arbitrary A/B revision comparison without changing repository state
 - Standalone CLI plus Git difftool/mergetool configuration
 - Finder Quick Action support through the built-in Compare Files shortcut on macOS 15+
 
@@ -103,9 +104,10 @@ Timings exclude fixture generation and vary by hardware and storage. Run them lo
 bash macos/Benchmarks/run-benchmarks.sh
 bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-benchmarks.sh 100000 10000
+GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-git-benchmarks.sh 5000 100
 ```
 
-The CI gate fails when either end-to-end text scenario exceeds 0.25 seconds, the 10k-file folder scenario exceeds 2 seconds, or peak resident memory exceeds 1 GiB.
+The CI gate fails when either end-to-end text scenario exceeds 0.25 seconds, the 10k-file folder scenario exceeds 2 seconds, a 5k-file Git changeset exceeds 2 seconds, a 100-commit file history exceeds 1 second, or the applicable peak-memory budget is exceeded.
 
 The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF01840446) and the low-occurrence anchoring ideas documented in [Git's diff algorithms](https://git-scm.com/docs/diff-algorithm-option.html).
 

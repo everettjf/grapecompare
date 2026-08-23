@@ -4,12 +4,15 @@ struct GitCompareView: View {
     @Environment(AppState.self) private var state
     @State private var selection = Set<GitChange.ID>()
     @State private var query = ""
+    @State private var statusFilter: GitChangeKind?
+    @State private var historyA: GitFileRevision.ID?
+    @State private var historyB: GitFileRevision.ID?
 
     private var filteredChanges: [GitChange] {
-        guard !query.isEmpty else { return state.gitChanges }
         return state.gitChanges.filter {
-            $0.path.localizedCaseInsensitiveContains(query) ||
-                $0.oldPath?.localizedCaseInsensitiveContains(query) == true
+            (statusFilter == nil || $0.kind == statusFilter) &&
+                (query.isEmpty || $0.path.localizedCaseInsensitiveContains(query) ||
+                    $0.oldPath?.localizedCaseInsensitiveContains(query) == true)
         }
     }
 
@@ -31,34 +34,52 @@ struct GitCompareView: View {
                     systemImage: "checkmark.seal.fill",
                     description: Text("The selected repository states are equivalent."))
             } else {
-                Table(filteredChanges, selection: $selection) {
-                    TableColumn("Status") { change in
-                        Label(change.kind.localizedTitle, systemImage: change.kind.symbol)
-                            .foregroundStyle(change.kind.color)
-                    }
-                    .width(min: 110, ideal: 130)
-                    TableColumn("Path") { change in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(change.path).font(Theme.mono)
-                            if let oldPath = change.oldPath {
-                                Text("from \(oldPath)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                VStack(spacing: 0) {
+                    commitContext
+                    Divider()
+                    HSplitView {
+                        Table(filteredChanges, selection: $selection) {
+                            TableColumn("Status") { change in
+                                Label(change.kind.localizedTitle, systemImage: change.kind.symbol)
+                                    .foregroundStyle(change.kind.color)
                             }
+                            .width(min: 110, ideal: 130)
+                            TableColumn("Path") { change in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(change.path).font(Theme.mono)
+                                    if let oldPath = change.oldPath {
+                                        Text("from \(oldPath)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
+                            TableColumn("Action") { change in
+                                Button("Compare") { state.openGitChange(change) }
+                                    .buttonStyle(.borderless)
+                            }
+                            .width(80)
+                        }
+                        .tableStyle(.bordered(alternatesRowBackgrounds: true))
+                        .frame(minWidth: 480)
+                        historyInspector
+                            .frame(minWidth: 280, idealWidth: 340, maxWidth: 420)
+                    }
+                    .onSubmit {
+                        if let id = selection.first,
+                           let change = state.gitChanges.first(where: { $0.id == id }) {
+                            state.openGitChange(change)
                         }
                     }
-                    TableColumn("Action") { change in
-                        Button("Compare") { state.openGitChange(change) }
-                            .buttonStyle(.borderless)
-                    }
-                    .width(80)
                 }
-                .tableStyle(.bordered(alternatesRowBackgrounds: true))
-                .onSubmit {
-                    if let id = selection.first,
-                       let change = state.gitChanges.first(where: { $0.id == id }) {
-                        state.openGitChange(change)
-                    }
+                .onChange(of: selection) { _, selected in
+                    guard let id = selected.first,
+                          let change = state.gitChanges.first(where: { $0.id == id }) else { return }
+                    state.loadGitFileHistory(change)
+                }
+                .onChange(of: state.gitFileRevisions) { _, revisions in
+                    historyA = revisions.first?.id
+                    historyB = revisions.dropFirst().first?.id
                 }
             }
         }
@@ -90,6 +111,17 @@ struct GitCompareView: View {
             }
             .buttonStyle(.borderedProminent)
             Spacer()
+            Menu {
+                Button("All Statuses") { statusFilter = nil }
+                Divider()
+                ForEach(GitChangeKind.allCases) { kind in
+                    Button { statusFilter = kind } label: {
+                        Label(kind.localizedTitle, systemImage: kind.symbol)
+                    }
+                }
+            } label: {
+                Label(statusFilter?.localizedTitle ?? "All Statuses", systemImage: "line.3.horizontal.decrease.circle")
+            }
             TextField("Filter paths", text: $query)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 180)
@@ -98,6 +130,138 @@ struct GitCompareView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
+    }
+
+    private var commitContext: some View {
+        HStack(spacing: 12) {
+            commitCard(target: state.gitLeftTarget, commit: state.gitLeftCommit)
+            Image(systemName: "arrow.right").foregroundStyle(.secondary)
+            commitCard(target: state.gitRightTarget, commit: state.gitRightCommit)
+            Spacer()
+            if let date = state.lastLiveRefresh {
+                Label {
+                    Text(date, format: .dateTime.hour().minute().second())
+                } icon: {
+                    Image(systemName: "arrow.clockwise.circle")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help("Last live refresh")
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(.quaternary.opacity(0.3))
+    }
+
+    private func commitCard(target: String, commit: GitCommit?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(target).font(.caption.bold())
+            if let commit {
+                Text("\(commit.shortObjectID)  \(commit.subject)")
+                    .font(Theme.mono)
+                    .lineLimit(1)
+                Text("\(commit.authorName) · \(commit.authoredDate.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(target.uppercased() == "WORKTREE" ? "Working tree" : "Staging index")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: 330, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var historyInspector: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("File History").font(.headline)
+                    Text(state.gitHistoryPath ?? String(localized: "Select a changed file"))
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Button("Compare A ↔ B") {
+                    guard let left = revision(historyA), let right = revision(historyB) else { return }
+                    state.compareGitFileRevisions(left, right)
+                }
+                .disabled(historyA == nil || historyB == nil || historyA == historyB)
+            }
+            .padding(12)
+            Divider()
+            if state.isLoadingGitHistory {
+                ProgressView("Reading file history…")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error = state.gitHistoryError {
+                ContentUnavailableView(
+                    "File History Failed",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(error))
+            } else if state.gitHistoryPath == nil {
+                ContentUnavailableView(
+                    "Select a Changed File",
+                    systemImage: "clock.arrow.circlepath",
+                    description: Text("Choose a row to inspect its revisions."))
+            } else if state.gitFileRevisions.isEmpty {
+                ContentUnavailableView("No File History", systemImage: "clock")
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(state.gitFileRevisions) { revision in
+                            historyRow(revision)
+                            Divider()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func historyRow(_ revision: GitFileRevision) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            VStack(spacing: 5) {
+                historyMarker("A", selected: historyA == revision.id) { historyA = revision.id }
+                historyMarker("B", selected: historyB == revision.id) { historyB = revision.id }
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(revision.commit.subject.isEmpty
+                     ? String(localized: "Untitled commit")
+                     : revision.commit.subject)
+                    .font(.callout.weight(.medium))
+                    .lineLimit(2)
+                Text("\(revision.commit.shortObjectID) · \(revision.commit.authorName)")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                Text(revision.commit.authoredDate, format: .dateTime.year().month().day().hour().minute())
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                if revision.path != state.gitHistoryPath {
+                    Text(revision.path).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+    }
+
+    private func historyMarker(
+        _ label: String,
+        selected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(label, action: action)
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .tint(selected ? .accentColor : .secondary)
+            .accessibilityLabel("Use revision as \(label)")
+    }
+
+    private func revision(_ id: GitFileRevision.ID?) -> GitFileRevision? {
+        state.gitFileRevisions.first { $0.id == id }
     }
 
     private func targetBinding(_ keyPath: ReferenceWritableKeyPath<AppState, String>) -> Binding<String> {

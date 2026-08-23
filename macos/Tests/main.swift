@@ -534,12 +534,53 @@ let branchChanges = try! GitRepositoryComparator.changes(
     to: .revision("feature"))
 check(branchChanges == [GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)],
       "Git comparison compares two branch tips")
+do {
+    _ = try GitRepositoryComparator.changes(
+        in: gitTmp, from: .revision("--ext-diff"), to: .workingTree)
+    check(false, "Git revisions cannot inject command options")
+} catch GitRepositoryError.commandFailed {
+    check(true, "Git revisions cannot inject command options")
+} catch {
+    check(false, "Git revision option injection reports a command failure")
+}
 let featureData = try! GitRepositoryComparator.fileData(
     in: gitTmp,
     target: .revision("feature"),
     path: "tracked.txt")
 check(featureData == Data("feature\n".utf8),
       "Git comparison materializes a file from a commit without checkout")
+let featureCommit = try! GitRepositoryComparator.commit(in: gitTmp, revision: "feature")
+check(featureCommit.subject == "feature" && featureCommit.authorName == "GrapeCompare Tests" &&
+      featureCommit.objectID.count == 40,
+      "Git comparison reads stable commit metadata")
+let trackedHistory = try! GitRepositoryComparator.fileHistory(
+    in: gitTmp, path: "tracked.txt", revision: "feature")
+check(trackedHistory.map(\.subject) == ["feature", "base"] &&
+      trackedHistory.allSatisfy { !$0.objectID.isEmpty },
+      "Git file history follows a path across commits")
+do {
+    _ = try GitRepositoryComparator.fileHistory(in: gitTmp, path: "../outside")
+    check(false, "Git file history rejects parent traversal")
+} catch GitRepositoryError.unsafePath {
+    check(true, "Git file history rejects parent traversal")
+} catch {
+    check(false, "Git file history reports the expected unsafe-path error")
+}
+runGit(["checkout", "feature"], in: gitTmp)
+runGit(["mv", "tracked.txt", "renamed.txt"], in: gitTmp)
+runGit(["commit", "-m", "rename tracked file"], in: gitTmp)
+let renamedHistory = try! GitRepositoryComparator.fileRevisions(
+    in: gitTmp, path: "renamed.txt", revision: "feature")
+check(renamedHistory.first?.path == "renamed.txt" &&
+      renamedHistory.last?.path == "tracked.txt" &&
+      renamedHistory.map(\.commit.subject) == ["rename tracked file", "feature", "base"],
+      "Git file history preserves the valid path on both sides of a rename")
+check((try! GitRepositoryComparator.fileData(
+        in: gitTmp,
+        target: .revision(renamedHistory.last!.commit.objectID),
+        path: renamedHistory.last!.path)) == Data("base\n".utf8),
+      "Git file history materializes a pre-rename revision without checkout")
+runGit(["checkout", "main"], in: gitTmp)
 
 try! Data("working\n".utf8).write(to: gitTmp.appending(path: "tracked.txt"))
 try! Data("new\n".utf8).write(to: gitTmp.appending(path: "untracked.txt"))

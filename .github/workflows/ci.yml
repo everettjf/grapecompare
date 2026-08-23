@@ -59,4 +59,6 @@ jobs:
       - name: Verify time and memory budgets
         env:
           GRAPECOMPARE_VERIFY_PERFORMANCE: '1'
-        run: bash macos/Benchmarks/run-benchmarks.sh 100000 10000
+        run: |
+          bash macos/Benchmarks/run-benchmarks.sh 100000 10000
+          bash macos/Benchmarks/run-git-benchmarks.sh 5000 100

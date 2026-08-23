@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.14.0 — 2026-08-22
+
+### Git changesets and file history
+
+- Added a professional Git changeset workspace with path and status filters, commit context, and live-refresh timestamps.
+- Added per-file commit history with author, date, subject, hash, and rename-aware paths.
+- Added arbitrary A/B revision selection and comparison without checking out or changing the repository.
+- Added deterministic Git metadata, history, unsafe-path, rename, and pre-rename materialization fixtures.
+- Fixed persistent undo journals becoming unreadable under macOS 27 file-protection behavior while retaining atomic replacement.
+
 ## 1.13.0 — 2026-08-22
 
 ### Live comparisons and performance defenses

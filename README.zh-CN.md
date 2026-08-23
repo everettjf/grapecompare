@@ -52,6 +52,12 @@
 - CRLF/LF 归一化、末尾换行提示与二进制文件检测
 - 大文件使用内存映射读取，避免在进入 diff 前复制两份完整内容
 
+### 合并与开发者工作流
+
+- 分支、提交、暂存区和工作区 Changeset，支持状态/路径筛选、提交上下文和实时刷新
+- 可追踪重命名的逐文件历史，并可任选 A/B 两个版本比较，全程不 checkout、不改变仓库状态
+- 三方合并、独立 CLI，以及 Git difftool/mergetool 配置
+
 ### 文件夹比较
 
 - 递归展开树，显示**相同 / 不同 / 仅左侧 / 仅右侧**状态
@@ -85,9 +91,10 @@
 bash macos/Benchmarks/run-benchmarks.sh
 bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-benchmarks.sh 100000 10000
+GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-git-benchmarks.sh 5000 100
 ```
 
-CI 性能门会在任一端到端文本场景超过 0.25 秒、1 万文件目录场景超过 2 秒，或峰值常驻内存超过 1 GiB 时失败。
+CI 性能门会在任一端到端文本场景超过 0.25 秒、1 万文件目录场景超过 2 秒、5 千文件 Git Changeset 超过 2 秒、100 次提交的文件历史超过 1 秒，或超过对应峰值内存预算时失败。
 
 Diff 设计基于 [Myers O(ND) 算法](https://doi.org/10.1007/BF01840446)，并采纳了 [Git diff 算法文档](https://git-scm.com/docs/diff-algorithm-option.html)中的低频元素锚定思路。
 

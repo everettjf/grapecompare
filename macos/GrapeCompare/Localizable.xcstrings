@@ -2888,6 +2888,22 @@
     "This saved comparison can no longer be opened: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法再打开此已保存的比较：%@" } } } },
     "Unable to Open Saved Comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开已保存的比较" } } } },
     "Undo Conflict Resolution" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销冲突解决" } } } },
+    "%@  %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@  %2$@" } } } },
+    "%@ · %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@" } } } },
+    "All Statuses" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有状态" } } } },
+    "Choose a row to inspect its revisions." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一个变更行以查看其历史版本。" } } } },
+    "Compare A ↔ B" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较 A ↔ B" } } } },
+    "File History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件历史" } } } },
+    "File History Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法读取文件历史" } } } },
+    "Last live refresh" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次实时刷新" } } } },
+    "No File History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有文件历史" } } } },
+    "Reading file history…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在读取文件历史…" } } } },
+    "Select a Changed File" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一个已变更文件" } } } },
+    "Select a changed file" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一个已变更文件" } } } },
+    "Staging index" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂存区" } } } },
+    "Untitled commit" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无标题提交" } } } },
+    "Use revision as %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将版本用作 %@" } } } },
+    "Working tree" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作区" } } } },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {

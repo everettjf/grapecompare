@@ -76,6 +76,8 @@ nonisolated private struct GitComparisonPayload: Sendable {
     let root: URL
     let references: [GitReference]
     let changes: [GitChange]
+    let leftCommit: GitCommit?
+    let rightCommit: GitCommit?
 }
 
 @Observable
@@ -142,6 +144,12 @@ final class AppState {
     var gitRepositoryURL: URL?
     var gitReferences: [GitReference] = []
     var gitChanges: [GitChange] = []
+    var gitLeftCommit: GitCommit?
+    var gitRightCommit: GitCommit?
+    var gitFileRevisions: [GitFileRevision] = []
+    var gitHistoryPath: String?
+    var gitHistoryError: String?
+    var isLoadingGitHistory = false
     var gitLeftTarget = "HEAD"
     var gitRightTarget = "WORKTREE"
     var gitError: String?
@@ -207,6 +215,8 @@ final class AppState {
     @ObservationIgnored private var operationLeftRoot: URL?
     @ObservationIgnored private var operationRightRoot: URL?
     @ObservationIgnored private var gitTemporaryDirectories: [URL] = []
+    @ObservationIgnored private var gitHistoryTask: Task<Void, Never>?
+    @ObservationIgnored private var gitHistoryGeneration: UInt = 0
     @ObservationIgnored private let sessionStore = ComparisonSessionStore()
     @ObservationIgnored private var restoredSecurityScopedURLs: [URL] = []
     @ObservationIgnored private var filesystemWatcher: FilesystemWatcher?
@@ -400,7 +410,24 @@ final class AppState {
                 let references = try GitRepositoryComparator.references(in: root)
                 let changes = try GitRepositoryComparator.changes(
                     in: root, from: left, to: right)
-                return GitComparisonPayload(root: root, references: references, changes: changes)
+                let leftCommit: GitCommit?
+                if case .revision(let revision) = left {
+                    leftCommit = try GitRepositoryComparator.commit(in: root, revision: revision)
+                } else {
+                    leftCommit = nil
+                }
+                let rightCommit: GitCommit?
+                if case .revision(let revision) = right {
+                    rightCommit = try GitRepositoryComparator.commit(in: root, revision: revision)
+                } else {
+                    rightCommit = nil
+                }
+                return GitComparisonPayload(
+                    root: root,
+                    references: references,
+                    changes: changes,
+                    leftCommit: leftCommit,
+                    rightCommit: rightCommit)
             }
             let result = await withTaskCancellationHandler {
                 await worker.result
@@ -416,6 +443,8 @@ final class AppState {
                 self.gitRepositoryURL = payload.root
                 self.gitReferences = payload.references
                 self.gitChanges = payload.changes
+                self.gitLeftCommit = payload.leftCommit
+                self.gitRightCommit = payload.rightCommit
             case .failure(let error):
                 if !(error is CancellationError) {
                     self.gitError = error.localizedDescription
@@ -439,6 +468,68 @@ final class AppState {
             runFileDiff(left: leftURL, right: rightURL)
         } catch {
             gitError = error.localizedDescription
+        }
+    }
+
+    func loadGitFileHistory(_ change: GitChange) {
+        guard let repository = gitRepositoryURL else { return }
+        gitHistoryTask?.cancel()
+        gitHistoryGeneration &+= 1
+        let generation = gitHistoryGeneration
+        let right = GitComparisonTarget.parse(gitRightTarget)
+        let left = GitComparisonTarget.parse(gitLeftTarget)
+        let revision: String
+        let path: String
+        if case .revision(let value) = right {
+            revision = value
+            path = change.path
+        } else if case .revision(let value) = left {
+            revision = value
+            path = change.oldPath ?? change.path
+        } else {
+            revision = "HEAD"
+            path = change.oldPath ?? change.path
+        }
+        gitHistoryPath = path
+        gitFileRevisions = []
+        gitHistoryError = nil
+        isLoadingGitHistory = true
+        gitHistoryTask = Task { [weak self] in
+            let result = await Task.detached(priority: .userInitiated) {
+                Result {
+                    try GitRepositoryComparator.fileRevisions(
+                        in: repository, path: path, revision: revision)
+                }
+            }.value
+            guard let self, !Task.isCancelled, self.gitHistoryGeneration == generation else { return }
+            self.isLoadingGitHistory = false
+            self.gitHistoryTask = nil
+            switch result {
+            case .success(let revisions):
+                self.gitFileRevisions = revisions
+            case .failure(let error):
+                self.gitHistoryError = error.localizedDescription
+            }
+        }
+    }
+
+    func compareGitFileRevisions(_ left: GitFileRevision, _ right: GitFileRevision) {
+        guard let repository = gitRepositoryURL else { return }
+        do {
+            let leftURL = try materializeGitFile(
+                repository: repository,
+                target: .revision(left.commit.objectID),
+                path: left.path,
+                side: "\(left.commit.shortObjectID)-left")
+            let rightURL = try materializeGitFile(
+                repository: repository,
+                target: .revision(right.commit.objectID),
+                path: right.path,
+                side: "\(right.commit.shortObjectID)-right")
+            diffReturnScreen = .git
+            runFileDiff(left: leftURL, right: rightURL)
+        } catch {
+            gitHistoryError = error.localizedDescription
         }
     }
 
