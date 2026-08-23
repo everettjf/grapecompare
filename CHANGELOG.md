@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.11.0 — 2026-08-22
+
+### Recent comparisons and safe resume
+
+- Added a bounded recent-comparisons list for file, folder, merge, and Git workflows.
+- Added single-session resume using versioned security-scoped bookmarks rather than raw paths.
+- Revalidate every restored input and compare its current on-disk contents instead of persisting stale diff results.
+- Never restore unsaved output text, merge decisions, or pending file operations across launches.
+
 ## 1.10.0 — 2026-08-22
 
 ### Professional merge workflow

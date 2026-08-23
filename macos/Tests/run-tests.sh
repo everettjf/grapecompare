@@ -22,5 +22,6 @@ swiftc -O -whole-module-optimization -o "$BIN" \
     ../GrapeCompare/Core/FolderComparator.swift \
     ../GrapeCompare/Core/FileOperations.swift \
     ../GrapeCompare/Core/FileOperationPersistence.swift \
+    ../GrapeCompare/Core/ComparisonSessionStore.swift \
     main.swift
 "$BIN"

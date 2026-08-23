@@ -159,6 +159,9 @@ final class AppState {
 
     private(set) var comparisonPhase: ComparisonPhase = .idle
     var demoError: String?
+    var recentComparisons: [ComparisonSession] = []
+    var resumableSession: ComparisonSession?
+    var sessionError: String?
 
     var isComparingFile: Bool { comparisonPhase == .file }
     var isComparingFolder: Bool { comparisonPhase == .folder }
@@ -173,10 +176,15 @@ final class AppState {
     @ObservationIgnored private var operationLeftRoot: URL?
     @ObservationIgnored private var operationRightRoot: URL?
     @ObservationIgnored private var gitTemporaryDirectories: [URL] = []
+    @ObservationIgnored private let sessionStore = ComparisonSessionStore()
+    @ObservationIgnored private var restoredSecurityScopedURLs: [URL] = []
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
     init() {
+        let savedSessions = sessionStore.load()
+        recentComparisons = savedSessions.recents
+        resumableSession = savedSessions.current
         let args = ProcessInfo.processInfo.arguments
         if let request = ExternalMergeRequest(commandLineArguments: args) {
             baseFileURL = request.baseURL
@@ -236,12 +244,14 @@ final class AppState {
 
     func startFileCompare() {
         guard let l = leftFileURL, let r = rightFileURL else { return }
+        recordSession(kind: .files, urls: [l, r])
         diffReturnScreen = .home
         runFileDiff(left: l, right: r)
     }
 
     func startFolderCompare() {
         guard let l = leftFolderURL, let r = rightFolderURL else { return }
+        recordSession(kind: .folders, urls: [l, r])
         if operationLeftRoot != l.standardizedFileURL || operationRightRoot != r.standardizedFileURL {
             operations.clearDrafts()
             operationLeftRoot = l.standardizedFileURL
@@ -287,6 +297,7 @@ final class AppState {
         guard let baseURL = baseFileURL,
               let oursURL = oursFileURL,
               let theirsURL = theirsFileURL else { return }
+        if !isExternalMerge { recordSession(kind: .merge, urls: [baseURL, oursURL, theirsURL]) }
         let (request, cancellation) = beginComparison(.merge)
         mergeResult = nil
         mergeError = nil
@@ -337,6 +348,7 @@ final class AppState {
 
     func startGitComparison() {
         guard let selectedRepository = gitRepositoryURL else { return }
+        recordSession(kind: .git, urls: [selectedRepository])
         let left = GitComparisonTarget.parse(gitLeftTarget)
         let right = GitComparisonTarget.parse(gitRightTarget)
         let (request, cancellation) = beginComparison(.git)
@@ -584,6 +596,26 @@ final class AppState {
         screen = .home
     }
 
+    func resumeLastSession() {
+        guard let resumableSession else { return }
+        openSession(resumableSession)
+    }
+
+    func openRecentComparison(_ session: ComparisonSession) {
+        openSession(session)
+    }
+
+    func clearRecentComparisons() {
+        do {
+            try sessionStore.clear()
+            recentComparisons = []
+            resumableSession = nil
+            sessionError = nil
+        } catch {
+            sessionError = error.localizedDescription
+        }
+    }
+
     func loadFileDemo() {
         do {
             let pair = try DemoData.makeFilePair()
@@ -736,6 +768,79 @@ final class AppState {
                 }
             }
             self.finishComparison(request)
+        }
+    }
+
+    private func recordSession(kind: ComparisonSessionKind, urls: [URL]) {
+        do {
+            let bookmarks = try urls.map {
+                try $0.bookmarkData(options: .withSecurityScope)
+            }
+            let session = ComparisonSession(
+                kind: kind,
+                displayNames: urls.map(\.lastPathComponent),
+                bookmarks: bookmarks)
+            let envelope = try sessionStore.record(session)
+            recentComparisons = envelope.recents
+            resumableSession = envelope.current
+            sessionError = nil
+        } catch {
+            // A comparison must never fail merely because its optional history
+            // could not be persisted (for example, an ephemeral demo URL).
+            sessionError = error.localizedDescription
+        }
+    }
+
+    private func openSession(_ session: ComparisonSession) {
+        do {
+            guard session.bookmarks.count == session.displayNames.count else {
+                throw CocoaError(.fileReadCorruptFile)
+            }
+            var resolved: [URL] = []
+            for bookmark in session.bookmarks {
+                var stale = false
+                let url = try URL(
+                    resolvingBookmarkData: bookmark,
+                    options: .withSecurityScope,
+                    relativeTo: nil,
+                    bookmarkDataIsStale: &stale)
+                guard !stale, FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
+                    throw CocoaError(.fileNoSuchFile)
+                }
+                if url.startAccessingSecurityScopedResource() {
+                    restoredSecurityScopedURLs.append(url)
+                }
+                resolved.append(url.standardizedFileURL)
+            }
+            switch session.kind {
+            case .files:
+                guard resolved.count == 2 else { throw CocoaError(.fileReadCorruptFile) }
+                leftFileURL = resolved[0]
+                rightFileURL = resolved[1]
+                startFileCompare()
+            case .folders:
+                guard resolved.count == 2, resolved.allSatisfy(\.hasDirectoryPath) else {
+                    throw CocoaError(.fileReadCorruptFile)
+                }
+                leftFolderURL = resolved[0]
+                rightFolderURL = resolved[1]
+                startFolderCompare()
+            case .merge:
+                guard resolved.count == 3 else { throw CocoaError(.fileReadCorruptFile) }
+                baseFileURL = resolved[0]
+                oursFileURL = resolved[1]
+                theirsFileURL = resolved[2]
+                startThreeWayMerge()
+            case .git:
+                guard resolved.count == 1, resolved[0].hasDirectoryPath else {
+                    throw CocoaError(.fileReadCorruptFile)
+                }
+                gitRepositoryURL = resolved[0]
+                startGitComparison()
+            }
+            sessionError = nil
+        } catch {
+            sessionError = String(localized: "This saved comparison can no longer be opened: \(error.localizedDescription)")
         }
     }
 

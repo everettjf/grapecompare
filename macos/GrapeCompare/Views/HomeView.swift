@@ -44,6 +44,11 @@ struct HomeView: View {
             }
             .padding(.horizontal, 48)
 
+            if state.resumableSession != nil || !state.recentComparisons.isEmpty {
+                RecentComparisonsView()
+                    .padding(.horizontal, 48)
+            }
+
             MergeCard()
                 .padding(.horizontal, 48)
 
@@ -78,6 +83,64 @@ struct HomeView: View {
             Button("OK") { state.demoError = nil }
         } message: {
             Text(state.demoError ?? "Unknown error")
+        }
+        .alert("Unable to Open Saved Comparison", isPresented: Binding(
+            get: { state.sessionError != nil },
+            set: { if !$0 { state.sessionError = nil } }
+        )) {
+            Button("OK") { state.sessionError = nil }
+        } message: {
+            Text(state.sessionError ?? "Unknown error")
+        }
+    }
+}
+
+private struct RecentComparisonsView: View {
+    @Environment(AppState.self) private var state
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Recent Comparisons", systemImage: "clock.arrow.circlepath")
+                    .font(.headline)
+                Spacer()
+                if state.resumableSession != nil {
+                    Button("Resume Last Session") { state.resumeLastSession() }
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut("r", modifiers: [.command, .shift])
+                }
+                Button("Clear", role: .destructive) { state.clearRecentComparisons() }
+                    .disabled(state.recentComparisons.isEmpty)
+            }
+            ForEach(state.recentComparisons.prefix(5)) { session in
+                Button { state.openRecentComparison(session) } label: {
+                    HStack {
+                        Image(systemName: icon(for: session.kind))
+                            .frame(width: 20)
+                        Text(session.displayNames.joined(separator: " ↔ "))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Text(session.createdAt, style: .relative)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Reopens the inputs and compares their current contents")
+            }
+        }
+        .padding(18)
+        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
+    }
+
+    private func icon(for kind: ComparisonSessionKind) -> String {
+        switch kind {
+        case .files: "doc.text.magnifyingglass"
+        case .folders: "folder.badge.questionmark"
+        case .merge: "arrow.triangle.branch"
+        case .git: "point.3.connected.trianglepath.dotted"
         }
     }
 }

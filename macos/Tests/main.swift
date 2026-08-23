@@ -1308,6 +1308,28 @@ do {
     check(false, "corrupt journal test completes without error: \(error)")
 }
 
+do {
+    let root = operationDirectory("comparison-sessions")
+    let store = ComparisonSessionStore(
+        fileURL: root.appending(path: "sessions.json"), maximumRecents: 2)
+    let first = ComparisonSession(
+        kind: .files, displayNames: ["a", "b"], bookmarks: [Data([1]), Data([2])])
+    let second = ComparisonSession(
+        kind: .folders, displayNames: ["c", "d"], bookmarks: [Data([3]), Data([4])])
+    let third = ComparisonSession(
+        kind: .git, displayNames: ["repo"], bookmarks: [Data([5])])
+    _ = try store.record(first)
+    _ = try store.record(second)
+    let envelope = try store.record(third)
+    check(envelope.current == third && envelope.recents == [third, second],
+          "comparison sessions retain the newest bounded history and current session")
+    check(store.load() == envelope, "comparison sessions round-trip deterministically")
+    try store.clear()
+    check(store.load() == ComparisonSessionEnvelope(), "comparison session history clears safely")
+} catch {
+    check(false, "comparison session persistence tests complete without error: \(error)")
+}
+
 try? FileManager.default.removeItem(at: tmp)
 
 print(failures == 0 ? "\nALL TESTS PASSED" : "\n\(failures) TEST(S) FAILED")
