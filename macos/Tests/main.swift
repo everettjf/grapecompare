@@ -364,6 +364,10 @@ let conflictingMerge = ThreeWayMergeEngine.merge(
     base: mergeBase, ours: conflictOurs, theirs: conflictTheirs)
 check(conflictingMerge.conflictCount == 1 && conflictingMerge.renderedLines() == nil,
       "three-way merge exposes overlapping divergent edits as a conflict")
+check(MergeOutputValidator.containsConflictMarkers("before\n<<<<<<< ours\na\n=======\nb\n>>>>>>> theirs\n"),
+      "merge output validation detects residual conflict markers")
+check(!MergeOutputValidator.containsConflictMarkers("let comparison = \"a ======= b\"\n"),
+      "merge output validation ignores marker text embedded inside a normal line")
 if let conflict = conflictingMerge.conflicts.first {
     check(conflictingMerge.renderedLines(resolving: [conflict.id: .ours])?.map(\.content) ==
           ["one", "OURS", "three"],

@@ -203,6 +203,12 @@ struct GitCompareView: View {
                           systemImage: state.gitReviewedChangeIDs.contains(change.id) ? "checkmark.circle.fill" : "circle")
                 }
             }
+            let reviewed = state.gitReviewedChangeIDs.count
+            Text("\(reviewed) of \(state.gitChanges.count) reviewed")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(reviewed == state.gitChanges.count ? .green : .secondary)
+                .accessibilityLabel("Review progress")
+                .accessibilityValue("\(reviewed) of \(state.gitChanges.count) files reviewed")
             if let date = state.lastLiveRefresh {
                 Label {
                     Text(date, format: .dateTime.hour().minute().second())
@@ -322,6 +328,19 @@ struct GitCompareView: View {
     @ViewBuilder
     private var fileHistoryInspector: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if let change = selectedChange {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Review Note").font(.caption.bold())
+                    TextField("Add a local note for this change", text: Binding(
+                        get: { state.gitReviewNotes[change.id] ?? "" },
+                        set: { state.updateGitReviewNote($0, for: change) }
+                    ), axis: .vertical)
+                    .lineLimit(2...4)
+                    .accessibilityHint("Stored locally for this repository and comparison")
+                }
+                .padding(12)
+                Divider()
+            }
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("File History").font(.headline)
@@ -461,8 +480,24 @@ struct GitCompareView: View {
                 }
             }
             Spacer(minLength: 0)
+            if let index = state.gitFileRevisions.firstIndex(where: { $0.id == revision.id }),
+               state.gitFileRevisions.indices.contains(index + 1) {
+                Button {
+                    state.compareGitRevisionWithPrevious(revision)
+                } label: {
+                    Label("Compare with Previous", systemImage: "arrow.left.arrow.right")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                .help("Compare this revision with its previous revision")
+            }
         }
         .padding(10)
+        .contextMenu {
+            Button("Use as A") { historyA = revision.id }
+            Button("Use as B") { historyB = revision.id }
+            Button("Compare with Previous") { state.compareGitRevisionWithPrevious(revision) }
+        }
     }
 
     private func historyMarker(

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 — Unreleased
+
+### Git review and merge parity
+
+- Add durable local review notes, reviewed-file progress, and one-click comparison with the previous file revision.
+- Add merge-resolution progress and prevent export or mergetool completion while standard conflict markers remain in editable output.
+
 ## 1.0.1 — Unreleased
 
 ### Reliability

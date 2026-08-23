@@ -157,6 +157,7 @@ final class AppState {
     var gitCommitGraphHasMore = false
     var isLoadingGitCommitGraph = false
     var gitReviewedChangeIDs: Set<GitChange.ID> = []
+    var gitReviewNotes: [GitChange.ID: String] = [:]
     var gitSelectedChangeID: GitChange.ID?
     var gitRepositoryLibrary: [GitRepositoryLibraryEntry] = []
     var gitFileRevisions: [GitFileRevision] = []
@@ -245,6 +246,7 @@ final class AppState {
     @ObservationIgnored private var watchedRootPaths: [String] = []
     @ObservationIgnored private var isLiveRefresh = false
     @ObservationIgnored private let gitReviewDefaultsKey = "gitReviewedChanges.v1"
+    @ObservationIgnored private let gitReviewNotesDefaultsKey = "gitReviewNotes.v1"
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
@@ -495,6 +497,8 @@ final class AppState {
                 self.gitSelectedChangeID = payload.changes.first?.id
                 self.gitReviewedChangeIDs = self.loadGitReviewedChanges(
                     repository: payload.root, changes: payload.changes)
+                self.gitReviewNotes = self.loadGitReviewNotes(
+                    repository: payload.root, changes: payload.changes)
                 self.gitRepositoryLibrary = (try? self.gitRepositoryLibraryStore.remember(payload.root))
                     ?? self.gitRepositoryLibrary
             case .failure(let error):
@@ -536,6 +540,15 @@ final class AppState {
         if gitReviewedChangeIDs.contains(change.id) { gitReviewedChangeIDs.remove(change.id) }
         else { gitReviewedChangeIDs.insert(change.id) }
         persistGitReviewedChanges()
+    }
+
+    func updateGitReviewNote(_ note: String, for change: GitChange) {
+        if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            gitReviewNotes.removeValue(forKey: change.id)
+        } else {
+            gitReviewNotes[change.id] = note
+        }
+        persistGitReviewNotes()
     }
 
     func switchGitWorktree(_ worktree: GitWorktree) {
@@ -603,6 +616,33 @@ final class AppState {
         }
         if let data = try? JSONEncoder().encode(stored) {
             UserDefaults.standard.set(data, forKey: gitReviewDefaultsKey)
+        }
+    }
+
+    private func loadGitReviewNotes(
+        repository: URL, changes: [GitChange]
+    ) -> [GitChange.ID: String] {
+        guard let data = UserDefaults.standard.data(forKey: gitReviewNotesDefaultsKey),
+              let stored = try? JSONDecoder().decode([String: [String: String]].self, from: data)
+        else { return [:] }
+        let valid = Set(changes.map(\.id))
+        return (stored[gitReviewKey(repository: repository)] ?? [:]).filter {
+            valid.contains($0.key)
+        }
+    }
+
+    private func persistGitReviewNotes() {
+        guard let repository = gitRepositoryURL else { return }
+        var stored: [String: [String: String]] = [:]
+        if let data = UserDefaults.standard.data(forKey: gitReviewNotesDefaultsKey) {
+            stored = (try? JSONDecoder().decode([String: [String: String]].self, from: data)) ?? [:]
+        }
+        stored[gitReviewKey(repository: repository)] = gitReviewNotes
+        if stored.count > 100 {
+            for key in stored.keys.sorted().prefix(stored.count - 100) { stored.removeValue(forKey: key) }
+        }
+        if let data = try? JSONEncoder().encode(stored) {
+            UserDefaults.standard.set(data, forKey: gitReviewNotesDefaultsKey)
         }
     }
 
@@ -746,6 +786,12 @@ final class AppState {
         }
     }
 
+    func compareGitRevisionWithPrevious(_ revision: GitFileRevision) {
+        guard let index = gitFileRevisions.firstIndex(where: { $0.id == revision.id }),
+              gitFileRevisions.indices.contains(index + 1) else { return }
+        compareGitFileRevisions(gitFileRevisions[index + 1], revision)
+    }
+
     func resolveMergeConflict(_ id: MergeConflict.ID, with choice: MergeConflictChoice) {
         guard let mergeResult else { return }
         recordMergeChoiceUndo()
@@ -814,6 +860,10 @@ final class AppState {
               let request = externalMergeRequest,
               let result = mergeResult,
               mergeChoices.count >= result.conflictCount else { return }
+        guard !MergeOutputValidator.containsConflictMarkers(mergeOutputText) else {
+            mergeSaveError = String(localized: "The merge output still contains conflict markers.")
+            return
+        }
         do {
             let snapshot = try TextSnapshot(text: mergeOutputText, encoding: mergeOutputEncoding)
             try request.complete(with: snapshot)
@@ -823,6 +873,10 @@ final class AppState {
         } catch {
             mergeSaveError = error.localizedDescription
         }
+    }
+
+    var mergeOutputHasConflictMarkers: Bool {
+        MergeOutputValidator.containsConflictMarkers(mergeOutputText)
     }
 
     func cancelExternalMerge() {

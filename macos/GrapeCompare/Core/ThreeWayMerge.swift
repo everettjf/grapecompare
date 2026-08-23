@@ -228,3 +228,14 @@ nonisolated enum ThreeWayMergeEngine {
         }
     }
 }
+
+nonisolated enum MergeOutputValidator {
+    private static let markerPrefixes = ["<<<<<<<", "|||||||", "=======", ">>>>>>>"]
+
+    static func containsConflictMarkers(_ text: String) -> Bool {
+        text.split(separator: "\n", omittingEmptySubsequences: false).contains { line in
+            let trimmed = line.drop(while: { $0 == " " || $0 == "\t" })
+            return markerPrefixes.contains { trimmed.hasPrefix($0) }
+        }
+    }
+}

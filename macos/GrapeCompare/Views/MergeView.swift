@@ -96,17 +96,20 @@ struct MergeView: View {
                 .disabled(result.conflicts.isEmpty)
                 Text("\(result.conflictCount) conflicts")
                     .foregroundStyle(result.conflictCount == 0 ? .green : .orange)
+                Text("\(state.mergeChoices.count) of \(result.conflictCount) resolved")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(state.mergeChoices.count == result.conflictCount ? .green : .secondary)
                 if state.isExternalMerge {
                     Button("Save Merge and Close") { state.saveExternalMerge() }
                         .buttonStyle(.borderedProminent)
-                        .disabled(state.mergeChoices.count < result.conflictCount)
+                        .disabled(state.mergeChoices.count < result.conflictCount || state.mergeOutputHasConflictMarkers)
                 } else {
                     Button("Export Result…") {
                         resultText = state.mergeOutputText
                         resultDocument = TextPatchDocument(text: resultText)
                         exportsResult = true
                     }
-                    .disabled(state.mergeChoices.count < result.conflictCount)
+                    .disabled(state.mergeChoices.count < result.conflictCount || state.mergeOutputHasConflictMarkers)
                 }
             }
         }
@@ -174,6 +177,11 @@ struct MergeView: View {
                     Text("Resolve every conflict before export")
                         .font(.caption)
                         .foregroundStyle(.orange)
+                }
+                if state.mergeOutputHasConflictMarkers {
+                    Label("Conflict markers remain in the output", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.red)
                 }
                 Spacer()
             }

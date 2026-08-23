@@ -2995,6 +2995,20 @@
     "Reset Alignment" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重置对齐" } } } },
     "Visible image" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示的图像" } } } },
     "x:%lld y:%lld  RGBA %u,%u,%u,%u" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "x:%lld y:%lld  RGBA %u,%u,%u,%u" } } } },
+    "%lld of %lld reviewed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已审阅 %lld / %lld" } } } },
+    "Review progress" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅进度" } } } },
+    "%lld of %lld files reviewed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已审阅 %lld / %lld 个文件" } } } },
+    "Review Note" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅备注" } } } },
+    "Add a local note for this change" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为此变更添加本地备注" } } } },
+    "Stored locally for this repository and comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅为此仓库和比较保存在本地" } } } },
+    "Compare this revision with its previous revision" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将此版本与上一版本比较" } } } },
+    "Compare with Previous" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "与上一版本比较" } } } },
+    "Use as A" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设为 A" } } } },
+    "Use as B" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设为 B" } } } },
+    "Invalid Structured Document" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无效的结构化文档" } } } },
+    "The merge output still contains conflict markers." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "合并输出中仍包含冲突标记。" } } } },
+    "%lld of %lld resolved" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已解决 %lld / %lld" } } } },
+    "Conflict markers remain in the output" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输出中仍有冲突标记" } } } },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {
