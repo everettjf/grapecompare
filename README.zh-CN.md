@@ -54,7 +54,9 @@
 
 ### 合并与开发者工作流
 
-- 分支、提交、暂存区和工作区 Changeset，支持状态/路径筛选、提交上下文和实时刷新
+- 分支、提交、暂存区和工作区 Changeset，按已暂存、未暂存、未跟踪分组，并支持目标快捷方式、状态/路径筛选、提交上下文和实时刷新
+- 支持跨重命名分页的文件历史、任意 A/B 版本和合并父提交比较，无需切换仓库状态
+- 明确识别文本、二进制、Git LFS 指针、子模块和有界探测的大文件
 - 可追踪重命名的逐文件历史，并可任选 A/B 两个版本比较，全程不 checkout、不改变仓库状态
 - 三方合并、独立 CLI，以及 Git difftool/mergetool 配置
 
@@ -84,6 +86,8 @@
 | 3 万行、高比例改动 | **0.070 秒** | 所有稳定结构锚点均得到保留 |
 | 1 万文件目录 | **0.382 秒** | 优化前 2.385 秒，约 **6.2 倍提速** |
 | 5 万文件目录 | **3.917 秒** | 完整扫描、校验、建树、排序与汇总 |
+| 1 万文件混合 Git Changeset | **0.294 秒** | 1 万条已暂存及 5 千条未暂存记录 |
+| 200 次提交的 Git 文件历史 | **0.196 秒** | 跨重命名元数据和路径 |
 
 数字不包含测试数据生成，实际结果会随硬件和存储设备变化。可在本机复现：
 
@@ -91,10 +95,10 @@
 bash macos/Benchmarks/run-benchmarks.sh
 bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-benchmarks.sh 100000 10000
-GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-git-benchmarks.sh 5000 100
+GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-git-benchmarks.sh 10000 200
 ```
 
-CI 性能门会在任一端到端文本场景超过 0.25 秒、1 万文件目录场景超过 2 秒、5 千文件 Git Changeset 超过 2 秒、100 次提交的文件历史超过 1 秒，或超过对应峰值内存预算时失败。
+CI 性能门会在任一端到端文本场景超过 0.25 秒、1 万文件目录场景超过 2 秒、1 万文件的混合暂存/未暂存 Git Changeset 超过 4 秒、200 次提交的文件历史超过 2 秒，或超过对应峰值内存预算时失败。CI 还会构建并审计 Universal macOS 14+ 发布归档。
 
 Diff 设计基于 [Myers O(ND) 算法](https://doi.org/10.1007/BF01840446)，并采纳了 [Git diff 算法文档](https://git-scm.com/docs/diff-algorithm-option.html)中的低频元素锚定思路。
 

@@ -150,6 +150,8 @@ final class AppState {
     var gitHistoryPath: String?
     var gitHistoryError: String?
     var isLoadingGitHistory = false
+    var gitHistoryHasMore = false
+    var gitSelectedFileInspection: GitFileInspection?
     var gitLeftTarget = "HEAD"
     var gitRightTarget = "WORKTREE"
     var gitError: String?
@@ -216,7 +218,10 @@ final class AppState {
     @ObservationIgnored private var operationRightRoot: URL?
     @ObservationIgnored private var gitTemporaryDirectories: [URL] = []
     @ObservationIgnored private var gitHistoryTask: Task<Void, Never>?
+    @ObservationIgnored private var gitHistoryCancellation: ComparisonCancellation?
     @ObservationIgnored private var gitHistoryGeneration: UInt = 0
+    @ObservationIgnored private var gitHistoryRevision = "HEAD"
+    @ObservationIgnored private let gitHistoryPageSize = 100
     @ObservationIgnored private let sessionStore = ComparisonSessionStore()
     @ObservationIgnored private var restoredSecurityScopedURLs: [URL] = []
     @ObservationIgnored private var filesystemWatcher: FilesystemWatcher?
@@ -406,19 +411,26 @@ final class AppState {
         comparisonTask = Task { [weak self] in
             let worker = Task.detached(priority: .userInitiated) {
                 try Self.checkMergeCancellation(cancellation)
-                let root = try GitRepositoryComparator.repositoryRoot(at: selectedRepository)
-                let references = try GitRepositoryComparator.references(in: root)
+                let policy = GitCommandPolicy(isCancelled: { cancellation.isCancelled })
+                let root = try GitRepositoryComparator.repositoryRoot(
+                    at: selectedRepository, policy: policy)
+                let references = try GitRepositoryComparator.references(in: root, policy: policy)
                 let changes = try GitRepositoryComparator.changes(
-                    in: root, from: left, to: right)
+                    in: root,
+                    from: left,
+                    to: right,
+                    policy: policy)
                 let leftCommit: GitCommit?
                 if case .revision(let revision) = left {
-                    leftCommit = try GitRepositoryComparator.commit(in: root, revision: revision)
+                    leftCommit = try GitRepositoryComparator.commit(
+                        in: root, revision: revision, policy: policy)
                 } else {
                     leftCommit = nil
                 }
                 let rightCommit: GitCommit?
                 if case .revision(let revision) = right {
-                    rightCommit = try GitRepositoryComparator.commit(in: root, revision: revision)
+                    rightCommit = try GitRepositoryComparator.commit(
+                        in: root, revision: revision, policy: policy)
                 } else {
                     rightCommit = nil
                 }
@@ -457,13 +469,12 @@ final class AppState {
     func openGitChange(_ change: GitChange) {
         guard let repository = gitRepositoryURL else { return }
         do {
-            let leftTarget = GitComparisonTarget.parse(gitLeftTarget)
-            let rightTarget = GitComparisonTarget.parse(gitRightTarget)
+            let selectedTargets = targets(for: change)
             let leftPath = change.oldPath ?? change.path
             let leftURL = try materializeGitFile(
-                repository: repository, target: leftTarget, path: leftPath, side: "left")
+                repository: repository, target: selectedTargets.left, path: leftPath, side: "left")
             let rightURL = try materializeGitFile(
-                repository: repository, target: rightTarget, path: change.path, side: "right")
+                repository: repository, target: selectedTargets.right, path: change.path, side: "right")
             diffReturnScreen = .git
             runFileDiff(left: leftURL, right: rightURL)
         } catch {
@@ -474,12 +485,17 @@ final class AppState {
     func loadGitFileHistory(_ change: GitChange) {
         guard let repository = gitRepositoryURL else { return }
         gitHistoryTask?.cancel()
+        gitHistoryCancellation?.cancel()
+        let cancellation = ComparisonCancellation()
+        gitHistoryCancellation = cancellation
         gitHistoryGeneration &+= 1
         let generation = gitHistoryGeneration
         let right = GitComparisonTarget.parse(gitRightTarget)
         let left = GitComparisonTarget.parse(gitLeftTarget)
         let revision: String
         let path: String
+        let selectedTargets = targets(for: change)
+        let leftPath = change.oldPath ?? change.path
         if case .revision(let value) = right {
             revision = value
             path = change.path
@@ -491,26 +507,99 @@ final class AppState {
             path = change.oldPath ?? change.path
         }
         gitHistoryPath = path
+        gitHistoryRevision = revision
         gitFileRevisions = []
+        gitHistoryHasMore = false
+        gitSelectedFileInspection = nil
+        gitHistoryError = nil
+        isLoadingGitHistory = true
+        let pageSize = gitHistoryPageSize
+        gitHistoryTask = Task { [weak self] in
+            let result = await Task.detached(priority: .userInitiated) {
+                Result {
+                    let revisions = try GitRepositoryComparator.fileRevisions(
+                        in: repository,
+                        path: path,
+                        revision: revision,
+                        limit: pageSize,
+                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
+                    let rightInspection = try GitRepositoryComparator.inspectFile(
+                        in: repository,
+                        target: selectedTargets.right,
+                        path: change.path,
+                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
+                    let inspection = rightInspection.kind == .missing
+                        ? try GitRepositoryComparator.inspectFile(
+                            in: repository,
+                            target: selectedTargets.left,
+                            path: leftPath,
+                            policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
+                        : rightInspection
+                    return (revisions, inspection)
+                }
+            }.value
+            guard let self, !Task.isCancelled, self.gitHistoryGeneration == generation else { return }
+            self.isLoadingGitHistory = false
+            self.gitHistoryTask = nil
+            self.gitHistoryCancellation = nil
+            switch result {
+            case .success(let payload):
+                let revisions = payload.0
+                self.gitFileRevisions = revisions
+                self.gitHistoryHasMore = revisions.count == self.gitHistoryPageSize
+                self.gitSelectedFileInspection = payload.1
+            case .failure(let error):
+                self.gitHistoryError = error.localizedDescription
+            }
+        }
+    }
+
+    func loadMoreGitFileHistory() {
+        guard let repository = gitRepositoryURL,
+              let path = gitHistoryPath,
+              gitHistoryHasMore,
+              !isLoadingGitHistory else { return }
+        gitHistoryGeneration &+= 1
+        let generation = gitHistoryGeneration
+        let revision = gitHistoryRevision
+        let skip = gitFileRevisions.count
+        let pageSize = gitHistoryPageSize
+        gitHistoryCancellation?.cancel()
+        let cancellation = ComparisonCancellation()
+        gitHistoryCancellation = cancellation
         gitHistoryError = nil
         isLoadingGitHistory = true
         gitHistoryTask = Task { [weak self] in
             let result = await Task.detached(priority: .userInitiated) {
                 Result {
                     try GitRepositoryComparator.fileRevisions(
-                        in: repository, path: path, revision: revision)
+                        in: repository,
+                        path: path,
+                        revision: revision,
+                        limit: pageSize,
+                        skip: skip,
+                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
                 }
             }.value
             guard let self, !Task.isCancelled, self.gitHistoryGeneration == generation else { return }
             self.isLoadingGitHistory = false
             self.gitHistoryTask = nil
+            self.gitHistoryCancellation = nil
             switch result {
             case .success(let revisions):
-                self.gitFileRevisions = revisions
+                let existing = Set(self.gitFileRevisions.map(\.id))
+                self.gitFileRevisions += revisions.filter { !existing.contains($0.id) }
+                self.gitHistoryHasMore = revisions.count == pageSize && self.gitFileRevisions.count < 10_000
             case .failure(let error):
                 self.gitHistoryError = error.localizedDescription
             }
         }
+    }
+
+    func useGitComparisonShortcut(left: String, right: String) {
+        gitLeftTarget = left
+        gitRightTarget = right
+        startGitComparison()
     }
 
     func compareGitFileRevisions(_ left: GitFileRevision, _ right: GitFileRevision) {
@@ -1008,8 +1097,13 @@ final class AppState {
         requestGeneration &+= 1
         comparisonCancellation?.cancel()
         comparisonTask?.cancel()
+        gitHistoryCancellation?.cancel()
+        gitHistoryTask?.cancel()
         comparisonTask = nil
         comparisonCancellation = nil
+        gitHistoryTask = nil
+        gitHistoryCancellation = nil
+        isLoadingGitHistory = false
         comparisonPhase = .idle
         stopLiveUpdates()
     }
@@ -1166,5 +1260,16 @@ final class AppState {
         let destination = directory.appending(path: filename, directoryHint: .notDirectory)
         try data.write(to: destination, options: .atomic)
         return destination
+    }
+
+    private func targets(for change: GitChange) -> (left: GitComparisonTarget, right: GitComparisonTarget) {
+        switch change.stage {
+        case .staged:
+            return (GitComparisonTarget.parse(gitLeftTarget), .index)
+        case .unstaged, .untracked:
+            return (.index, .workingTree)
+        case .comparison:
+            return (GitComparisonTarget.parse(gitLeftTarget), GitComparisonTarget.parse(gitRightTarget))
+        }
     }
 }

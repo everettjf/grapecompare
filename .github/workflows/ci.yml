@@ -26,8 +26,14 @@ jobs:
       - name: Run core tests
         run: bash macos/Tests/run-tests.sh
 
-  app-build:
-    name: Build macOS app
+      - name: Run CLI and real Git integration tests
+        run: bash macos/CLI/run-tests.sh
+
+      - name: Validate localization coverage
+        run: ruby macos/Tests/validate-localizations.rb
+
+  release-artifact:
+    name: Universal release artifact audit
     runs-on: xcode-27
     timeout-minutes: 15
 
@@ -35,17 +41,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build release app without signing
-        run: >-
-          xcodebuild
-          -project macos/GrapeCompare.xcodeproj
-          -scheme GrapeCompare
-          -destination 'platform=macOS'
-          -configuration Release
-          -derivedDataPath "$RUNNER_TEMP/GrapeCompareDerivedData"
-          MACOSX_DEPLOYMENT_TARGET=14.0
-          CODE_SIGNING_ALLOWED=NO
-          build
+      - name: Build direct-distribution candidate
+        run: bash scripts/build-release.sh 1.15.0 "$RUNNER_TEMP/release"
+
+      - name: Validate archive, architectures, deployment target, signature, sandbox, and localizations
+        run: bash scripts/validate-release.sh 1.15.0 "$RUNNER_TEMP/release"
 
   performance-budget:
     name: Large-input performance budgets
@@ -61,4 +61,4 @@ jobs:
           GRAPECOMPARE_VERIFY_PERFORMANCE: '1'
         run: |
           bash macos/Benchmarks/run-benchmarks.sh 100000 10000
-          bash macos/Benchmarks/run-git-benchmarks.sh 5000 100
+          bash macos/Benchmarks/run-git-benchmarks.sh 10000 200

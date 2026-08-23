@@ -588,23 +588,135 @@ let workingChanges = try! GitRepositoryComparator.changes(
     in: gitTmp,
     from: .revision("HEAD"),
     to: .workingTree)
-check(workingChanges.contains(GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)) &&
-      workingChanges.contains(GitChange(kind: .untracked, path: "untracked.txt", oldPath: nil)),
+check(workingChanges.contains(GitChange(
+        kind: .modified, path: "tracked.txt", oldPath: nil, stage: .unstaged)) &&
+      workingChanges.contains(GitChange(
+        kind: .untracked, path: "untracked.txt", oldPath: nil, stage: .untracked)),
       "Git working-tree comparison includes tracked and untracked changes")
 runGit(["add", "tracked.txt"], in: gitTmp)
 let indexChanges = try! GitRepositoryComparator.changes(
     in: gitTmp, from: .revision("HEAD"), to: .index)
-check(indexChanges == [GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)] &&
+check(indexChanges == [GitChange(
+        kind: .modified, path: "tracked.txt", oldPath: nil, stage: .staged)] &&
       (try! GitRepositoryComparator.fileData(
         in: gitTmp, target: .index, path: "tracked.txt")) == Data("working\n".utf8),
       "Git comparison reads staged index content")
 try! Data("unstaged\n".utf8).write(to: gitTmp.appending(path: "tracked.txt"))
 let indexToWorktree = try! GitRepositoryComparator.changes(
     in: gitTmp, from: .index, to: .workingTree)
-check(indexToWorktree.contains(GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)) &&
-      indexToWorktree.contains(GitChange(kind: .untracked, path: "untracked.txt", oldPath: nil)),
+check(indexToWorktree.contains(GitChange(
+        kind: .modified, path: "tracked.txt", oldPath: nil, stage: .unstaged)) &&
+      indexToWorktree.contains(GitChange(
+        kind: .untracked, path: "untracked.txt", oldPath: nil, stage: .untracked)),
       "Git comparison distinguishes index from working-tree content")
+
+let stagedAndUnstaged = try! GitRepositoryComparator.changes(
+    in: gitTmp, from: .revision("HEAD"), to: .workingTree)
+check(stagedAndUnstaged.filter { $0.path == "tracked.txt" }.map(\.stage).sorted {
+        $0.rawValue < $1.rawValue
+      } == [.staged, .unstaged] && Set(stagedAndUnstaged.map(\.id)).count == stagedAndUnstaged.count,
+      "Git comparison preserves staged and unstaged versions of the same path")
+
+let historyPageOne = try! GitRepositoryComparator.fileRevisions(
+    in: gitTmp, path: "renamed.txt", revision: "feature", limit: 1)
+let historyPageTwo = try! GitRepositoryComparator.fileRevisions(
+    in: gitTmp, path: "renamed.txt", revision: "feature", limit: 1, skip: 1)
+check(historyPageOne.count == 1 && historyPageTwo.count == 1 &&
+      historyPageOne[0].id != historyPageTwo[0].id,
+      "Git file history pagination returns stable non-overlapping pages")
+
+try! Data([0x00, 0x01, 0x02]).write(to: gitTmp.appending(path: "binary.dat"))
+try! Data("version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 3\n".utf8)
+    .write(to: gitTmp.appending(path: "pointer.bin"))
+try! Data(repeating: 0x41, count: 32).write(to: gitTmp.appending(path: "large.txt"))
+check((try! GitRepositoryComparator.inspectFile(
+        in: gitTmp, target: .workingTree, path: "binary.dat")).kind == .binary,
+      "Git inspection identifies binary working-tree content")
+check((try! GitRepositoryComparator.inspectFile(
+        in: gitTmp, target: .workingTree, path: "pointer.bin")).kind == .lfsPointer,
+      "Git inspection identifies an LFS pointer without invoking Git LFS")
+check((try! GitRepositoryComparator.inspectFile(
+        in: gitTmp, target: .workingTree, path: "large.txt", probeLimit: 16)).kind == .largeFile,
+      "Git inspection bounds reads for large content")
+
+do {
+    _ = try GitRepositoryComparator.changes(
+        in: gitTmp,
+        from: .index,
+        to: .workingTree,
+        policy: GitCommandPolicy(maximumOutputBytes: 1))
+    check(false, "Git commands enforce their output safety limit")
+} catch GitRepositoryError.outputTooLarge {
+    check(true, "Git commands enforce their output safety limit")
+} catch {
+    check(false, "Git output limit reports the expected error")
+}
+do {
+    _ = try GitRepositoryComparator.changes(
+        in: gitTmp,
+        from: .index,
+        to: .workingTree,
+        policy: GitCommandPolicy(isCancelled: { true }))
+    check(false, "Git commands observe cancellation")
+} catch GitRepositoryError.cancelled {
+    check(true, "Git commands observe cancellation")
+} catch {
+    check(false, "Git cancellation reports the expected error")
+}
+
+do {
+    _ = try GitRepositoryComparator.runProcessForTesting(
+        executable: URL(fileURLWithPath: "/bin/sh"),
+        arguments: ["-c", "sleep 2"],
+        in: gitTmp,
+        policy: GitCommandPolicy(timeout: 0.05))
+    check(false, "Git commands enforce their timeout")
+} catch GitRepositoryError.timedOut {
+    check(true, "Git commands enforce their timeout")
+} catch {
+    check(false, "Git timeout reports the expected error")
+}
+
+let submoduleSource = URL(fileURLWithPath: NSTemporaryDirectory())
+    .appending(path: "grapetest-submodule-\(UUID().uuidString)")
+try! FileManager.default.createDirectory(at: submoduleSource, withIntermediateDirectories: true)
+runGit(["init", "-b", "main"], in: submoduleSource)
+runGit(["config", "user.email", "tests@grapecompare.local"], in: submoduleSource)
+runGit(["config", "user.name", "GrapeCompare Tests"], in: submoduleSource)
+try! Data("nested\n".utf8).write(to: submoduleSource.appending(path: "nested.txt"))
+runGit(["add", "nested.txt"], in: submoduleSource)
+runGit(["commit", "-m", "nested"], in: submoduleSource)
+runGit(["-c", "protocol.file.allow=always", "submodule", "add", submoduleSource.path, "modules/sample"], in: gitTmp)
+check((try! GitRepositoryComparator.inspectFile(
+        in: gitTmp, target: .index, path: "modules/sample")).kind == .submodule &&
+      (try! GitRepositoryComparator.inspectFile(
+        in: gitTmp, target: .workingTree, path: "modules/sample")).kind == .submodule,
+      "Git inspection identifies submodules without traversing them")
+
+let mergeTmp = URL(fileURLWithPath: NSTemporaryDirectory())
+    .appending(path: "grapetest-merge-\(UUID().uuidString)")
+try! FileManager.default.createDirectory(at: mergeTmp, withIntermediateDirectories: true)
+runGit(["init", "-b", "main"], in: mergeTmp)
+runGit(["config", "user.email", "tests@grapecompare.local"], in: mergeTmp)
+runGit(["config", "user.name", "GrapeCompare Tests"], in: mergeTmp)
+try! Data("base\n".utf8).write(to: mergeTmp.appending(path: "base.txt"))
+runGit(["add", "base.txt"], in: mergeTmp)
+runGit(["commit", "-m", "base"], in: mergeTmp)
+runGit(["checkout", "-b", "side"], in: mergeTmp)
+try! Data("side\n".utf8).write(to: mergeTmp.appending(path: "side.txt"))
+runGit(["add", "side.txt"], in: mergeTmp)
+runGit(["commit", "-m", "side"], in: mergeTmp)
+runGit(["checkout", "main"], in: mergeTmp)
+try! Data("main\n".utf8).write(to: mergeTmp.appending(path: "main.txt"))
+runGit(["add", "main.txt"], in: mergeTmp)
+runGit(["commit", "-m", "main"], in: mergeTmp)
+runGit(["merge", "--no-ff", "side", "-m", "merge"], in: mergeTmp)
+check((try! GitRepositoryComparator.commit(in: mergeTmp, revision: "HEAD")).parentIDs.count == 2,
+      "Git commit metadata preserves both merge parents")
+
 try! FileManager.default.removeItem(at: gitTmp)
+try! FileManager.default.removeItem(at: submoduleSource)
+try! FileManager.default.removeItem(at: mergeTmp)
 
 // MARK: - FolderComparator
 
@@ -1377,9 +1489,12 @@ let watcherRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
     .appending(path: ".filesystem-watcher-\(UUID().uuidString)")
 try! FileManager.default.createDirectory(at: watcherRoot, withIntermediateDirectories: true)
 let changed = DispatchSemaphore(value: 0)
+let watcherLock = NSLock()
+var watcherCallbackCount = 0
 let watcher = FilesystemWatcher()
 watcher.start(watching: [watcherRoot], latency: 0.05) { urls in
     if !urls.isEmpty {
+        watcherLock.withLock { watcherCallbackCount += 1 }
         changed.signal()
     }
 }
@@ -1387,6 +1502,14 @@ Thread.sleep(forTimeInterval: 0.1)
 write("changed", watcherRoot.appending(path: "changed.txt"))
 check(changed.wait(timeout: .now() + 3) == .success,
       "filesystem watcher reports a mutation inside a watched root")
+for index in 0..<100 {
+    write("burst \(index)", watcherRoot.appending(path: "burst-\(index).txt"))
+}
+check(changed.wait(timeout: .now() + 3) == .success,
+      "filesystem watcher reports a 100-file mutation burst")
+Thread.sleep(forTimeInterval: 0.3)
+check(watcherLock.withLock { watcherCallbackCount } <= 3,
+      "filesystem watcher coalesces mutation bursts into bounded callbacks")
 watcher.stop()
 try? FileManager.default.removeItem(at: watcherRoot)
 

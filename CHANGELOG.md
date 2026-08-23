@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.15.0 — 2026-08-22
+
+### Professional Git and release confidence
+
+- Split HEAD-to-worktree changes into staged, unstaged, and untracked groups, including distinct comparisons when one path has both staged and unstaged edits.
+- Added Git target shortcuts, keyboard commands, merge-parent selection, and rename-aware paginated file history.
+- Added explicit text, binary, Git LFS pointer, submodule, and bounded large-file inspection without traversing submodules or requiring Git LFS.
+- Bounded every changeset Git process with cancellation, a 30-second timeout, a 64 MiB output limit, and temporary-file-backed output capture.
+- Coalesced 100-file watcher bursts and added deterministic fixtures for Git pagination, merge parents, binary/LFS/large files, submodules, cancellation, timeout, and output limits.
+- Added a CI-built universal direct-distribution archive audit covering checksum, both CPU architectures, macOS 14 deployment, signature, sandbox separation, and English/Chinese resources.
+- Expanded the performance gate to a 10,000-file mixed staged/unstaged repository and 200-commit paginated history.
+
 ## 1.14.0 — 2026-08-22
 
 ### Git changesets and file history

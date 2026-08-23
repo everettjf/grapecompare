@@ -7,7 +7,7 @@ on:
       version:
         description: Version without the v prefix
         required: true
-        default: '1.14.0'
+        default: '1.15.0'
         type: string
 permissions:
   contents: write
@@ -37,6 +37,8 @@ jobs:
         run: |
           chmod +x scripts/build-release.sh
           scripts/build-release.sh "$RELEASE_VERSION" "$RUNNER_TEMP/release"
+      - name: Validate release candidate
+        run: scripts/validate-release.sh "$RELEASE_VERSION" "$RUNNER_TEMP/release"
       - name: Upload candidate build
         if: env.HAS_SIGNING_CERTIFICATE != 'true' || env.HAS_NOTARY_CREDENTIALS != 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
@@ -57,6 +59,7 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent "$RUNNER_TEMP/release/.staging/GrapeCompare.app" "$RUNNER_TEMP/release/GrapeCompare-$version.zip"
           cd "$RUNNER_TEMP/release"
           shasum -a 256 "GrapeCompare-$version.zip" > "GrapeCompare-$version.zip.sha256"
+          "$GITHUB_WORKSPACE/scripts/validate-release.sh" "$version" "$RUNNER_TEMP/release"
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/') && env.HAS_SIGNING_CERTIFICATE == 'true' && env.HAS_NOTARY_CREDENTIALS == 'true'
         env:

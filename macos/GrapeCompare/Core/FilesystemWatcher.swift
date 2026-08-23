@@ -13,6 +13,9 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
     private var rootPollTimer: DispatchSourceTimer?
     private var rootFingerprints: [String: String] = [:]
     private var handler: Handler?
+    private var pendingPaths: Set<String> = []
+    private var deliveryGeneration: UInt = 0
+    private var coalescingDelay: TimeInterval = 0.05
 
     deinit { stop() }
 
@@ -27,7 +30,10 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
         // special `SinceNow` value leaves a small registration window in which
         // an immediate save can be missed.
         let sinceEventID = FSEventsGetCurrentEventId()
-        lock.withLock { self.handler = handler }
+        lock.withLock {
+            self.handler = handler
+            coalescingDelay = min(max(latency, 0.02), 0.5)
+        }
         var context = FSEventStreamContext(
             version: 0,
             info: Unmanaged.passUnretained(self).toOpaque(),
@@ -78,6 +84,8 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
                 rootSources = []
                 rootPollTimer = nil
                 rootFingerprints = [:]
+                pendingPaths = []
+                deliveryGeneration &+= 1
                 handler = nil
             }
             return (stream, rootSources, rootPollTimer)
@@ -93,8 +101,25 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
 
     private func deliver(_ urls: [URL]) {
         guard !urls.isEmpty else { return }
-        let callback = lock.withLock { handler }
-        callback?(urls)
+        let (generation, delay) = lock.withLock {
+            pendingPaths.formUnion(urls.map { $0.standardizedFileURL.path(percentEncoded: false) })
+            deliveryGeneration &+= 1
+            return (deliveryGeneration, coalescingDelay)
+        }
+        queue.asyncAfter(deadline: .now() + delay) { [weak self] in
+            self?.flushDelivery(generation: generation)
+        }
+    }
+
+    private func flushDelivery(generation: UInt) {
+        let delivery: (Handler?, [URL]) = lock.withLock {
+            guard generation == deliveryGeneration else { return (nil, []) }
+            let urls = pendingPaths.sorted().map(URL.init(fileURLWithPath:))
+            pendingPaths.removeAll(keepingCapacity: true)
+            return (handler, urls)
+        }
+        guard !delivery.1.isEmpty else { return }
+        delivery.0?(delivery.1)
     }
 
     /// A vnode source closes the small FSEvents delivery gap for immediate

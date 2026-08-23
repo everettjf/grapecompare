@@ -61,8 +61,9 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 ### Merge and developer workflows
 
 - Three-way base/ours/theirs merge with explicit conflict resolution
-- Branch, commit, index, and working-tree changesets with filters, commit context, and live refresh
-- Rename-aware per-file history with arbitrary A/B revision comparison without changing repository state
+- Branch, commit, index, and working-tree changesets grouped as staged, unstaged, and untracked, with target shortcuts, filters, commit context, and live refresh
+- Rename-aware paginated file history with arbitrary A/B revision and merge-parent comparison without changing repository state
+- Explicit text, binary, Git LFS pointer, submodule, and bounded large-file inspection
 - Standalone CLI plus Git difftool/mergetool configuration
 - Finder Quick Action support through the built-in Compare Files shortcut on macOS 15+
 
@@ -97,6 +98,8 @@ The repository includes a Release benchmark with reproducible generated fixtures
 | 30k-line high churn | **0.070 s** | Retains all stable structural anchors |
 | 10k-file folder | **0.382 s** | Down from 2.385 s, about **6.2× faster** |
 | 50k-file folder | **3.917 s** | Full scan, validation, tree, sort, rollup |
+| 10k-file mixed Git changeset | **0.294 s** | 10k staged plus 5k unstaged records |
+| 200-commit Git file history | **0.196 s** | Rename-aware metadata and paths |
 
 Timings exclude fixture generation and vary by hardware and storage. Run them locally:
 
@@ -104,10 +107,10 @@ Timings exclude fixture generation and vary by hardware and storage. Run them lo
 bash macos/Benchmarks/run-benchmarks.sh
 bash macos/Benchmarks/run-benchmarks.sh 100000 50000
 GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-benchmarks.sh 100000 10000
-GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-git-benchmarks.sh 5000 100
+GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-git-benchmarks.sh 10000 200
 ```
 
-The CI gate fails when either end-to-end text scenario exceeds 0.25 seconds, the 10k-file folder scenario exceeds 2 seconds, a 5k-file Git changeset exceeds 2 seconds, a 100-commit file history exceeds 1 second, or the applicable peak-memory budget is exceeded.
+The CI gate fails when either end-to-end text scenario exceeds 0.25 seconds, the 10k-file folder scenario exceeds 2 seconds, a 10k-file mixed staged/unstaged Git changeset exceeds 4 seconds, a 200-commit file history exceeds 2 seconds, or the applicable peak-memory budget is exceeded. CI also builds and audits the universal macOS 14+ release archive.
 
 The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF01840446) and the low-occurrence anchoring ideas documented in [Git's diff algorithms](https://git-scm.com/docs/diff-algorithm-option.html).
 

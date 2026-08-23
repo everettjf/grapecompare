@@ -5,12 +5,14 @@ struct GitCompareView: View {
     @State private var selection = Set<GitChange.ID>()
     @State private var query = ""
     @State private var statusFilter: GitChangeKind?
+    @State private var stageFilter: GitChangeStage?
     @State private var historyA: GitFileRevision.ID?
     @State private var historyB: GitFileRevision.ID?
 
     private var filteredChanges: [GitChange] {
         return state.gitChanges.filter {
             (statusFilter == nil || $0.kind == statusFilter) &&
+                (stageFilter == nil || $0.stage == stageFilter) &&
                 (query.isEmpty || $0.path.localizedCaseInsensitiveContains(query) ||
                     $0.oldPath?.localizedCaseInsensitiveContains(query) == true)
         }
@@ -39,6 +41,10 @@ struct GitCompareView: View {
                     Divider()
                     HSplitView {
                         Table(filteredChanges, selection: $selection) {
+                            TableColumn("Stage") { change in
+                                Label(change.stage.localizedTitle, systemImage: change.stage.symbol)
+                            }
+                            .width(min: 90, ideal: 110)
                             TableColumn("Status") { change in
                                 Label(change.kind.localizedTitle, systemImage: change.kind.symbol)
                                     .foregroundStyle(change.kind.color)
@@ -105,6 +111,17 @@ struct GitCompareView: View {
                     Button(reference.name) { state.gitLeftTarget = reference.name }
                 }
             }
+            Menu("Shortcuts") {
+                Button("HEAD ↔ WORKTREE") {
+                    state.useGitComparisonShortcut(left: "HEAD", right: "WORKTREE")
+                }
+                Button("HEAD ↔ INDEX") {
+                    state.useGitComparisonShortcut(left: "HEAD", right: "INDEX")
+                }
+                Button("INDEX ↔ WORKTREE") {
+                    state.useGitComparisonShortcut(left: "INDEX", right: "WORKTREE")
+                }
+            }
             Button("Compare") {
                 selection.removeAll()
                 state.startGitComparison()
@@ -122,6 +139,15 @@ struct GitCompareView: View {
             } label: {
                 Label(statusFilter?.localizedTitle ?? "All Statuses", systemImage: "line.3.horizontal.decrease.circle")
             }
+            Menu {
+                Button("All Stages") { stageFilter = nil }
+                Divider()
+                ForEach(GitChangeStage.allCases) { stage in
+                    Button(stage.localizedTitle) { stageFilter = stage }
+                }
+            } label: {
+                Label(stageFilter?.localizedTitle ?? "All Stages", systemImage: "square.stack.3d.up")
+            }
             TextField("Filter paths", text: $query)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 180)
@@ -134,9 +160,9 @@ struct GitCompareView: View {
 
     private var commitContext: some View {
         HStack(spacing: 12) {
-            commitCard(target: state.gitLeftTarget, commit: state.gitLeftCommit)
+            commitCard(target: state.gitLeftTarget, commit: state.gitLeftCommit, isLeft: true)
             Image(systemName: "arrow.right").foregroundStyle(.secondary)
-            commitCard(target: state.gitRightTarget, commit: state.gitRightCommit)
+            commitCard(target: state.gitRightTarget, commit: state.gitRightCommit, isLeft: false)
             Spacer()
             if let date = state.lastLiveRefresh {
                 Label {
@@ -154,7 +180,7 @@ struct GitCompareView: View {
         .background(.quaternary.opacity(0.3))
     }
 
-    private func commitCard(target: String, commit: GitCommit?) -> some View {
+    private func commitCard(target: String, commit: GitCommit?, isLeft: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(target).font(.caption.bold())
             if let commit {
@@ -164,6 +190,23 @@ struct GitCompareView: View {
                 Text("\(commit.authorName) · \(commit.authoredDate.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                if !commit.parentIDs.isEmpty {
+                    HStack(spacing: 4) {
+                        Text("Parents:").font(.caption2).foregroundStyle(.secondary)
+                        ForEach(commit.parentIDs, id: \.self) { parent in
+                            Button(String(parent.prefix(8))) {
+                                if isLeft {
+                                    state.useGitComparisonShortcut(left: parent, right: state.gitRightTarget)
+                                } else {
+                                    state.useGitComparisonShortcut(left: state.gitLeftTarget, right: parent)
+                                }
+                            }
+                            .buttonStyle(.link)
+                            .font(.caption2.monospaced())
+                            .help("Compare using parent commit \(parent)")
+                        }
+                    }
+                }
             } else {
                 Text(target.uppercased() == "WORKTREE" ? "Working tree" : "Staging index")
                     .font(.caption)
@@ -183,6 +226,11 @@ struct GitCompareView: View {
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                    if let inspection = state.gitSelectedFileInspection {
+                        Text(inspection.summary)
+                            .font(.caption2)
+                            .foregroundStyle(inspection.kind == .text ? Color.secondary : Color.orange)
+                    }
                 }
                 Spacer()
                 Button("Compare A ↔ B") {
@@ -193,7 +241,7 @@ struct GitCompareView: View {
             }
             .padding(12)
             Divider()
-            if state.isLoadingGitHistory {
+            if state.isLoadingGitHistory && state.gitFileRevisions.isEmpty {
                 ProgressView("Reading file history…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let error = state.gitHistoryError {
@@ -214,6 +262,13 @@ struct GitCompareView: View {
                         ForEach(state.gitFileRevisions) { revision in
                             historyRow(revision)
                             Divider()
+                        }
+                        if state.gitHistoryHasMore || state.isLoadingGitHistory {
+                            Button(state.isLoadingGitHistory ? "Loading…" : "Load More") {
+                                state.loadMoreGitFileHistory()
+                            }
+                            .disabled(state.isLoadingGitHistory)
+                            .padding(12)
                         }
                     }
                 }
@@ -268,6 +323,42 @@ struct GitCompareView: View {
         Binding(
             get: { state[keyPath: keyPath] },
             set: { state[keyPath: keyPath] = $0 })
+    }
+}
+
+private extension GitChangeStage {
+    var localizedTitle: LocalizedStringResource {
+        switch self {
+        case .comparison: "Comparison"
+        case .staged: "Staged"
+        case .unstaged: "Unstaged"
+        case .untracked: "Untracked"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .comparison: "arrow.left.arrow.right"
+        case .staged: "tray.and.arrow.down.fill"
+        case .unstaged: "pencil"
+        case .untracked: "questionmark.diamond"
+        }
+    }
+}
+
+private extension GitFileInspection {
+    var summary: String {
+        let kindName: String
+        switch kind {
+        case .text: kindName = String(localized: "Text")
+        case .binary: kindName = String(localized: "Binary")
+        case .lfsPointer: kindName = String(localized: "Git LFS pointer")
+        case .submodule: kindName = String(localized: "Git submodule")
+        case .largeFile: kindName = String(localized: "Large file")
+        case .missing: kindName = String(localized: "Missing")
+        }
+        guard let byteCount else { return kindName }
+        return "\(kindName) · \(ByteCountFormatter.string(fromByteCount: byteCount, countStyle: .file))"
     }
 }
 

@@ -45,12 +45,20 @@ private enum GitBenchmark {
     for index in 0..<changedFileCount {
       try Data("after \(index)\n".utf8).write(to: root.appending(path: "file-\(index).txt"))
     }
+    try runGit(["add", "."], in: root)
+    for index in 0..<(changedFileCount / 2) {
+      try Data("after staged and unstaged \(index)\n".utf8)
+        .write(to: root.appending(path: "file-\(index).txt"))
+    }
 
     let (changes, changesSeconds) = try measure {
       try GitRepositoryComparator.changes(in: root, from: .revision("HEAD"), to: .workingTree)
     }
-    guard changes.count == changedFileCount else {
-      fatalError("Expected \(changedFileCount) changes, got \(changes.count)")
+    let expectedChanges = changedFileCount + changedFileCount / 2
+    guard changes.count == expectedChanges,
+          changes.filter({ $0.stage == .staged }).count == changedFileCount,
+          changes.filter({ $0.stage == .unstaged }).count == changedFileCount / 2 else {
+      fatalError("Expected \(expectedChanges) staged/unstaged changes, got \(changes.count)")
     }
 
     try runGit(["add", "."], in: root)
@@ -68,12 +76,22 @@ private enum GitBenchmark {
     guard history.count == historyCommitCount else {
       fatalError("Expected \(historyCommitCount) history entries, got \(history.count)")
     }
+    let pageSize = min(50, historyCommitCount / 2)
+    let (historyPage, paginationSeconds) = try measure {
+      try GitRepositoryComparator.fileRevisions(
+        in: root, path: "history.txt", limit: pageSize, skip: pageSize)
+    }
+    guard historyPage.count == pageSize,
+          Set(history.map(\.id)).isSuperset(of: historyPage.map(\.id)) else {
+      fatalError("History pagination returned inconsistent results")
+    }
 
     var usage = rusage()
     getrusage(RUSAGE_SELF, &usage)
     let peakResidentMB = Double(usage.ru_maxrss) / 1_048_576
     print(String(format: "Git changeset (%d files): %.3f s", changedFileCount, changesSeconds))
     print(String(format: "Git history (%d commits): %.3f s", historyCommitCount, historySeconds))
+    print(String(format: "Git history page (%d…%d): %.3f s", pageSize, pageSize * 2, paginationSeconds))
     print(String(format: "Peak resident memory: %.1f MB", peakResidentMB))
 
     if ProcessInfo.processInfo.environment["GRAPECOMPARE_VERIFY_PERFORMANCE"] == "1" {
@@ -85,6 +103,9 @@ private enum GitBenchmark {
       }
       if historySeconds > historyBudget {
         violations.append("history \(historySeconds)s exceeded \(historyBudget)s")
+      }
+      if paginationSeconds > historyBudget {
+        violations.append("history pagination \(paginationSeconds)s exceeded \(historyBudget)s")
       }
       if peakResidentMB > 512 {
         violations.append("peak memory \(peakResidentMB)MB exceeded 512MB")

@@ -39,6 +39,7 @@ struct GrapeCompareApp: App {
         .commands {
             FileOperationCommands()
             MergeCommands()
+            GitCommands()
             WorkspaceCommands()
             CommandMenu("Appearance") {
                 Picker("Appearance", selection: Binding(
@@ -103,6 +104,36 @@ extension FocusedValues {
     @Entry var fileOperationController: FileOperationController?
     @Entry var appState: AppState?
     @Entry var workspaceController: WorkspaceController?
+}
+
+private struct GitCommands: Commands {
+    @FocusedValue(\.appState) private var state
+
+    private var isGitScreen: Bool { state?.screen == .git }
+
+    var body: some Commands {
+        CommandMenu("Git") {
+            Button("Compare HEAD ↔ WORKTREE") {
+                state?.useGitComparisonShortcut(left: "HEAD", right: "WORKTREE")
+            }
+            .keyboardShortcut("1", modifiers: [.command, .shift])
+            .disabled(!isGitScreen)
+            Button("Compare HEAD ↔ INDEX") {
+                state?.useGitComparisonShortcut(left: "HEAD", right: "INDEX")
+            }
+            .keyboardShortcut("2", modifiers: [.command, .shift])
+            .disabled(!isGitScreen)
+            Button("Compare INDEX ↔ WORKTREE") {
+                state?.useGitComparisonShortcut(left: "INDEX", right: "WORKTREE")
+            }
+            .keyboardShortcut("3", modifiers: [.command, .shift])
+            .disabled(!isGitScreen)
+            Divider()
+            Button("Refresh Git Comparison") { state?.startGitComparison() }
+                .keyboardShortcut("r", modifiers: [.command])
+                .disabled(!isGitScreen || state?.isComparingGit == true)
+        }
+    }
 }
 
 private struct WorkspaceCommands: Commands {
