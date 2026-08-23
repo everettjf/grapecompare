@@ -44,6 +44,9 @@ struct HomeView: View {
             }
             .padding(.horizontal, 48)
 
+            QuickCompareDropZone()
+                .padding(.horizontal, 48)
+
             if state.resumableSession != nil || !state.recentComparisons.isEmpty {
                 RecentComparisonsView()
                     .padding(.horizontal, 48)
@@ -92,6 +95,52 @@ struct HomeView: View {
         } message: {
             Text(state.sessionError ?? "Unknown error")
         }
+        .alert("Quick Compare Failed", isPresented: Binding(
+            get: { state.quickCompareError != nil },
+            set: { if !$0 { state.quickCompareError = nil } }
+        )) {
+            Button("OK") { state.quickCompareError = nil }
+        } message: {
+            Text(state.quickCompareError ?? "")
+        }
+    }
+}
+
+private struct QuickCompareDropZone: View {
+    @Environment(AppState.self) private var state
+    @State private var isTargeted = false
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: "arrow.down.doc.fill")
+                .font(.title2)
+                .foregroundStyle(.tint)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Quick Compare").font(.headline)
+                Text("Drop exactly two files or folders to compare immediately")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button("Paste Left") { state.pasteQuickComparisonSide(left: true) }
+            Button("Paste Right") { state.pasteQuickComparisonSide(left: false) }
+        }
+        .padding(18)
+        .background(
+            isTargeted ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor),
+            in: .rect(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.25),
+                              style: StrokeStyle(lineWidth: 1.5, dash: [7]))
+        }
+        .dropDestination(for: URL.self) { items, _ in
+            state.compareQuickItems(items)
+            return items.count == 2
+        } isTargeted: { isTargeted = $0 }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Quick Compare drop zone")
+        .accessibilityHint("Drop exactly two files or two folders to compare them immediately")
     }
 }
 

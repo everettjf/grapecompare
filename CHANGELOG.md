@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.13 — 2026-08-23
+
+### Quick drop and clipboard comparison
+
+- Drop exactly two files or two folders on one target to start the matching comparison immediately.
+- Paste file URLs or bounded text independently into the left and right file inputs; comparison starts as soon as both sides are ready.
+- Store pasted text in private `0700` temporary directories with `0600` files and an 8 MiB per-item safety limit.
+- Reject mixed file/folder pairs and ambiguous item counts before starting any filesystem work.
+
 ## 1.0.12 — 2026-08-23
 
 ### Printable and shareable comparison reports

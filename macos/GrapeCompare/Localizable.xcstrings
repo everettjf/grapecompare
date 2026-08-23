@@ -3080,6 +3080,18 @@
     "Report Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "报告操作失败" } } } },
     "Share Comparison…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分享比较…" } } } },
     "The PDF report could not be created." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法创建 PDF 报告。" } } } },
+    "Both items must be the same kind." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "两个项目必须是同一类型。" } } } },
+    "Clipboard text exceeds the 8 MiB safety limit." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板文本超过 8 MiB 安全限制。" } } } },
+    "Drop exactly two files or folders to compare immediately" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拖入恰好两个文件或文件夹即可立即比较" } } } },
+    "Drop exactly two files or two folders." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请拖入恰好两个文件或两个文件夹。" } } } },
+    "Drop exactly two files or two folders to compare them immediately" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拖入恰好两个文件或两个文件夹即可立即比较" } } } },
+    "Paste Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "粘贴到左侧" } } } },
+    "Paste Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "粘贴到右侧" } } } },
+    "Paste a file or text for file comparison." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请粘贴文件或文本以进行文件比较。" } } } },
+    "Quick Compare" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较" } } } },
+    "Quick Compare drop zone" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较拖放区域" } } } },
+    "Quick Compare Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较失败" } } } },
+    "The clipboard does not contain a file or text." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板中没有文件或文本。" } } } },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {

@@ -6,7 +6,7 @@
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
 原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
-**1.0.12 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+**1.0.13 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)

@@ -196,6 +196,7 @@ final class AppState {
     var sessionError: String?
     var gitActionError: String?
     var reportActionError: String?
+    var quickCompareError: String?
 
     var isComparingFile: Bool { comparisonPhase == .file }
     var isComparingFolder: Bool { comparisonPhase == .folder }
@@ -258,6 +259,73 @@ final class AppState {
     @ObservationIgnored private var pendingLiveEventCount = 0
     @ObservationIgnored private var sharedReportURL: URL?
     @ObservationIgnored private var sharingPicker: NSSharingServicePicker?
+    @ObservationIgnored private var temporaryClipboardURLs: [URL] = []
+
+    func compareQuickItems(_ urls: [URL]) {
+        guard urls.count == 2 else {
+            quickCompareError = String(localized: "Drop exactly two files or two folders.")
+            return
+        }
+        let standardized = urls.map(\.standardizedFileURL)
+        let folderFlags = standardized.map(\.hasDirectoryPath)
+        guard folderFlags[0] == folderFlags[1] else {
+            quickCompareError = String(localized: "Both items must be the same kind.")
+            return
+        }
+        standardized.forEach { _ = $0.startAccessingSecurityScopedResource() }
+        if folderFlags[0] {
+            leftFolderURL = standardized[0]
+            rightFolderURL = standardized[1]
+            startFolderCompare()
+        } else {
+            leftFileURL = standardized[0]
+            rightFileURL = standardized[1]
+            startFileCompare()
+        }
+    }
+
+    func pasteQuickComparisonSide(left: Bool) {
+        let pasteboard = NSPasteboard.general
+        if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [
+            .urlReadingFileURLsOnly: true
+        ]) as? [URL], let url = urls.first {
+            assignQuickFile(url, left: left)
+            return
+        }
+        guard let text = pasteboard.string(forType: .string) else {
+            quickCompareError = String(localized: "The clipboard does not contain a file or text.")
+            return
+        }
+        let data = Data(text.utf8)
+        guard data.count <= 8 * 1_024 * 1_024 else {
+            quickCompareError = String(localized: "Clipboard text exceeds the 8 MiB safety limit.")
+            return
+        }
+        do {
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("GrapeCompare-Clipboard", isDirectory: true)
+            try FileManager.default.createDirectory(
+                at: directory, withIntermediateDirectories: true,
+                attributes: [.posixPermissions: 0o700])
+            let destination = directory.appendingPathComponent(UUID().uuidString + ".txt")
+            try data.write(to: destination, options: [.atomic])
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: destination.path)
+            temporaryClipboardURLs.append(destination)
+            assignQuickFile(destination, left: left)
+        } catch {
+            quickCompareError = error.localizedDescription
+        }
+    }
+
+    private func assignQuickFile(_ url: URL, left: Bool) {
+        guard !url.hasDirectoryPath else {
+            quickCompareError = String(localized: "Paste a file or text for file comparison.")
+            return
+        }
+        _ = url.startAccessingSecurityScopedResource()
+        if left { leftFileURL = url } else { rightFileURL = url }
+        if leftFileURL != nil, rightFileURL != nil { startFileCompare() }
+    }
 
     var canCreateComparisonReport: Bool {
         switch screen {
