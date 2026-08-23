@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.14 — 2026-08-23
+
+### Image conflict resolution
+
+- Detect three-image merge inputs and present Base, Ours, and Theirs as full visual candidates.
+- Measure Base-to-Ours and Base-to-Theirs pixel differences with the existing deterministic image engine.
+- Export the selected original image bytes without re-encoding or color-profile loss.
+- Complete Git image mergetool requests atomically and create the success sentinel only after the selected bytes are written.
+
 ## 1.0.13 — 2026-08-23
 
 ### Quick drop and clipboard comparison

@@ -445,6 +445,10 @@ if let request = ExternalMergeRequest(commandLineArguments: externalArguments) {
     check((try? String(contentsOf: request.destinationURL, encoding: .utf8)) == "resolved\n" &&
           FileManager.default.fileExists(atPath: request.sentinelURL.path),
           "external mergetool handoff writes output and completion sentinel")
+    let imageBytes = Data([0x89, 0x50, 0x4E, 0x47, 0x00, 0xFF])
+    try! request.complete(with: imageBytes)
+    check((try? Data(contentsOf: request.destinationURL)) == imageBytes,
+          "external mergetool handoff preserves binary image bytes")
 } else {
     check(false, "external mergetool command-line handoff parses")
 }

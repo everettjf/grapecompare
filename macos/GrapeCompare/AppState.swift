@@ -68,11 +68,29 @@ nonisolated private struct FileComparisonPayload: Sendable {
     let structuredError: String?
 }
 
-nonisolated private struct MergePayload: Sendable {
+nonisolated private struct TextMergePayload: Sendable {
     let base: TextSnapshot
     let ours: TextSnapshot
     let theirs: TextSnapshot
     let result: ThreeWayMergeResult
+}
+
+nonisolated private struct ImageMergePayload: Sendable {
+    let base: Data
+    let ours: Data
+    let theirs: Data
+    let oursDifference: ImageDifferenceResult
+    let theirsDifference: ImageDifferenceResult
+}
+
+nonisolated private enum MergePayload: Sendable {
+    case text(TextMergePayload)
+    case image(ImageMergePayload)
+}
+
+enum ImageMergeChoice: String, CaseIterable, Identifiable {
+    case base, ours, theirs
+    var id: Self { self }
 }
 
 nonisolated private struct GitComparisonPayload: Sendable {
@@ -135,6 +153,12 @@ final class AppState {
     var mergeError: String?
     var mergeSaveError: String?
     var mergeOutputIsDirty = false
+    var imageMergeBaseData: Data?
+    var imageMergeOursData: Data?
+    var imageMergeTheirsData: Data?
+    var imageMergeOursDifference: ImageDifferenceResult?
+    var imageMergeTheirsDifference: ImageDifferenceResult?
+    var imageMergeChoice: ImageMergeChoice?
     var mergeChoices: [MergeConflict.ID: MergeConflictChoice] = [:]
     var selectedMergeConflictID: MergeConflict.ID?
     private var mergeChoiceUndoStack: [[MergeConflict.ID: MergeConflictChoice]] = []
@@ -332,7 +356,7 @@ final class AppState {
         case .home: false
         case .fileDiff: fileDiff != nil
         case .folderCompare: folderRoot != nil
-        case .merge: mergeResult != nil
+        case .merge: mergeResult != nil || imageMergeBaseData != nil
         case .git: gitRepositoryURL != nil && gitError == nil
         }
     }
@@ -471,7 +495,15 @@ final class AppState {
             }
             if let folderRoot { walk(folderRoot) }
         case .merge:
-            if let result = mergeResult {
+            if let choice = imageMergeChoice {
+                append("Image conflict resolution: \(choice.rawValue)")
+                if let ours = imageMergeOursDifference {
+                    append("Base ↔ Ours: \(ours.differingPixelCount) differing pixels")
+                }
+                if let theirs = imageMergeTheirsDifference {
+                    append("Base ↔ Theirs: \(theirs.differingPixelCount) differing pixels")
+                }
+            } else if let result = mergeResult {
                 append("Conflicts: \(result.conflictCount)    Resolved: \(mergeChoices.count)")
                 append("")
                 mergeOutputText.prefix(maximumCharacters)
@@ -647,19 +679,38 @@ final class AppState {
         mergeChoiceRedoStack.removeAll()
         mergeOutputText = ""
         mergeOutputIsDirty = false
+        imageMergeBaseData = nil
+        imageMergeOursData = nil
+        imageMergeTheirsData = nil
+        imageMergeOursDifference = nil
+        imageMergeTheirsDifference = nil
+        imageMergeChoice = nil
         screen = .merge
         comparisonTask = Task { [weak self] in
             let worker = Task.detached(priority: .userInitiated) {
                 try Self.checkMergeCancellation(cancellation)
-                let base = try TextSnapshot(data: Data(contentsOf: baseURL, options: .mappedIfSafe))
-                let ours = try TextSnapshot(data: Data(contentsOf: oursURL, options: .mappedIfSafe))
-                let theirs = try TextSnapshot(data: Data(contentsOf: theirsURL, options: .mappedIfSafe))
+                let baseData = try Data(contentsOf: baseURL, options: .mappedIfSafe)
+                let oursData = try Data(contentsOf: oursURL, options: .mappedIfSafe)
+                let theirsData = try Data(contentsOf: theirsURL, options: .mappedIfSafe)
+                if let baseRaster = try? ImageRaster.decode(baseData),
+                   let oursRaster = try? ImageRaster.decode(oursData),
+                   let theirsRaster = try? ImageRaster.decode(theirsData) {
+                    return MergePayload.image(ImageMergePayload(
+                        base: baseData,
+                        ours: oursData,
+                        theirs: theirsData,
+                        oursDifference: ImageComparisonEngine.compare(left: baseRaster, right: oursRaster),
+                        theirsDifference: ImageComparisonEngine.compare(left: baseRaster, right: theirsRaster)))
+                }
+                let base = try TextSnapshot(data: baseData)
+                let ours = try TextSnapshot(data: oursData)
+                let theirs = try TextSnapshot(data: theirsData)
                 try Self.checkMergeCancellation(cancellation)
-                return MergePayload(
+                return MergePayload.text(TextMergePayload(
                     base: base,
                     ours: ours,
                     theirs: theirs,
-                    result: ThreeWayMergeEngine.merge(base: base, ours: ours, theirs: theirs))
+                    result: ThreeWayMergeEngine.merge(base: base, ours: ours, theirs: theirs)))
             }
             let result = await withTaskCancellationHandler {
                 await worker.result
@@ -671,7 +722,13 @@ final class AppState {
                   !Task.isCancelled,
                   self.requestGeneration == request else { return }
             switch result {
-            case .success(let payload):
+            case .success(.image(let payload)):
+                self.imageMergeBaseData = payload.base
+                self.imageMergeOursData = payload.ours
+                self.imageMergeTheirsData = payload.theirs
+                self.imageMergeOursDifference = payload.oursDifference
+                self.imageMergeTheirsDifference = payload.theirsDifference
+            case .success(.text(let payload)):
                 self.mergeResult = payload.result
                 self.mergeOutputText = self.renderMergeDraft(payload.result)
                 self.mergeOutputEncoding = payload.ours.encoding
@@ -682,6 +739,39 @@ final class AppState {
                 }
             }
             self.finishComparison(request)
+        }
+    }
+
+    func chooseImageMerge(_ choice: ImageMergeChoice) {
+        imageMergeChoice = choice
+        mergeOutputIsDirty = true
+    }
+
+    func saveImageMerge() {
+        guard let data = selectedImageMergeData else { return }
+        if isExternalMerge, let request = externalMergeRequest {
+            do {
+                try request.complete(with: data)
+                mergeOutputIsDirty = false
+                NSApp.terminate(nil)
+            } catch { mergeSaveError = error.localizedDescription }
+            return
+        }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = oursFileURL?.lastPathComponent ?? "merged-image.png"
+        guard panel.runModal() == .OK, let destination = panel.url else { return }
+        do {
+            try data.write(to: destination, options: .atomic)
+            mergeOutputIsDirty = false
+        } catch { mergeSaveError = error.localizedDescription }
+    }
+
+    private var selectedImageMergeData: Data? {
+        switch imageMergeChoice {
+        case .base: imageMergeBaseData
+        case .ours: imageMergeOursData
+        case .theirs: imageMergeTheirsData
+        case nil: nil
         }
     }
 

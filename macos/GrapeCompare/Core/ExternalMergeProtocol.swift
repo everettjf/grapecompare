@@ -19,7 +19,11 @@ nonisolated struct ExternalMergeRequest: Equatable, Sendable {
     }
 
     func complete(with snapshot: TextSnapshot) throws {
-        try snapshot.encodedData().write(to: destinationURL, options: .atomic)
+        try complete(with: snapshot.encodedData())
+    }
+
+    func complete(with data: Data) throws {
+        try data.write(to: destinationURL, options: .atomic)
         try Data().write(to: sentinelURL, options: .atomic)
     }
 }

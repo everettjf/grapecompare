@@ -3092,6 +3092,12 @@
     "Quick Compare drop zone" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较拖放区域" } } } },
     "Quick Compare Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较失败" } } } },
     "The clipboard does not contain a file or text." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板中没有文件或文本。" } } } },
+    "Choose" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择" } } } },
+    "Choose the image to keep" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择要保留的图像" } } } },
+    "Image Conflict Resolution" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像冲突解决" } } } },
+    "Image Unavailable" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像不可用" } } } },
+    "Ours: %lld px · Theirs: %lld px" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "我们的版本：%lld 像素 · 他们的版本：%lld 像素" } } } },
+    "Selected: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已选择：%@" } } } },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {
