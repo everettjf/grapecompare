@@ -9,76 +9,62 @@ struct HomeView: View {
 
     var body: some View {
         @Bindable var state = state
-        ScrollView {
-        VStack(spacing: 36) {
-            VStack(spacing: 10) {
-                Image("GrapeIcon")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 96, height: 96)
-                    .shadow(color: .green.opacity(0.35), radius: 12, y: 6)
-                Text("GrapeCompare")
-                    .font(.system(size: 32, weight: .bold))
-                Text("Native, fast, and professional file & folder comparison")
-                    .foregroundStyle(.secondary)
+        ZStack {
+            LinearGradient(
+                colors: [Color.accentColor.opacity(0.055), Color.clear, Color.purple.opacity(0.025)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: 22) {
+                    HomeHero(showDemoButton: showDemoButton)
+
+                    HStack(alignment: .top, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            DashboardSectionTitle(
+                                title: "Compare",
+                                subtitle: "Choose two files or folders")
+                            CompareCard(
+                                title: "Files",
+                                icon: "doc.text.magnifyingglass",
+                                description: "Text, structured data, images, and developer formats",
+                                acceptsFolders: false,
+                                left: $state.leftFileURL,
+                                right: $state.rightFileURL,
+                                action: state.startFileCompare)
+                            CompareCard(
+                                title: "Folders",
+                                icon: "folder.badge.questionmark",
+                                description: "Recursive comparison with safe, reviewable operations",
+                                acceptsFolders: true,
+                                left: $state.leftFolderURL,
+                                right: $state.rightFolderURL,
+                                action: state.startFolderCompare)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            DashboardSectionTitle(
+                                title: "Workflows",
+                                subtitle: "Drop, merge, or inspect a repository")
+                            QuickCompareDropZone()
+                            MergeCard()
+                            GitCard()
+                            if state.resumableSession != nil || !state.recentComparisons.isEmpty {
+                                RecentComparisonsView()
+                            }
+                        }
+                        .frame(width: 360, alignment: .topLeading)
+                    }
+                }
+                .frame(maxWidth: 1160)
+                .padding(.horizontal, 26)
+                .padding(.top, 22)
+                .padding(.bottom, 32)
             }
-            .padding(.top, 44)
-
-            HStack(spacing: 24) {
-                CompareCard(
-                    title: "Compare Files",
-                    icon: "doc.text.magnifyingglass",
-                    description: "Side-by-side diff with line and in-line highlighting",
-                    acceptsFolders: false,
-                    left: $state.leftFileURL,
-                    right: $state.rightFileURL,
-                    action: state.startFileCompare)
-                CompareCard(
-                    title: "Compare Folders",
-                    icon: "folder.badge.questionmark",
-                    description: "Recursively compare folders to find added, missing, and modified files",
-                    acceptsFolders: true,
-                    left: $state.leftFolderURL,
-                    right: $state.rightFolderURL,
-                    action: state.startFolderCompare)
-            }
-            .padding(.horizontal, 48)
-
-            QuickCompareDropZone()
-                .padding(.horizontal, 48)
-
-            if state.resumableSession != nil || !state.recentComparisons.isEmpty {
-                RecentComparisonsView()
-                    .padding(.horizontal, 48)
-            }
-
-            MergeCard()
-                .padding(.horizontal, 48)
-
-            GitCard()
-                .padding(.horizontal, 48)
-
-            Spacer()
-        }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .bottomTrailing) {
-            if showDemoButton {
-                Menu {
-                    Button("Compare Swift Files", systemImage: "doc.text.magnifyingglass") {
-                        state.loadFileDemo()
-                    }
-                    Button("Compare Swift Project Folders", systemImage: "folder.badge.questionmark") {
-                        state.loadFolderDemo()
-                    }
-                } label: {
-                    Label("Load Demo", systemImage: "sparkles")
-                }
-                .menuStyle(.button)
-                .controlSize(.large)
-                .padding(20)
-            }
-        }
         .alert("Unable to Load Demo", isPresented: Binding(
             get: { state.demoError != nil },
             set: { if !$0 { state.demoError = nil } }
@@ -106,26 +92,110 @@ struct HomeView: View {
     }
 }
 
+private struct HomeHero: View {
+    @Environment(AppState.self) private var state
+    let showDemoButton: Bool
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Image("GrapeIcon")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 68, height: 68)
+                .shadow(color: .green.opacity(0.28), radius: 10, y: 5)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text("GrapeCompare")
+                    .font(.largeTitle.bold())
+                Text("Native comparison for files, folders, images, merges, and Git")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 7) {
+                    HeroBadge(title: "Local", icon: "lock.shield")
+                    HeroBadge(title: "Fast", icon: "bolt")
+                    HeroBadge(title: "Open Source", icon: "chevron.left.forwardslash.chevron.right")
+                }
+            }
+
+            Spacer(minLength: 18)
+
+            if showDemoButton {
+                Menu {
+                    Button("Compare Swift Files", systemImage: "doc.text.magnifyingglass") {
+                        state.loadFileDemo()
+                    }
+                    Button("Compare Swift Project Folders", systemImage: "folder.badge.questionmark") {
+                        state.loadFolderDemo()
+                    }
+                } label: {
+                    Label("Load Demo", systemImage: "sparkles")
+                }
+                .menuStyle(.button)
+                .controlSize(.large)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(.regularMaterial, in: .rect(cornerRadius: 18))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .strokeBorder(Color.primary.opacity(0.07))
+        }
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct HeroBadge: View {
+    let title: LocalizedStringResource
+    let icon: String
+
+    var body: some View {
+        Label(title, systemImage: icon)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.primary.opacity(0.055), in: .capsule)
+    }
+}
+
+private struct DashboardSectionTitle: View {
+    let title: LocalizedStringResource
+    let subtitle: LocalizedStringResource
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.headline)
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 2)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 private struct QuickCompareDropZone: View {
     @Environment(AppState.self) private var state
     @State private var isTargeted = false
 
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: "arrow.down.doc.fill")
-                .font(.title2)
-                .foregroundStyle(.tint)
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Quick Compare").font(.headline)
-                Text("Drop exactly two files or folders to compare immediately")
+        VStack(alignment: .leading, spacing: 12) {
+            CompactCardHeader(
+                title: "Quick Compare",
+                subtitle: "Drop exactly two files or folders to compare immediately",
+                icon: "arrow.down.doc.fill")
+            HStack {
+                Label("Drop two items anywhere in this card", systemImage: "plus.square.on.square")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Spacer()
+                Button("Paste Left") { state.pasteQuickComparisonSide(left: true) }
+                Button("Paste Right") { state.pasteQuickComparisonSide(left: false) }
             }
-            Spacer()
-            Button("Paste Left") { state.pasteQuickComparisonSide(left: true) }
-            Button("Paste Right") { state.pasteQuickComparisonSide(left: false) }
         }
-        .padding(18)
+        .padding(14)
         .background(
             isTargeted ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor),
             in: .rect(cornerRadius: 16))
@@ -134,6 +204,7 @@ private struct QuickCompareDropZone: View {
                 .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.25),
                               style: StrokeStyle(lineWidth: 1.5, dash: [7]))
         }
+        .shadow(color: .black.opacity(0.055), radius: 9, y: 3)
         .dropDestination(for: URL.self) { items, _ in
             state.compareQuickItems(items)
             return items.count == 2
@@ -161,7 +232,7 @@ private struct RecentComparisonsView: View {
                 Button("Clear", role: .destructive) { state.clearRecentComparisons() }
                     .disabled(state.recentComparisons.isEmpty)
             }
-            ForEach(state.recentComparisons.prefix(5)) { session in
+            ForEach(state.recentComparisons.prefix(3)) { session in
                 Button { state.openRecentComparison(session) } label: {
                     HStack {
                         Image(systemName: icon(for: session.kind))
@@ -180,8 +251,8 @@ private struct RecentComparisonsView: View {
                 .accessibilityHint("Reopens the inputs and compares their current contents")
             }
         }
-        .padding(18)
-        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
+        .padding(14)
+        .dashboardCard()
     }
 
     private func icon(for kind: ComparisonSessionKind) -> String {
@@ -199,43 +270,38 @@ private struct GitCard: View {
 
     var body: some View {
         @Bindable var state = state
-        HStack(spacing: 16) {
-            Image(systemName: "arrow.triangle.branch")
-                .font(.title2)
-                .foregroundStyle(.tint)
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Compare Git Repository").font(.headline)
-                Text("Compare branches, commits, index, and working tree without checkout")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
+        VStack(alignment: .leading, spacing: 12) {
+            CompactCardHeader(
+                title: "Git Repository",
+                subtitle: "Branches, commits, index, worktree, and history",
+                icon: "arrow.triangle.branch")
             DropSlot(
                 label: "Repository",
                 acceptsFolders: true,
-                url: $state.gitRepositoryURL)
-                .frame(maxWidth: 300)
-            Button("Open Repository") { state.startGitComparison() }
-                .buttonStyle(.borderedProminent)
-                .disabled(state.gitRepositoryURL == nil)
-            if !state.gitRepositoryLibrary.isEmpty {
-                Menu("Recent Repositories") {
-                    ForEach(state.gitRepositoryLibrary) { entry in
-                        Button {
-                            state.openGitRepositoryLibraryEntry(entry)
-                        } label: {
-                            Label(entry.displayName, systemImage: "externaldrive")
-                        }
-                        Button("Forget \(entry.displayName)", role: .destructive) {
-                            state.removeGitRepositoryLibraryEntry(entry)
+                url: $state.gitRepositoryURL,
+                compact: true)
+            HStack {
+                Button("Open Repository") { state.startGitComparison() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(state.gitRepositoryURL == nil)
+                if !state.gitRepositoryLibrary.isEmpty {
+                    Menu("Recent") {
+                        ForEach(state.gitRepositoryLibrary) { entry in
+                            Button {
+                                state.openGitRepositoryLibraryEntry(entry)
+                            } label: {
+                                Label(entry.displayName, systemImage: "externaldrive")
+                            }
+                            Button("Forget \(entry.displayName)", role: .destructive) {
+                                state.removeGitRepositoryLibraryEntry(entry)
+                            }
                         }
                     }
                 }
             }
         }
-        .padding(18)
-        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+        .padding(14)
+        .dashboardCard()
     }
 }
 
@@ -245,30 +311,24 @@ private struct MergeCard: View {
     var body: some View {
         @Bindable var state = state
         VStack(spacing: 14) {
-            HStack {
-                Image(systemName: "arrow.triangle.branch")
-                    .font(.title2)
-                    .foregroundStyle(.tint)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Three-Way Merge").font(.headline)
-                    Text("Compare base, ours, and theirs; resolve conflicts into editable output")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+            HStack(alignment: .top) {
+                CompactCardHeader(
+                    title: "Three-Way Merge",
+                    subtitle: "Resolve text and image conflicts",
+                    icon: "arrow.triangle.branch")
                 Spacer()
                 Button("Merge") { state.startThreeWayMerge() }
                     .buttonStyle(.borderedProminent)
                     .disabled(state.baseFileURL == nil || state.oursFileURL == nil || state.theirsFileURL == nil)
             }
             HStack(spacing: 10) {
-                DropSlot(label: "Base", acceptsFolders: false, url: $state.baseFileURL)
-                DropSlot(label: "Ours", acceptsFolders: false, url: $state.oursFileURL)
-                DropSlot(label: "Theirs", acceptsFolders: false, url: $state.theirsFileURL)
+                DropSlot(label: "Base", acceptsFolders: false, url: $state.baseFileURL, compact: true)
+                DropSlot(label: "Ours", acceptsFolders: false, url: $state.oursFileURL, compact: true)
+                DropSlot(label: "Theirs", acceptsFolders: false, url: $state.theirsFileURL, compact: true)
             }
         }
-        .padding(18)
-        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+        .padding(14)
+        .dashboardCard()
     }
 }
 
@@ -282,17 +342,15 @@ private struct CompareCard: View {
     let action: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 28))
-                .foregroundStyle(.tint)
-            Text(title)
-                .font(.title3).bold()
-            Text(description)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                CompactCardHeader(title: title, subtitle: description, icon: icon)
+                Spacer(minLength: 12)
+                Button("Compare", action: action)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(left == nil || right == nil)
+            }
 
             HStack(spacing: 10) {
                 DropSlot(label: "Left", acceptsFolders: acceptsFolders, url: $left)
@@ -301,16 +359,52 @@ private struct CompareCard: View {
                 DropSlot(label: "Right", acceptsFolders: acceptsFolders, url: $right)
             }
 
-            Button("Compare", action: action)
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(left == nil || right == nil)
         }
-        .padding(24)
+        .padding(18)
         .frame(maxWidth: .infinity)
-        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+        .dashboardCard()
     }
+}
+
+private struct CompactCardHeader: View {
+    let title: LocalizedStringResource
+    let subtitle: LocalizedStringResource
+    let icon: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.tint)
+                .frame(width: 28, height: 28)
+                .background(Color.accentColor.opacity(0.1), in: .rect(cornerRadius: 8))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.headline)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct DashboardCardModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(Color.primary.opacity(0.075))
+            }
+            .shadow(color: .black.opacity(0.055), radius: 9, y: 3)
+    }
+}
+
+private extension View {
+    func dashboardCard() -> some View { modifier(DashboardCardModifier()) }
 }
 
 /// 拖放/点选槽位
@@ -318,6 +412,7 @@ struct DropSlot: View {
     let label: LocalizedStringResource
     let acceptsFolders: Bool
     @Binding var url: URL?
+    var compact = false
     @State private var isTargeted = false
     @State private var invalidDropMessage: LocalizedStringResource?
 
@@ -350,16 +445,18 @@ struct DropSlot: View {
                     Text("Drop a file here")
                         .font(.caption)
                 }
-                Text("or choose below")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                if !compact {
+                    Text("or choose below")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
                 Button("Choose…", action: pick)
                     .buttonStyle(.link)
                     .font(.caption)
             }
         }
         .padding(10)
-        .frame(maxWidth: .infinity, minHeight: 116)
+        .frame(maxWidth: .infinity, minHeight: compact ? 72 : 116)
         .background(isTargeted ? Color.accentColor.opacity(0.08) : Color.clear,
                     in: .rect(cornerRadius: 10))
         .overlay {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.15 — 2026-08-23
+
+### Refined home workspace and pixel-art identity
+
+- Reorganize the home screen into a focused two-column comparison workspace with clearer primary and advanced workflows.
+- Improve information density, keyboard and accessibility grouping, compact-window scrolling, and Simplified Chinese localization.
+- Introduce a distinctive two-cluster pixel-art grape icon that represents side-by-side comparison.
+- Provide the new icon at every required macOS AppIcon resolution from 16 to 1,024 pixels.
+
 ## 1.0.14 — 2026-08-23
 
 ### Image conflict resolution
