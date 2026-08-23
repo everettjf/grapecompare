@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.19.0 — 2026-08-22
+
+### Repository, image, sync, and Apple developer workflows
+
+- Added a persistent Git repository library, worktree switching, upstream and merge-base context, paginated commit graph, tree changesets, cross-file navigation, and persistent review state.
+- Added professional image Two-Up, One-Up, Split, Blink, and Difference modes with synchronized zoom/pan, navigator, pixel inspection, thresholds, channel isolation, bounded local alignment, and SVG rasterization.
+- Added reusable folder ignore profiles, Mirror/Update/Custom synchronization plans, permission and extended-attribute comparison, machine-readable dry-run reports, CLI planning, and verified APFS clone-copy acceleration.
+- Added semantic `.xcstrings` and section-aware `.pbxproj` comparison plus App Bundle, signature, entitlement, provisioning-profile, Mach-O, and Asset Catalog inspection.
+- Retained the macOS 14 baseline and local-only processing; no compared content is uploaded.
+
 ## 1.15.0 — 2026-08-22
 
 ### Professional Git and release confidence

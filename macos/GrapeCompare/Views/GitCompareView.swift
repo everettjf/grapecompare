@@ -1,5 +1,12 @@
 import SwiftUI
 
+private enum ChangesetBrowserMode: String, CaseIterable, Identifiable {
+    case flat, tree
+    var id: Self { self }
+    var title: LocalizedStringResource { self == .flat ? "Flat" : "Tree" }
+    var symbol: String { self == .flat ? "list.bullet" : "list.bullet.indent" }
+}
+
 struct GitCompareView: View {
     @Environment(AppState.self) private var state
     @State private var selection = Set<GitChange.ID>()
@@ -8,6 +15,7 @@ struct GitCompareView: View {
     @State private var stageFilter: GitChangeStage?
     @State private var historyA: GitFileRevision.ID?
     @State private var historyB: GitFileRevision.ID?
+    @State private var browserMode = ChangesetBrowserMode.flat
 
     private var filteredChanges: [GitChange] {
         return state.gitChanges.filter {
@@ -40,33 +48,13 @@ struct GitCompareView: View {
                     commitContext
                     Divider()
                     HSplitView {
-                        Table(filteredChanges, selection: $selection) {
-                            TableColumn("Stage") { change in
-                                Label(change.stage.localizedTitle, systemImage: change.stage.symbol)
+                        Group {
+                            if browserMode == .flat {
+                                changesTable
+                            } else {
+                                changesTree
                             }
-                            .width(min: 90, ideal: 110)
-                            TableColumn("Status") { change in
-                                Label(change.kind.localizedTitle, systemImage: change.kind.symbol)
-                                    .foregroundStyle(change.kind.color)
-                            }
-                            .width(min: 110, ideal: 130)
-                            TableColumn("Path") { change in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(change.path).font(Theme.mono)
-                                    if let oldPath = change.oldPath {
-                                        Text("from \(oldPath)")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                            TableColumn("Action") { change in
-                                Button("Compare") { state.openGitChange(change) }
-                                    .buttonStyle(.borderless)
-                            }
-                            .width(80)
                         }
-                        .tableStyle(.bordered(alternatesRowBackgrounds: true))
                         .frame(minWidth: 480)
                         historyInspector
                             .frame(minWidth: 280, idealWidth: 340, maxWidth: 420)
@@ -82,6 +70,7 @@ struct GitCompareView: View {
                     guard let id = selected.first,
                           let change = state.gitChanges.first(where: { $0.id == id }) else { return }
                     state.loadGitFileHistory(change)
+                    state.gitSelectedChangeID = change.id
                 }
                 .onChange(of: state.gitFileRevisions) { _, revisions in
                     historyA = revisions.first?.id
@@ -122,12 +111,31 @@ struct GitCompareView: View {
                     state.useGitComparisonShortcut(left: "INDEX", right: "WORKTREE")
                 }
             }
+            if state.gitWorktrees.count > 1 {
+                Menu("Worktrees") {
+                    ForEach(state.gitWorktrees) { worktree in
+                        Button {
+                            state.switchGitWorktree(worktree)
+                        } label: {
+                            Label(worktree.branch ?? String(localized: "Detached HEAD"),
+                                  systemImage: worktree.isLocked ? "lock" : "point.3.connected.trianglepath.dotted")
+                        }
+                    }
+                }
+            }
             Button("Compare") {
                 selection.removeAll()
                 state.startGitComparison()
             }
             .buttonStyle(.borderedProminent)
             Spacer()
+            Picker("Changeset layout", selection: $browserMode) {
+                ForEach(ChangesetBrowserMode.allCases) { mode in
+                    Label(mode.title, systemImage: mode.symbol).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 140)
             Menu {
                 Button("All Statuses") { statusFilter = nil }
                 Divider()
@@ -164,6 +172,37 @@ struct GitCompareView: View {
             Image(systemName: "arrow.right").foregroundStyle(.secondary)
             commitCard(target: state.gitRightTarget, commit: state.gitRightCommit, isLeft: false)
             Spacer()
+            if let context = state.gitBranchContext {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(context.branch ?? String(localized: "Detached HEAD")).font(.caption.bold())
+                    if let upstream = context.upstream {
+                        Text("\(upstream) · ↑\(context.ahead) ↓\(context.behind)")
+                            .font(.caption2.monospaced()).foregroundStyle(.secondary)
+                    }
+                    if let mergeBase = context.mergeBaseObjectID {
+                        Button("Merge Base \(mergeBase.prefix(8))") {
+                            state.useGitComparisonShortcut(left: mergeBase, right: "HEAD")
+                        }
+                        .buttonStyle(.link).font(.caption2.monospaced())
+                    }
+                }
+            }
+            Button { state.selectAdjacentGitChange(forward: false) } label: {
+                Label("Previous Change", systemImage: "chevron.up")
+            }
+            .labelStyle(.iconOnly)
+            .keyboardShortcut("[", modifiers: [.command])
+            Button { state.selectAdjacentGitChange(forward: true) } label: {
+                Label("Next Change", systemImage: "chevron.down")
+            }
+            .labelStyle(.iconOnly)
+            .keyboardShortcut("]", modifiers: [.command])
+            if let change = selectedChange {
+                Button { state.toggleGitReviewed(change) } label: {
+                    Label(state.gitReviewedChangeIDs.contains(change.id) ? "Reviewed" : "Mark Reviewed",
+                          systemImage: state.gitReviewedChangeIDs.contains(change.id) ? "checkmark.circle.fill" : "circle")
+                }
+            }
             if let date = state.lastLiveRefresh {
                 Label {
                     Text(date, format: .dateTime.hour().minute().second())
@@ -178,6 +217,60 @@ struct GitCompareView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(.quaternary.opacity(0.3))
+    }
+
+    private var selectedChange: GitChange? {
+        state.gitSelectedChangeID.flatMap { id in state.gitChanges.first { $0.id == id } }
+    }
+
+    private var changesTable: some View {
+        Table(filteredChanges, selection: $selection) {
+            TableColumn("Stage") { change in
+                Label(change.stage.localizedTitle, systemImage: change.stage.symbol)
+            }.width(min: 90, ideal: 110)
+            TableColumn("Status") { change in
+                Label(change.kind.localizedTitle, systemImage: change.kind.symbol)
+                    .foregroundStyle(change.kind.color)
+            }.width(min: 110, ideal: 130)
+            TableColumn("Path") { change in
+                HStack {
+                    if state.gitReviewedChangeIDs.contains(change.id) {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(change.path).font(Theme.mono)
+                        if let oldPath = change.oldPath {
+                            Text("from \(oldPath)").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            TableColumn("Action") { change in
+                Button("Compare") { state.openGitChange(change) }.buttonStyle(.borderless)
+            }.width(80)
+        }
+        .tableStyle(.bordered(alternatesRowBackgrounds: true))
+    }
+
+    private var changesTree: some View {
+        List {
+            OutlineGroup(GitChangesetTreeBuilder.build(filteredChanges), children: \.outlineChildren) { node in
+                if let change = node.change {
+                    Button {
+                        state.gitSelectedChangeID = change.id
+                        selection = [change.id]
+                        state.loadGitFileHistory(change)
+                    } label: {
+                        Label(node.name, systemImage: change.kind.symbol)
+                            .foregroundStyle(change.kind.color)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Label(node.name, systemImage: "folder")
+                }
+            }
+        }
+        .accessibilityLabel("Changed files tree")
     }
 
     private func commitCard(target: String, commit: GitCommit?, isLeft: Bool) -> some View {
@@ -218,6 +311,16 @@ struct GitCompareView: View {
 
     @ViewBuilder
     private var historyInspector: some View {
+        TabView {
+            fileHistoryInspector
+                .tabItem { Label("File History", systemImage: "clock.arrow.circlepath") }
+            commitGraphInspector
+                .tabItem { Label("Commit Graph", systemImage: "point.3.filled.connected.trianglepath.dotted") }
+        }
+    }
+
+    @ViewBuilder
+    private var fileHistoryInspector: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -274,6 +377,65 @@ struct GitCompareView: View {
                 }
             }
         }
+    }
+
+    private var commitGraphInspector: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Repository History").font(.headline)
+                Spacer()
+                Text("\(state.gitCommitGraph.count) commits").font(.caption).foregroundStyle(.secondary)
+            }
+            .padding(12)
+            Divider()
+            if state.gitCommitGraph.isEmpty {
+                ContentUnavailableView("No Commit History", systemImage: "clock")
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(state.gitCommitGraph) { row in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Image(systemName: row.commit.parentIDs.count > 1
+                                          ? "arrow.triangle.merge" : "circle.fill")
+                                        .font(.caption2).foregroundStyle(.tint)
+                                    Text(row.commit.shortObjectID).font(.caption.monospaced())
+                                    Text(row.commit.subject.isEmpty ? String(localized: "Untitled commit") : row.commit.subject)
+                                        .lineLimit(1)
+                                }
+                                if !row.decorations.isEmpty {
+                                    Text(row.decorations.joined(separator: " · "))
+                                        .font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+                                }
+                                Text("\(row.commit.authorName) · \(row.commit.authoredDate.formatted(date: .abbreviated, time: .shortened))")
+                                    .font(.caption2).foregroundStyle(.tertiary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                            .contextMenu {
+                                Button("Compare with HEAD") {
+                                    state.useGitComparisonShortcut(left: row.commit.objectID, right: "HEAD")
+                                }
+                                if let parent = row.commit.parentIDs.first {
+                                    Button("Compare with Parent") {
+                                        state.useGitComparisonShortcut(left: parent, right: row.commit.objectID)
+                                    }
+                                }
+                            }
+                            Divider()
+                        }
+                        if state.gitCommitGraphHasMore || state.isLoadingGitCommitGraph {
+                            Button(state.isLoadingGitCommitGraph ? "Loading…" : "Load More") {
+                                state.loadMoreGitCommitGraph()
+                            }
+                            .disabled(state.isLoadingGitCommitGraph)
+                            .padding(12)
+                        }
+                    }
+                }
+            }
+        }
+        .accessibilityLabel("Repository commit history")
     }
 
     private func historyRow(_ revision: GitFileRevision) -> some View {

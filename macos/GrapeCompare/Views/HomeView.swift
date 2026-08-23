@@ -169,6 +169,20 @@ private struct GitCard: View {
             Button("Open Repository") { state.startGitComparison() }
                 .buttonStyle(.borderedProminent)
                 .disabled(state.gitRepositoryURL == nil)
+            if !state.gitRepositoryLibrary.isEmpty {
+                Menu("Recent Repositories") {
+                    ForEach(state.gitRepositoryLibrary) { entry in
+                        Button {
+                            state.openGitRepositoryLibraryEntry(entry)
+                        } label: {
+                            Label(entry.displayName, systemImage: "externaldrive")
+                        }
+                        Button("Forget \(entry.displayName)", role: .destructive) {
+                            state.removeGitRepositoryLibraryEntry(entry)
+                        }
+                    }
+                }
+            }
         }
         .padding(18)
         .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))

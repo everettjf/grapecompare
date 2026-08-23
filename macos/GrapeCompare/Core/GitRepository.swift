@@ -440,7 +440,7 @@ nonisolated enum GitRepositoryComparator {
         }
     }
 
-    private static func splitNUL(_ data: Data) -> [String] {
+    static func splitNUL(_ data: Data) -> [String] {
         data.split(separator: 0, omittingEmptySubsequences: true)
             .map { String(decoding: $0, as: UTF8.self) }
     }
@@ -507,7 +507,7 @@ nonisolated enum GitRepositoryComparator {
             .contains("..")
     }
 
-    private static func run(
+    static func run(
         _ arguments: [String],
         in directory: URL,
         policy: GitCommandPolicy = .standard

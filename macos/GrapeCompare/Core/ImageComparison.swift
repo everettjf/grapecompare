@@ -1,6 +1,8 @@
+import AppKit
 import CoreGraphics
 import Foundation
 import ImageIO
+import Vision
 
 nonisolated enum ImageComparisonError: Error, Equatable, LocalizedError {
     case cannotDecode
@@ -75,6 +77,40 @@ nonisolated struct ImageRaster: Equatable, Sendable {
         guard drew else { throw ImageComparisonError.cannotDecode }
         return try ImageRaster(width: width, height: height, rgba: pixels)
     }
+
+    static func decode(
+        _ data: Data,
+        formatHint: String?,
+        maximumPixels: Int = 25_000_000
+    ) throws -> ImageRaster {
+        guard formatHint?.lowercased() == "svg" else {
+            return try decode(data, maximumPixels: maximumPixels)
+        }
+        guard let vector = NSImage(data: data) else { throw ImageComparisonError.cannotDecode }
+        let width = Int(vector.size.width.rounded(.up))
+        let height = Int(vector.size.height.rounded(.up))
+        guard maximumPixels > 0, width > 0, height > 0,
+              width <= maximumPixels / height else { throw ImageComparisonError.dimensionsTooLarge }
+        var proposed = NSRect(x: 0, y: 0, width: width, height: height)
+        guard let image = vector.cgImage(forProposedRect: &proposed, context: nil, hints: [
+            .interpolation: NSImageInterpolation.none
+        ]) else { throw ImageComparisonError.cannotDecode }
+        var pixels = Data(count: width * height * 4)
+        let drew = pixels.withUnsafeMutableBytes { bytes -> Bool in
+            guard let base = bytes.baseAddress,
+                  let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+                  let context = CGContext(data: base, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: width * 4,
+                                          space: colorSpace,
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue |
+                                            CGBitmapInfo.byteOrder32Big.rawValue) else { return false }
+            context.interpolationQuality = .none
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drew else { throw ImageComparisonError.cannotDecode }
+        return try ImageRaster(width: width, height: height, rgba: pixels)
+    }
 }
 
 nonisolated struct ImageDifferenceResult: Equatable, Sendable {
@@ -98,15 +134,45 @@ nonisolated struct ImageDifferenceResult: Equatable, Sendable {
     }
 }
 
+nonisolated struct ImageComparisonChannels: OptionSet, Equatable, Sendable {
+    let rawValue: UInt8
+    static let red = Self(rawValue: 1 << 0)
+    static let green = Self(rawValue: 1 << 1)
+    static let blue = Self(rawValue: 1 << 2)
+    static let alpha = Self(rawValue: 1 << 3)
+    static let rgb: Self = [.red, .green, .blue]
+    static let all: Self = [.red, .green, .blue, .alpha]
+}
+
+nonisolated struct ImageComparisonOptions: Equatable, Sendable {
+    var threshold: UInt8 = 0
+    var channels: ImageComparisonChannels = .all
+    var rightOffsetX = 0
+    var rightOffsetY = 0
+}
+
 nonisolated enum ImageComparisonEngine {
     static func compare(left: ImageRaster, right: ImageRaster) -> ImageDifferenceResult {
-        let width = max(left.width, right.width)
-        let height = max(left.height, right.height)
+        compare(left: left, right: right, options: ImageComparisonOptions())
+    }
+
+    static func compare(
+        left: ImageRaster,
+        right: ImageRaster,
+        options: ImageComparisonOptions
+    ) -> ImageDifferenceResult {
+        let minimumX = min(0, options.rightOffsetX)
+        let minimumY = min(0, options.rightOffsetY)
+        let maximumX = max(left.width, options.rightOffsetX + right.width)
+        let maximumY = max(left.height, options.rightOffsetY + right.height)
+        let width = maximumX - minimumX
+        let height = maximumY - minimumY
         let totalPixels = width * height
         var heatmap = Data(count: totalPixels * 4)
         var differingPixels = 0
         var differenceSum: UInt64 = 0
         var maximumDifference: UInt8 = 0
+        let selectedChannelCount = options.channels.rawValue.nonzeroBitCount
 
         left.rgba.withUnsafeBytes { leftBytes in
             right.rgba.withUnsafeBytes { rightBytes in
@@ -118,12 +184,18 @@ nonisolated enum ImageComparisonEngine {
                         for x in 0..<width {
                             let outputOffset = (y * width + x) * 4
                             var pixelMaximum: UInt8 = 0
-                            let isInsideLeft = x < left.width && y < left.height
-                            let isInsideRight = x < right.width && y < right.height
+                            let worldX = x + minimumX
+                            let worldY = y + minimumY
+                            let rightX = worldX - options.rightOffsetX
+                            let rightY = worldY - options.rightOffsetY
+                            let isInsideLeft = worldX >= 0 && worldY >= 0 && worldX < left.width && worldY < left.height
+                            let isInsideRight = rightX >= 0 && rightY >= 0 && rightX < right.width && rightY < right.height
                             if isInsideLeft && isInsideRight {
-                                let leftOffset = (y * left.width + x) * 4
-                                let rightOffset = (y * right.width + x) * 4
+                                let leftOffset = (worldY * left.width + worldX) * 4
+                                let rightOffset = (rightY * right.width + rightX) * 4
                                 for channel in 0..<4 {
+                                    let channelFlag = ImageComparisonChannels(rawValue: 1 << channel)
+                                    guard options.channels.contains(channelFlag) else { continue }
                                     let a = lhs[leftOffset + channel]
                                     let b = rhs[rightOffset + channel]
                                     let difference = a > b ? a - b : b - a
@@ -131,9 +203,10 @@ nonisolated enum ImageComparisonEngine {
                                     differenceSum += UInt64(difference)
                                 }
                             } else {
-                                pixelMaximum = 255
-                                differenceSum += 255 * 4
+                                if selectedChannelCount > 0 { pixelMaximum = 255 }
+                                differenceSum += UInt64(255 * selectedChannelCount)
                             }
+                            if pixelMaximum <= options.threshold { pixelMaximum = 0 }
                             if pixelMaximum > 0 { differingPixels += 1 }
                             maximumDifference = max(maximumDifference, pixelMaximum)
                             output[outputOffset] = 255
@@ -146,7 +219,7 @@ nonisolated enum ImageComparisonEngine {
             }
         }
 
-        let denominator = max(Double(totalPixels) * 4.0 * 255.0, 1.0)
+        let denominator = max(Double(totalPixels * selectedChannelCount) * 255.0, 1.0)
         return ImageDifferenceResult(
             leftWidth: left.width,
             leftHeight: left.height,
@@ -157,5 +230,80 @@ nonisolated enum ImageComparisonEngine {
             maximumChannelDifference: maximumDifference,
             meanAbsoluteDifference: Double(differenceSum) / denominator,
             heatmap: ImageRaster(validatedWidth: width, height: height, rgba: heatmap))
+    }
+}
+
+nonisolated enum ImageAlignmentEngine {
+    static func visionTranslation(left: ImageRaster, right: ImageRaster) throws -> (x: Int, y: Int) {
+        guard let leftImage = cgImage(left), let rightImage = cgImage(right) else {
+            throw ImageComparisonError.invalidRaster
+        }
+        let request = VNTranslationalImageRegistrationRequest(targetedCGImage: rightImage)
+        let handler = VNImageRequestHandler(cgImage: leftImage)
+        try handler.perform([request])
+        guard let result = request.results?.first else { throw ImageComparisonError.cannotDecode }
+        return (Int(result.alignmentTransform.tx.rounded()),
+                Int(result.alignmentTransform.ty.rounded()))
+    }
+
+    /// Finds a small translation using a bounded, sampled RGB mean-absolute-error
+    /// search. This is entirely local and caps work independently of image size.
+    static func bestTranslation(
+        left: ImageRaster,
+        right: ImageRaster,
+        maximumOffset: Int = 32,
+        maximumSamples: Int = 2_000_000
+    ) -> (x: Int, y: Int) {
+        let limit = min(max(maximumOffset, 0), 128)
+        let area = max(min(left.width, right.width) * min(left.height, right.height), 1)
+        let candidateCount = (limit * 2 + 1) * (limit * 2 + 1)
+        let samplesPerCandidate = max(maximumSamples / max(candidateCount, 1), 16)
+        let stride = max(Int(sqrt(Double(area) / Double(samplesPerCandidate))), 1)
+        var best = (x: 0, y: 0, score: UInt64.max, count: 0)
+        left.rgba.withUnsafeBytes { leftBytes in
+            right.rgba.withUnsafeBytes { rightBytes in
+                let lhs = leftBytes.bindMemory(to: UInt8.self)
+                let rhs = rightBytes.bindMemory(to: UInt8.self)
+                for yOffset in -limit...limit {
+                    for xOffset in -limit...limit {
+                        var score: UInt64 = 0
+                        var count = 0
+                        var y = max(0, yOffset)
+                        let endY = min(left.height, right.height + yOffset)
+                        while y < endY {
+                            var x = max(0, xOffset)
+                            let endX = min(left.width, right.width + xOffset)
+                            while x < endX {
+                                let lo = (y * left.width + x) * 4
+                                let ro = ((y - yOffset) * right.width + (x - xOffset)) * 4
+                                for channel in 0..<3 {
+                                    let a = lhs[lo + channel], b = rhs[ro + channel]
+                                    score += UInt64(a > b ? a - b : b - a)
+                                }
+                                count += 1
+                                x += stride
+                            }
+                            y += stride
+                        }
+                        guard count > 0 else { continue }
+                        // Compare normalized scores without floating point.
+                        if best.count == 0 || score * UInt64(best.count) < best.score * UInt64(count) {
+                            best = (xOffset, yOffset, score, count)
+                        }
+                    }
+                }
+            }
+        }
+        return (best.x, best.y)
+    }
+
+    private static func cgImage(_ raster: ImageRaster) -> CGImage? {
+        guard let provider = CGDataProvider(data: raster.rgba as CFData),
+              let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+        return CGImage(width: raster.width, height: raster.height, bitsPerComponent: 8,
+                       bitsPerPixel: 32, bytesPerRow: raster.width * 4, space: colorSpace,
+                       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+                        .union(.byteOrder32Big), provider: provider, decode: nil,
+                       shouldInterpolate: false, intent: .defaultIntent)
     }
 }

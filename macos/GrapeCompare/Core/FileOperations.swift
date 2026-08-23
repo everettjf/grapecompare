@@ -670,7 +670,18 @@ nonisolated final class FileOperationEngine: @unchecked Sendable {
         let info = try entryInfo(at: source)
         switch info.kind {
         case .regularFile:
-            try fileManager.copyItem(at: source, to: destination)
+            let cloned = source.path.withCString { sourcePath in
+                destination.path.withCString { destinationPath in
+                    clonefile(sourcePath, destinationPath, 0) == 0
+                }
+            }
+            if !cloned {
+                // clonefile is an APFS copy-on-write optimization. Unsupported
+                // filesystems and metadata combinations safely fall back to the
+                // ordinary copy path; verification remains identical below.
+                try? fileManager.removeItem(at: destination)
+                try fileManager.copyItem(at: source, to: destination)
+            }
         case .symbolicLink:
             let target = try fileManager.destinationOfSymbolicLink(atPath: source.path(percentEncoded: false))
             try fileManager.createSymbolicLink(atPath: destination.path(percentEncoded: false), withDestinationPath: target)

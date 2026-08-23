@@ -121,4 +121,19 @@ else
     exit 1
 fi
 
+mkdir "$TMP_ROOT/sync-left" "$TMP_ROOT/sync-right"
+printf 'left\n' > "$TMP_ROOT/sync-left/new.txt"
+set +e
+SYNC_OUTPUT="$($BIN folder-sync "$TMP_ROOT/sync-left" "$TMP_ROOT/sync-right" mirror --dry-run)"
+SYNC_STATUS=$?
+set -e
+if [[ $SYNC_STATUS -eq 1 && "$SYNC_OUTPUT" == *'"dryRun" : true'* && \
+      "$SYNC_OUTPUT" == *'"relativePath" : "new.txt"'* ]] && \
+      [[ ! -e "$TMP_ROOT/sync-right/new.txt" ]]; then
+    echo 'PASS: CLI folder sync dry-run emits a plan without mutating either root'
+else
+    echo 'FAIL: CLI folder sync dry-run emits a plan without mutating either root'
+    exit 1
+fi
+
 echo 'ALL CLI TESTS PASSED'

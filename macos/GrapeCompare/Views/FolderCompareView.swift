@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -13,6 +14,9 @@ struct FolderCompareView: View {
     @State private var exportDocument: FileOperationRecipeDocument?
     @State private var exportRecipe: FileOperationRecipe?
     @State private var planError: String?
+    @State private var useDeveloperIgnoreProfile = false
+    @State private var appleInspections: [AppleInspectionItem] = []
+    @State private var showsAppleInspection = false
 
     enum Filter: CaseIterable, Identifiable {
         case all, differences, onlyLeft, onlyRight
@@ -64,6 +68,9 @@ struct FolderCompareView: View {
         } message: {
             Text(planError ?? "Unknown error")
         }
+        .sheet(isPresented: $showsAppleInspection) {
+            AppleInspectionSheet(items: appleInspections)
+        }
     }
 
     // MARK: 顶部工具栏
@@ -101,6 +108,12 @@ struct FolderCompareView: View {
             .labelsHidden()
             .frame(width: 300)
 
+            Toggle("Metadata", isOn: Binding(
+                get: { state.compareFolderMetadata },
+                set: { state.compareFolderMetadata = $0; state.startFolderCompare() }))
+                .toggleStyle(.button)
+                .help("Compare POSIX permissions, ownership, and extended attributes")
+
             Button { state.startFolderCompare() } label: {
                 Image(systemName: "arrow.clockwise")
             }
@@ -108,6 +121,24 @@ struct FolderCompareView: View {
             .keyboardShortcut("r", modifiers: [.command])
 
             operationMenu
+
+            if supportsAppleInspection {
+                Button("Inspect Apple Metadata", systemImage: "apple.logo") { inspectAppleRoots() }
+            }
+
+            Menu {
+                Toggle("Developer Ignore Profile", isOn: $useDeveloperIgnoreProfile)
+                Divider()
+                Button("Mirror Left → Right") { generateSyncPlan(.mirror) }
+                Button("Update Left → Right") { generateSyncPlan(.update) }
+                Button("Custom Plan") { state.operations.clearDrafts() }
+                Divider()
+                Button("Copy Dry-Run Report") { copyDryRunReport() }
+                    .disabled(state.operations.drafts.isEmpty)
+            } label: {
+                Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+            }
+            .help("Build a previewable folder synchronization plan")
 
             Menu {
                 Button("Import Plan…", systemImage: "square.and.arrow.down") {
@@ -429,6 +460,72 @@ struct FolderCompareView: View {
         }
     }
 
+    private func generateSyncPlan(_ mode: FolderSyncMode) {
+        guard let root = state.folderRoot,
+              let leftRoot = state.leftFolderURL,
+              let rightRoot = state.rightFolderURL else { return }
+        let profile = useDeveloperIgnoreProfile ? FolderIgnoreProfile.developer : nil
+        let drafts = FolderSyncPlanner.drafts(
+            root: root, leftRoot: leftRoot, rightRoot: rightRoot,
+            mode: mode, ignoreProfile: profile)
+        state.operations.clearDrafts()
+        state.operations.enqueue(drafts)
+        if !drafts.isEmpty { state.operations.showReview() }
+    }
+
+    private func copyDryRunReport() {
+        let drafts = state.operations.drafts
+        Task {
+            let result = await Task.detached(priority: .userInitiated) {
+                Result { try FileOperationReport(
+                    plan: FileOperationEngine().prepare(drafts: drafts), dryRun: true).encodedJSON() }
+            }.value
+            switch result {
+            case .success(let data):
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(String(decoding: data, as: UTF8.self), forType: .string)
+            case .failure(let error): planError = error.localizedDescription
+            }
+        }
+    }
+
+    private var supportsAppleInspection: Bool {
+        guard let left = state.leftFolderURL, let right = state.rightFolderURL else { return false }
+        let supported: Set<String> = ["app", "framework", "bundle", "appex", "xpc", "xcassets"]
+        return supported.contains(left.pathExtension.lowercased()) &&
+            supported.contains(right.pathExtension.lowercased())
+    }
+
+    private func inspectAppleRoots() {
+        guard let left = state.leftFolderURL, let right = state.rightFolderURL else { return }
+        Task {
+            let result = await Task.detached(priority: .userInitiated) {
+                Result { try [Self.inspectAppleRoot(left, side: "Left"),
+                              Self.inspectAppleRoot(right, side: "Right")] }
+            }.value
+            switch result {
+            case .success(let items): appleInspections = items; showsAppleInspection = true
+            case .failure(let error): planError = error.localizedDescription
+            }
+        }
+    }
+
+    nonisolated private static func inspectAppleRoot(_ url: URL, side: String) throws -> AppleInspectionItem {
+        if url.pathExtension.lowercased() == "xcassets" {
+            let assets = try AssetCatalogInspector.inspect(url)
+            return AppleInspectionItem(side: side, path: url.path, bundle: nil, signature: nil, provisioning: nil,
+                                       assetGroups: assets.groups.count, assetImages: assets.imageFiles.count)
+        }
+        let profileURL = url.appending(path: "Contents/embedded.provisionprofile")
+        let provisioning = (try? Data(contentsOf: profileURL, options: .mappedIfSafe))
+            .flatMap { try? ProvisioningProfileInspector.inspect($0) }
+        return AppleInspectionItem(side: side, path: url.path,
+                                   bundle: try AppleBundleInspector.inspect(url),
+                                   signature: try CodeSignatureInspector.inspect(url),
+                                   provisioning: provisioning,
+                                   assetGroups: nil, assetImages: nil)
+    }
+
     private func importPlan(_ result: Result<[URL], Error>) {
         do {
             guard let url = try result.get().first,
@@ -504,6 +601,65 @@ struct FolderCompareView: View {
                 sourceURL: sourceRoot.appending(path: node.relativePath),
                 destinationURL: destinationRoot.appending(path: node.relativePath)))
         }
+    }
+}
+
+private struct AppleInspectionItem: Identifiable, Sendable {
+    let side: String
+    let path: String
+    let bundle: AppleBundleSnapshot?
+    let signature: CodeSignatureSnapshot?
+    let provisioning: ProvisioningProfileSnapshot?
+    let assetGroups: Int?
+    let assetImages: Int?
+    var id: String { side }
+}
+
+private struct AppleInspectionSheet: View {
+    let items: [AppleInspectionItem]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Apple Developer Metadata").font(.title2.bold())
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+            HSplitView {
+                ForEach(items) { item in
+                    Form {
+                        Section(item.side) {
+                            LabeledContent("Path", value: item.path)
+                            if let bundle = item.bundle {
+                                LabeledContent("Bundle Identifier", value: bundle.bundleIdentifier ?? "—")
+                                LabeledContent("Version", value: bundle.version ?? "—")
+                                LabeledContent("Executable", value: bundle.executable ?? "—")
+                                LabeledContent("Package Type", value: bundle.packageType ?? "—")
+                                LabeledContent("Files", value: "\(bundle.fileCount)")
+                                LabeledContent("Nested Code", value: "\(bundle.nestedCodePaths.count)")
+                            }
+                            if let signature = item.signature {
+                                LabeledContent("Signed", value: signature.isSigned ? "Yes" : "No")
+                                LabeledContent("Valid", value: signature.isValid ? "Yes" : "No")
+                                LabeledContent("Signing Identifier", value: signature.identifier ?? "—")
+                                LabeledContent("Team Identifier", value: signature.teamIdentifier ?? "—")
+                                LabeledContent("Entitlements", value: "\(signature.entitlements.count)")
+                            }
+                            if let profile = item.provisioning {
+                                LabeledContent("Provisioning Profile", value: profile.name ?? "—")
+                                LabeledContent("Profile UUID", value: profile.uuid ?? "—")
+                                LabeledContent("Application Identifier", value: profile.applicationIdentifier ?? "—")
+                            }
+                            if let groups = item.assetGroups, let images = item.assetImages {
+                                LabeledContent("Asset Groups", value: "\(groups)")
+                                LabeledContent("Image Inputs", value: "\(images)")
+                            }
+                        }
+                    }.formStyle(.grouped).frame(minWidth: 360)
+                }
+            }
+        }.padding().frame(minWidth: 780, minHeight: 480)
     }
 }
 

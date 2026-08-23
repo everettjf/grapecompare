@@ -12,5 +12,8 @@ SWIFT_MODULECACHE_PATH="$CACHE_DIR" \
 swiftc -O -whole-module-optimization -o "$BIN" \
     ../GrapeCompare/Core/DiffEngine.swift \
     ../GrapeCompare/Core/FolderComparator.swift \
+    ../GrapeCompare/Core/FileOperations.swift \
+    ../GrapeCompare/Core/FolderSync.swift \
+    ../GrapeCompare/Core/ImageComparison.swift \
     main.swift
 "$BIN" "$@"

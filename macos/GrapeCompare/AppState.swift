@@ -78,6 +78,9 @@ nonisolated private struct GitComparisonPayload: Sendable {
     let changes: [GitChange]
     let leftCommit: GitCommit?
     let rightCommit: GitCommit?
+    let worktrees: [GitWorktree]
+    let branchContext: GitBranchContext
+    let commitGraph: [GitCommitGraphRow]
 }
 
 @Observable
@@ -146,6 +149,14 @@ final class AppState {
     var gitChanges: [GitChange] = []
     var gitLeftCommit: GitCommit?
     var gitRightCommit: GitCommit?
+    var gitWorktrees: [GitWorktree] = []
+    var gitBranchContext: GitBranchContext?
+    var gitCommitGraph: [GitCommitGraphRow] = []
+    var gitCommitGraphHasMore = false
+    var isLoadingGitCommitGraph = false
+    var gitReviewedChangeIDs: Set<GitChange.ID> = []
+    var gitSelectedChangeID: GitChange.ID?
+    var gitRepositoryLibrary: [GitRepositoryLibraryEntry] = []
     var gitFileRevisions: [GitFileRevision] = []
     var gitHistoryPath: String?
     var gitHistoryError: String?
@@ -167,6 +178,7 @@ final class AppState {
     var folderRoot: FolderNode?
     var folderStats: FolderCompareStats?
     var folderError: String?
+    var compareFolderMetadata = false
     /// 每次完成文件夹比较自增，驱动视图重置展开状态
     var treeVersion = 0
     private var folderNeedsRefresh = false
@@ -223,12 +235,14 @@ final class AppState {
     @ObservationIgnored private var gitHistoryRevision = "HEAD"
     @ObservationIgnored private let gitHistoryPageSize = 100
     @ObservationIgnored private let sessionStore = ComparisonSessionStore()
+    @ObservationIgnored private let gitRepositoryLibraryStore = GitRepositoryLibraryStore()
     @ObservationIgnored private var restoredSecurityScopedURLs: [URL] = []
     @ObservationIgnored private var filesystemWatcher: FilesystemWatcher?
     @ObservationIgnored private var liveRefreshTask: Task<Void, Never>?
     @ObservationIgnored private var watchedExactPaths: Set<String> = []
     @ObservationIgnored private var watchedRootPaths: [String] = []
     @ObservationIgnored private var isLiveRefresh = false
+    @ObservationIgnored private let gitReviewDefaultsKey = "gitReviewedChanges.v1"
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
@@ -236,6 +250,7 @@ final class AppState {
         let savedSessions = sessionStore.load()
         recentComparisons = savedSessions.recents
         resumableSession = savedSessions.current
+        gitRepositoryLibrary = gitRepositoryLibraryStore.load()
         guard processLaunchArguments else { return }
         let args = ProcessInfo.processInfo.arguments
         if let request = ExternalMergeRequest(commandLineArguments: args) {
@@ -315,11 +330,13 @@ final class AppState {
         folderError = nil
         folderNeedsRefresh = false
         screen = .folderCompare
+        let compareMetadata = compareFolderMetadata
         comparisonTask = Task { [weak self] in
             let worker = Task.detached(priority: .userInitiated) {
                 try FolderComparator.compareCancellable(
                     leftRoot: l,
                     rightRoot: r,
+                    compareMetadata: compareMetadata,
                     shouldCancel: { cancellation.isCancelled })
             }
             let result = await withTaskCancellationHandler {
@@ -434,12 +451,24 @@ final class AppState {
                 } else {
                     rightCommit = nil
                 }
+                let worktrees = try GitRepositoryComparator.worktrees(in: root, policy: policy)
+                let comparisonRevision: String
+                if case .revision(let revision) = left { comparisonRevision = revision }
+                else if case .revision(let revision) = right { comparisonRevision = revision }
+                else { comparisonRevision = "HEAD" }
+                let branchContext = try GitRepositoryComparator.branchContext(
+                    in: root, comparisonRevision: comparisonRevision, policy: policy)
+                let commitGraph = try GitRepositoryComparator.commitGraph(
+                    in: root, limit: 200, policy: policy)
                 return GitComparisonPayload(
                     root: root,
                     references: references,
                     changes: changes,
                     leftCommit: leftCommit,
-                    rightCommit: rightCommit)
+                    rightCommit: rightCommit,
+                    worktrees: worktrees,
+                    branchContext: branchContext,
+                    commitGraph: commitGraph)
             }
             let result = await withTaskCancellationHandler {
                 await worker.result
@@ -457,6 +486,15 @@ final class AppState {
                 self.gitChanges = payload.changes
                 self.gitLeftCommit = payload.leftCommit
                 self.gitRightCommit = payload.rightCommit
+                self.gitWorktrees = payload.worktrees
+                self.gitBranchContext = payload.branchContext
+                self.gitCommitGraph = payload.commitGraph
+                self.gitCommitGraphHasMore = payload.commitGraph.count == 200
+                self.gitSelectedChangeID = payload.changes.first?.id
+                self.gitReviewedChangeIDs = self.loadGitReviewedChanges(
+                    repository: payload.root, changes: payload.changes)
+                self.gitRepositoryLibrary = (try? self.gitRepositoryLibraryStore.remember(payload.root))
+                    ?? self.gitRepositoryLibrary
             case .failure(let error):
                 if !(error is CancellationError) {
                     self.gitError = error.localizedDescription
@@ -479,6 +517,92 @@ final class AppState {
             runFileDiff(left: leftURL, right: rightURL)
         } catch {
             gitError = error.localizedDescription
+        }
+    }
+
+    func selectAdjacentGitChange(forward: Bool) {
+        guard !gitChanges.isEmpty else { return }
+        let current = gitSelectedChangeID.flatMap { id in gitChanges.firstIndex { $0.id == id } }
+        let index: Int
+        if forward { index = min((current ?? -1) + 1, gitChanges.count - 1) }
+        else { index = max((current ?? gitChanges.count) - 1, 0) }
+        gitSelectedChangeID = gitChanges[index].id
+        loadGitFileHistory(gitChanges[index])
+    }
+
+    func toggleGitReviewed(_ change: GitChange) {
+        if gitReviewedChangeIDs.contains(change.id) { gitReviewedChangeIDs.remove(change.id) }
+        else { gitReviewedChangeIDs.insert(change.id) }
+        persistGitReviewedChanges()
+    }
+
+    func switchGitWorktree(_ worktree: GitWorktree) {
+        gitRepositoryURL = worktree.path
+        startGitComparison()
+    }
+
+    func openGitRepositoryLibraryEntry(_ entry: GitRepositoryLibraryEntry) {
+        do {
+            let resolved = try gitRepositoryLibraryStore.resolve(entry)
+            if resolved.url.startAccessingSecurityScopedResource() {
+                restoredSecurityScopedURLs.append(resolved.url)
+            }
+            gitRepositoryURL = resolved.url
+            startGitComparison()
+        } catch {
+            gitError = error.localizedDescription
+        }
+    }
+
+    func removeGitRepositoryLibraryEntry(_ entry: GitRepositoryLibraryEntry) {
+        gitRepositoryLibrary = (try? gitRepositoryLibraryStore.remove(id: entry.id)) ?? gitRepositoryLibrary
+    }
+
+    func loadMoreGitCommitGraph() {
+        guard let repository = gitRepositoryURL,
+              gitCommitGraphHasMore, !isLoadingGitCommitGraph else { return }
+        isLoadingGitCommitGraph = true
+        let skip = gitCommitGraph.count
+        Task { [weak self] in
+            let result = await Task.detached(priority: .userInitiated) {
+                Result { try GitRepositoryComparator.commitGraph(
+                    in: repository, limit: 200, skip: skip) }
+            }.value
+            guard let self else { return }
+            switch result {
+            case .success(let rows):
+                let existing = Set(self.gitCommitGraph.map(\.id))
+                self.gitCommitGraph.append(contentsOf: rows.filter { !existing.contains($0.id) })
+                self.gitCommitGraphHasMore = rows.count == 200
+            case .failure(let error): self.gitError = error.localizedDescription
+            }
+            self.isLoadingGitCommitGraph = false
+        }
+    }
+
+    private func gitReviewKey(repository: URL) -> String {
+        "\(repository.standardizedFileURL.path)\u{0}\(gitLeftTarget)\u{0}\(gitRightTarget)"
+    }
+
+    private func loadGitReviewedChanges(repository: URL, changes: [GitChange]) -> Set<GitChange.ID> {
+        guard let data = UserDefaults.standard.data(forKey: gitReviewDefaultsKey),
+              let stored = try? JSONDecoder().decode([String: [String]].self, from: data) else { return [] }
+        let valid = Set(changes.map(\.id))
+        return Set(stored[gitReviewKey(repository: repository)] ?? []).intersection(valid)
+    }
+
+    private func persistGitReviewedChanges() {
+        guard let repository = gitRepositoryURL else { return }
+        var stored: [String: [String]] = [:]
+        if let data = UserDefaults.standard.data(forKey: gitReviewDefaultsKey) {
+            stored = (try? JSONDecoder().decode([String: [String]].self, from: data)) ?? [:]
+        }
+        stored[gitReviewKey(repository: repository)] = gitReviewedChangeIDs.sorted()
+        if stored.count > 100 {
+            for key in stored.keys.sorted().prefix(stored.count - 100) { stored.removeValue(forKey: key) }
+        }
+        if let data = try? JSONEncoder().encode(stored) {
+            UserDefaults.standard.set(data, forKey: gitReviewDefaultsKey)
         }
     }
 
@@ -936,18 +1060,18 @@ final class AppState {
                     }
                 }
                 let extensions = [left?.pathExtension.lowercased(), right?.pathExtension.lowercased()]
-                let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "gif", "heic", "heif", "tif", "tiff", "bmp", "webp"]
+                let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "gif", "heic", "heif", "tif", "tiff", "bmp", "webp", "svg"]
                 let imageComparison: ImageDifferenceResult?
                 if extensions.allSatisfy({ $0.map(imageExtensions.contains) == true }),
                    let ld, let rd,
-                   let leftImage = try? ImageRaster.decode(ld),
-                   let rightImage = try? ImageRaster.decode(rd) {
+                   let leftImage = try? ImageRaster.decode(ld, formatHint: extensions[0]),
+                   let rightImage = try? ImageRaster.decode(rd, formatHint: extensions[1]) {
                     imageComparison = ImageComparisonEngine.compare(left: leftImage, right: rightImage)
                 } else {
                     imageComparison = nil
                 }
                 let structuredFormat: StructuredFormat?
-                if extensions.allSatisfy({ $0 == "json" }) {
+                if extensions.allSatisfy({ $0 == "json" || $0 == "xcstrings" }) {
                     structuredFormat = .json
                 } else if extensions.allSatisfy({ $0 == "plist" }) {
                     structuredFormat = .propertyList
@@ -956,7 +1080,20 @@ final class AppState {
                 }
                 let structuredDifferences: [StructuredDifference]?
                 let maximumStructuredBytes = 64 * 1024 * 1024
-                if let structuredFormat, let ld, let rd,
+                if extensions.allSatisfy({ $0 == "pbxproj" }), let ld, let rd,
+                   max(ld.count, rd.count) <= maximumStructuredBytes,
+                   let leftProject = try? PBXProjectComparator.decode(ld),
+                   let rightProject = try? PBXProjectComparator.decode(rd) {
+                    structuredDifferences = StructuredDataComparator.compare(
+                        left: PBXProjectComparator.structuredValue(leftProject),
+                        right: PBXProjectComparator.structuredValue(rightProject))
+                } else if let ld, let rd,
+                          let leftMachO = try? MachOInspector.inspect(ld),
+                          let rightMachO = try? MachOInspector.inspect(rd) {
+                    structuredDifferences = StructuredDataComparator.compare(
+                        left: MachOInspector.structuredValue(leftMachO),
+                        right: MachOInspector.structuredValue(rightMachO))
+                } else if let structuredFormat, let ld, let rd,
                    max(ld.count, rd.count) <= maximumStructuredBytes,
                    let leftValue = try? StructuredDataComparator.decode(ld, format: structuredFormat),
                    let rightValue = try? StructuredDataComparator.decode(rd, format: structuredFormat) {

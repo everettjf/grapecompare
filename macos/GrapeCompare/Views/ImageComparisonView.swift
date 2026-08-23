@@ -3,17 +3,15 @@ import SwiftUI
 
 struct ImageComparisonView: View {
     enum Mode: String, CaseIterable, Identifiable {
-        case sideBySide
-        case overlay
-        case heatmap
-
+        case twoUp, oneUp, split, blink, difference
         var id: Self { self }
-
         var title: LocalizedStringResource {
             switch self {
-            case .sideBySide: "Side by Side"
-            case .overlay: "Overlay"
-            case .heatmap: "Difference Heatmap"
+            case .twoUp: "Two-Up"
+            case .oneUp: "One-Up"
+            case .split: "Split"
+            case .blink: "Blink"
+            case .difference: "Difference"
             }
         }
     }
@@ -21,105 +19,241 @@ struct ImageComparisonView: View {
     let leftURL: URL?
     let rightURL: URL?
     let result: ImageDifferenceResult
-    @State private var mode: Mode = .sideBySide
-    @State private var overlayOpacity = 0.5
+    @State private var mode = Mode.twoUp
+    @State private var showRight = false
+    @State private var zoom = 1.0
+    @State private var pan = CGSize.zero
+    @GestureState private var dragTranslation = CGSize.zero
+    @State private var split = 0.5
+    @State private var threshold = 0.0
+    @State private var channels = ImageComparisonChannels.all
+    @State private var offsetX = 0
+    @State private var offsetY = 0
+    @State private var leftRaster: ImageRaster?
+    @State private var rightRaster: ImageRaster?
+    @State private var leftImage: NSImage?
+    @State private var rightImage: NSImage?
+    @State private var pixel: PixelInspection?
+    @State private var loadError: String?
+
+    private var currentResult: ImageDifferenceResult {
+        guard let leftRaster, let rightRaster else { return result }
+        return ImageComparisonEngine.compare(left: leftRaster, right: rightRaster,
+            options: ImageComparisonOptions(threshold: UInt8(threshold), channels: channels,
+                                            rightOffsetX: offsetX, rightOffsetY: offsetY))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Picker("Image display", selection: $mode) {
-                    ForEach(Mode.allCases) { mode in
-                        Text(mode.title).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 420)
-                if mode == .overlay {
-                    Slider(value: $overlayOpacity, in: 0...1) {
-                        Text("Right image opacity")
-                    }
-                    .frame(maxWidth: 220)
-                }
-                Spacer()
-                Text("\(result.differingPixelCount) / \(result.comparedPixelCount) pixels")
-                Text(result.meanAbsoluteDifference, format: .percent.precision(.fractionLength(3)))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(10)
+            controls
             Divider()
-            switch mode {
-            case .sideBySide:
-                HSplitView {
-                    imagePane(url: leftURL, label: "Left image")
-                    imagePane(url: rightURL, label: "Right image")
-                }
-            case .overlay:
-                ZStack {
-                    localImage(url: leftURL)
-                    localImage(url: rightURL).opacity(overlayOpacity)
-                }
-                .padding()
-            case .heatmap:
-                if let image = nsImage(from: result.heatmap) {
-                    Image(nsImage: image)
-                        .resizable()
-                        .interpolation(.none)
-                        .aspectRatio(contentMode: .fit)
-                        .padding()
-                        .accessibilityLabel("Image difference heatmap")
-                } else {
-                    ContentUnavailableView("Unable to Load Image", systemImage: "photo.badge.exclamationmark")
-                }
-            }
+            content.overlay(alignment: .topTrailing) { navigator.padding(12) }
             Divider()
-            HStack(spacing: 18) {
-                Text("Left: \(result.leftWidth)×\(result.leftHeight)")
-                Text("Right: \(result.rightWidth)×\(result.rightHeight)")
-                Text("Maximum channel difference: \(result.maximumChannelDifference)")
-                Spacer()
-                Text(result.identical ? "Images are identical" : "Images differ")
-                    .foregroundStyle(result.identical ? .green : .orange)
+            status
+        }
+        .task(id: "\(leftURL?.path ?? "")|\(rightURL?.path ?? "")") { await load() }
+        .task(id: mode) {
+            guard mode == .blink else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(450))
+                if !Task.isCancelled { showRight.toggle() }
             }
-            .font(.caption)
-            .padding(8)
         }
     }
 
-    private func imagePane(url: URL?, label: LocalizedStringResource) -> some View {
-        localImage(url: url)
-            .padding()
-            .frame(minWidth: 240, maxWidth: .infinity, maxHeight: .infinity)
-            .accessibilityLabel(Text(label))
+    private var controls: some View {
+        HStack(spacing: 9) {
+            Picker("Image display", selection: $mode) {
+                ForEach(Mode.allCases) { Text($0.title).tag($0) }
+            }.pickerStyle(.segmented).frame(maxWidth: 430)
+            Button { zoom = max(0.1, zoom / 1.25) } label: { Label("Zoom Out", systemImage: "minus.magnifyingglass") }
+                .labelStyle(.iconOnly)
+            Slider(value: $zoom, in: 0.1...8).frame(width: 90)
+            Button { zoom = min(8, zoom * 1.25) } label: { Label("Zoom In", systemImage: "plus.magnifyingglass") }
+                .labelStyle(.iconOnly)
+            Button("Actual Size") { zoom = 1; pan = .zero }
+            Menu("Channels") {
+                channelButton("Red", .red); channelButton("Green", .green)
+                channelButton("Blue", .blue); channelButton("Alpha", .alpha)
+            }
+            Text("Threshold")
+            Slider(value: $threshold, in: 0...255, step: 1).frame(width: 90)
+            Text(threshold, format: .number.precision(.fractionLength(0))).monospacedDigit()
+            Menu("Align") {
+                Stepper("Horizontal: \(offsetX) px", value: $offsetX, in: -10_000...10_000)
+                Stepper("Vertical: \(offsetY) px", value: $offsetY, in: -10_000...10_000)
+                Button("Auto Align Locally") { autoAlign() }
+                Button("Reset Alignment") { offsetX = 0; offsetY = 0 }
+            }
+            Spacer()
+        }.controlSize(.small).padding(10)
     }
 
-    @ViewBuilder
-    private func localImage(url: URL?) -> some View {
-        if let url, let image = NSImage(contentsOf: url) {
-            Image(nsImage: image)
-                .resizable()
-                .interpolation(.none)
-                .aspectRatio(contentMode: .fit)
+    @ViewBuilder private var content: some View {
+        if let loadError {
+            ContentUnavailableView("Unable to Load Image", systemImage: "photo.badge.exclamationmark",
+                                   description: Text(loadError))
         } else {
-            ContentUnavailableView("Unable to Load Image", systemImage: "photo.badge.exclamationmark")
+            switch mode {
+            case .twoUp:
+                HSplitView {
+                    canvas(leftImage, leftRaster, "Left image")
+                    canvas(rightImage, rightRaster, "Right image")
+                }
+            case .oneUp:
+                canvas(showRight ? rightImage : leftImage, showRight ? rightRaster : leftRaster,
+                       showRight ? "Right image" : "Left image", aligned: showRight)
+                    .overlay(alignment: .topLeading) {
+                        Picker("Visible image", selection: $showRight) {
+                            Text("Left").tag(false); Text("Right").tag(true)
+                        }.pickerStyle(.segmented).frame(width: 120).padding()
+                    }
+            case .split:
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        transformed(rightImage, aligned: true)
+                        transformed(leftImage).frame(width: proxy.size.width * split, alignment: .leading).clipped()
+                        Rectangle().fill(.white).frame(width: 1).offset(x: proxy.size.width * split)
+                    }.overlay(alignment: .bottom) { Slider(value: $split).frame(width: 280).padding() }
+                }
+            case .blink:
+                canvas(showRight ? rightImage : leftImage, showRight ? rightRaster : leftRaster,
+                       showRight ? "Right image" : "Left image", aligned: showRight)
+            case .difference:
+                canvas(makeImage(currentResult.heatmap), currentResult.heatmap, "Image difference heatmap")
+            }
         }
     }
 
-    private func nsImage(from raster: ImageRaster) -> NSImage? {
-        guard let provider = CGDataProvider(data: raster.rgba as CFData),
+    private func canvas(
+        _ image: NSImage?, _ raster: ImageRaster?, _ label: LocalizedStringResource,
+        aligned: Bool = false
+    ) -> some View {
+        GeometryReader { proxy in
+            transformed(image, aligned: aligned).frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(.rect)
+                .gesture(DragGesture()
+                    .updating($dragTranslation) { value, state, _ in state = value.translation }
+                    .onEnded { value in
+                        pan = CGSize(width: pan.width + value.translation.width,
+                                     height: pan.height + value.translation.height)
+                    })
+                .onContinuousHover { phase in
+                    switch phase {
+                    case .active(let point): pixel = raster.flatMap { inspect($0, point, proxy.size, aligned: aligned) }
+                    case .ended: pixel = nil
+                    }
+                }.accessibilityLabel(Text(label))
+        }
+    }
+
+    @ViewBuilder private func transformed(_ image: NSImage?, aligned: Bool = false) -> some View {
+        if let image {
+            Image(nsImage: image).resizable().interpolation(.none).aspectRatio(contentMode: .fit)
+                .scaleEffect(zoom)
+                .offset(x: pan.width + dragTranslation.width + (aligned ? Double(offsetX) * zoom : 0),
+                        y: pan.height + dragTranslation.height + (aligned ? Double(offsetY) * zoom : 0))
+        } else { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
+    }
+
+    private var navigator: some View {
+        VStack(alignment: .trailing, spacing: 4) {
+            if let preview = mode == .difference ? makeImage(currentResult.heatmap) : leftImage {
+                Image(nsImage: preview).resizable().aspectRatio(contentMode: .fit).frame(width: 120, height: 80)
+                    .background(.black.opacity(0.5)).overlay(Rectangle().stroke(.white.opacity(0.8)))
+            }
+            if let pixel {
+                Text("x:\(pixel.x) y:\(pixel.y)  RGBA \(pixel.r),\(pixel.g),\(pixel.b),\(pixel.a)")
+                    .font(.caption2.monospaced()).padding(5).background(.regularMaterial, in: .rect(cornerRadius: 4))
+            }
+        }.accessibilityElement(children: .combine).accessibilityLabel("Image navigator and pixel inspector")
+    }
+
+    private var status: some View {
+        let value = currentResult
+        return HStack(spacing: 16) {
+            Text("Left: \(value.leftWidth)×\(value.leftHeight)")
+            Text("Right: \(value.rightWidth)×\(value.rightHeight)")
+            Text("\(value.differingPixelCount) / \(value.comparedPixelCount) pixels")
+            Text(value.meanAbsoluteDifference, format: .percent.precision(.fractionLength(3)))
+            Text("Maximum channel difference: \(value.maximumChannelDifference)")
+            Spacer()
+            Text(value.identical ? "Images are identical" : "Images differ")
+                .foregroundStyle(value.identical ? .green : .orange)
+        }.font(.caption).padding(8)
+    }
+
+    private func channelButton(_ title: LocalizedStringResource, _ channel: ImageComparisonChannels) -> some View {
+        Button {
+            if channels.contains(channel) { channels.remove(channel) } else { channels.insert(channel) }
+            if channels.isEmpty { channels = channel }
+        } label: { Label(title, systemImage: channels.contains(channel) ? "checkmark.square" : "square") }
+    }
+
+    private func load() async {
+        guard let leftURL, let rightURL else { return }
+        let loaded = await Task.detached(priority: .userInitiated) { () -> Result<(ImageRaster, ImageRaster), Error> in
+            Result { (try ImageRaster.decode(Data(contentsOf: leftURL, options: .mappedIfSafe),
+                                              formatHint: leftURL.pathExtension),
+                      try ImageRaster.decode(Data(contentsOf: rightURL, options: .mappedIfSafe),
+                                              formatHint: rightURL.pathExtension)) }
+        }.value
+        switch loaded {
+        case .success(let pair):
+            leftRaster = pair.0; rightRaster = pair.1
+            leftImage = makeImage(pair.0); rightImage = makeImage(pair.1); loadError = nil
+        case .failure(let error): loadError = error.localizedDescription
+        }
+    }
+
+    private func autoAlign() {
+        guard let leftRaster, let rightRaster else { return }
+        Task {
+            let alignment = await Task.detached(priority: .userInitiated) {
+                (try? ImageAlignmentEngine.visionTranslation(left: leftRaster, right: rightRaster)) ??
+                    ImageAlignmentEngine.bestTranslation(left: leftRaster, right: rightRaster)
+            }.value
+            offsetX = alignment.x
+            offsetY = alignment.y
+        }
+    }
+
+    private func inspect(
+        _ raster: ImageRaster, _ point: CGPoint, _ size: CGSize, aligned: Bool
+    ) -> PixelInspection? {
+        guard size.width > 0, size.height > 0, raster.width > 0, raster.height > 0 else { return nil }
+        let fit = min(size.width / Double(raster.width), size.height / Double(raster.height))
+        let width = Double(raster.width) * fit * zoom
+        let height = Double(raster.height) * fit * zoom
+        let originX = (size.width - width) / 2 + pan.width + dragTranslation.width +
+            (aligned ? Double(offsetX) * zoom : 0)
+        let originY = (size.height - height) / 2 + pan.height + dragTranslation.height +
+            (aligned ? Double(offsetY) * zoom : 0)
+        guard point.x >= originX, point.y >= originY,
+              point.x < originX + width, point.y < originY + height else { return nil }
+        let x = min(Int((point.x - originX) / width * Double(raster.width)), raster.width - 1)
+        let y = min(Int((point.y - originY) / height * Double(raster.height)), raster.height - 1)
+        let o = (y * raster.width + x) * 4
+        return raster.rgba.withUnsafeBytes { raw in
+            let p = raw.bindMemory(to: UInt8.self)
+            return PixelInspection(x: x, y: y, r: p[o], g: p[o + 1], b: p[o + 2], a: p[o + 3])
+        }
+    }
+
+    private func makeImage(_ raster: ImageRaster) -> NSImage? {
+        guard raster.width > 0, raster.height > 0,
+              let provider = CGDataProvider(data: raster.rgba as CFData),
               let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-              let image = CGImage(
-            width: raster.width,
-            height: raster.height,
-            bitsPerComponent: 8,
-            bitsPerPixel: 32,
-            bytesPerRow: raster.width * 4,
-            space: colorSpace,
-            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
-                .union(.byteOrder32Big),
-            provider: provider,
-            decode: nil,
-            shouldInterpolate: false,
-            intent: .defaultIntent) else { return nil }
+              let image = CGImage(width: raster.width, height: raster.height, bitsPerComponent: 8,
+                                  bitsPerPixel: 32, bytesPerRow: raster.width * 4, space: colorSpace,
+                                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+                                    .union(.byteOrder32Big), provider: provider, decode: nil,
+                                  shouldInterpolate: false, intent: .defaultIntent) else { return nil }
         return NSImage(cgImage: image, size: NSSize(width: raster.width, height: raster.height))
     }
+}
+
+private struct PixelInspection {
+    let x: Int; let y: Int
+    let r: UInt8; let g: UInt8; let b: UInt8; let a: UInt8
 }

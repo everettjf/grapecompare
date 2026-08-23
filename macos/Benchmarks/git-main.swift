@@ -7,11 +7,17 @@ private func runGit(_ arguments: [String], in directory: URL) throws {
   process.arguments = arguments
   process.currentDirectoryURL = directory
   process.standardOutput = FileHandle.nullDevice
-  process.standardError = FileHandle.nullDevice
+  let errorPipe = Pipe()
+  process.standardError = errorPipe
   try process.run()
   process.waitUntilExit()
   guard process.terminationStatus == 0 else {
-    throw GitRepositoryError.commandFailed(arguments: arguments, message: "fixture setup failed")
+    let details = String(
+      decoding: errorPipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self
+    ).trimmingCharacters(in: .whitespacesAndNewlines)
+    throw GitRepositoryError.commandFailed(
+      arguments: arguments,
+      message: details.isEmpty ? "fixture setup failed" : details)
   }
 }
 

@@ -18,6 +18,7 @@ private func usage() -> Never {
       grapecompare structured <json|plist> <left> <right>
       grapecompare image <left> <right>
       grapecompare git <repository> <from> <to|INDEX|WORKTREE>
+      grapecompare folder-sync <left> <right> <mirror|update> --dry-run
       grapecompare git-config
 
     Exit status: 0 identical/resolved, 1 different/conflicts, 2 invalid input or failure.
@@ -164,6 +165,18 @@ private func run() throws -> Exit {
             trustExitCode = true
         """)
         return .success
+
+    case "folder-sync":
+        guard arguments.count == 5, arguments[4] == "--dry-run",
+              let mode = FolderSyncMode(rawValue: arguments[3]), mode != .custom else { usage() }
+        let left = URL(fileURLWithPath: arguments[1]).standardizedFileURL
+        let right = URL(fileURLWithPath: arguments[2]).standardizedFileURL
+        let tree = try FolderComparator.compareCancellable(leftRoot: left, rightRoot: right)
+        let drafts = FolderSyncPlanner.drafts(root: tree, leftRoot: left, rightRoot: right, mode: mode)
+        let plan = try FileOperationEngine().prepare(drafts: drafts)
+        FileHandle.standardOutput.write(try FileOperationReport(plan: plan, dryRun: true).encodedJSON())
+        FileHandle.standardOutput.write(Data("\n".utf8))
+        return drafts.isEmpty ? .success : .different
 
     default:
         usage()

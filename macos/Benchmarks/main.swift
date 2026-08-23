@@ -158,20 +158,44 @@ measurements.append(measure("large text / churn end-to-end", detail: "split + di
 })
 precondition(churnResult.differenceCount == churnCount - churnCount / 100)
 
+let imageSide = 1_024
+var imageAData = Data(repeating: 0x7F, count: imageSide * imageSide * 4)
+var imageBData = imageAData
+imageAData[3] = 0xFF
+imageBData[3] = 0xFF
+for offset in stride(from: 0, to: imageBData.count, by: 16_384) { imageBData[offset] = 0x80 }
+let imageA = try! ImageRaster(width: imageSide, height: imageSide, rgba: imageAData)
+let imageB = try! ImageRaster(width: imageSide, height: imageSide, rgba: imageBData)
+var imageDifferenceCount = 0
+measurements.append(measure("image difference", detail: "1024×1024 RGBA") {
+    imageDifferenceCount = ImageComparisonEngine.compare(
+        left: imageA, right: imageB,
+        options: ImageComparisonOptions(threshold: 0, channels: .rgb)).differingPixelCount
+})
+precondition(imageDifferenceCount > 0)
+
 print("Preparing \(folderFileCount)-file folder scenario…")
 let folders = makeFolderScenario(fileCount: folderFileCount)
 defer { try? FileManager.default.removeItem(at: folders.root) }
 addLargeBinaryPair(left: folders.left, right: folders.right, byteCount: 64 * 1_024 * 1_024)
 var folderStats = FolderCompareStats()
+var folderResult: FolderNode!
 measurements.append(measure("large folder", detail: "\(folderFileCount) logical files") {
-    let result = FolderComparator.compare(leftRoot: folders.left, rightRoot: folders.right)
-    folderStats = FolderComparator.stats(for: result)
+    folderResult = FolderComparator.compare(leftRoot: folders.left, rightRoot: folders.right)
+    folderStats = FolderComparator.stats(for: folderResult)
 })
 let expectedBucket = folderFileCount / 100
 precondition(folderStats.onlyLeft == expectedBucket)
 precondition(folderStats.onlyRight == expectedBucket)
 precondition(folderStats.different == expectedBucket * 2 + 1)
 precondition(folderStats.same == folderFileCount - expectedBucket * 4)
+var syncDraftCount = 0
+measurements.append(measure("folder sync planning", detail: "mirror + ignore profile") {
+    syncDraftCount = FolderSyncPlanner.drafts(
+        root: folderResult, leftRoot: folders.left, rightRoot: folders.right,
+        mode: .mirror, ignoreProfile: .developer).count
+})
+precondition(syncDraftCount == expectedBucket * 4 + 1)
 
 print("\nPerformance results (Release, lower is better)")
 for result in measurements {
@@ -189,7 +213,9 @@ if ProcessInfo.processInfo.environment["GRAPECOMPARE_VERIFY_PERFORMANCE"] == "1"
     let timeBudgets: [String: Double] = [
         "large text / sparse end-to-end": 0.25,
         "large text / churn end-to-end": 0.25,
+        "image difference": 0.25,
         "large folder": max(2.0, Double(folderFileCount) / 10_000 * 2.0),
+        "folder sync planning": max(0.25, Double(folderFileCount) / 10_000 * 0.25),
     ]
     var violations: [String] = []
     for measurement in measurements {

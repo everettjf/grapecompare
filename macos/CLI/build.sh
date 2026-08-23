@@ -17,4 +17,7 @@ swiftc -O -whole-module-optimization -o "$OUTPUT" \
     ../GrapeCompare/Core/StructuredComparison.swift \
     ../GrapeCompare/Core/ImageComparison.swift \
     ../GrapeCompare/Core/GitRepository.swift \
+    ../GrapeCompare/Core/FolderComparator.swift \
+    ../GrapeCompare/Core/FileOperations.swift \
+    ../GrapeCompare/Core/FolderSync.swift \
     main.swift

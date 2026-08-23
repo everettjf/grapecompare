@@ -148,6 +148,7 @@ nonisolated enum FolderComparator {
 
     static func compareCancellable(
         leftRoot: URL, rightRoot: URL,
+        compareMetadata: Bool = false,
         shouldCancel: @Sendable () -> Bool = { false }
     ) throws -> FolderNode {
         // Directory metadata walks are independent and usually I/O-bound. Scan
@@ -176,6 +177,10 @@ nonisolated enum FolderComparator {
             } else if right == nil {
                 statuses[index] = .onlyLeft
             } else if left!.kind != right!.kind {
+                statuses[index] = .different
+            } else if compareMetadata,
+                      try FileMetadataComparator.snapshot(at: leftRoot.appending(path: path)) !=
+                        FileMetadataComparator.snapshot(at: rightRoot.appending(path: path)) {
                 statuses[index] = .different
             } else if left!.isFolder {
                 statuses[index] = .same

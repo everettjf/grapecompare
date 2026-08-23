@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 var failures = 0
 func check(_ cond: Bool, _ name: String) {
@@ -443,6 +444,65 @@ let plistDifferences = StructuredDataComparator.compare(
 check(plistDifferences.count == 1 && plistDifferences[0].path == "$.nested.value",
       "binary and XML plist values share one semantic comparison model")
 
+let xcstringsLeft = Data(#"{"sourceLanguage":"en","strings":{"Hello":{"localizations":{"en":{"stringUnit":{"state":"translated","value":"Hello"}}}}}}"#.utf8)
+let xcstringsRight = Data(#"{"strings":{"Hello":{"localizations":{"zh-Hans":{"stringUnit":{"value":"你好","state":"translated"}},"en":{"stringUnit":{"value":"Hello","state":"translated"}}}}},"sourceLanguage":"en"}"#.utf8)
+let catalogLeft = try! XCStringsComparator.decode(xcstringsLeft)
+let catalogRight = try! XCStringsComparator.decode(xcstringsRight)
+check(catalogLeft.keys == ["Hello"] && catalogRight.localizations == ["en", "zh-Hans"] &&
+      !XCStringsComparator.compare(left: catalogLeft, right: catalogRight).isEmpty,
+      "xcstrings comparison reports localization changes while ignoring JSON key order")
+
+let pbxHeader = "// !$*UTF8*$!\n{ archiveVersion = 1; objectVersion = 77; objects = {\n"
+let pbxLeft = Data((pbxHeader + "/* Begin PBXFileReference section */\n A = { path = A.swift; };\n B = { path = B.swift; };\n/* End PBXFileReference section */\n};}\n").utf8)
+let pbxRight = Data((pbxHeader + "/* Begin PBXFileReference section */\n B = { path = B.swift; };\n A = { path = A.swift; };\n/* End PBXFileReference section */\n};}\n").utf8)
+check(try! PBXProjectComparator.decode(pbxLeft) == PBXProjectComparator.decode(pbxRight),
+      "pbxproj comparison is section-aware and ignores stable object ordering")
+
+let thinArm64 = Data([0xCF, 0xFA, 0xED, 0xFE, 0x0C, 0x00, 0x00, 0x01])
+check((try! MachOInspector.inspect(thinArm64)).architectures == ["arm64"],
+      "Mach-O comparison decodes architecture metadata without executing the binary")
+
+let appleFixture = URL(fileURLWithPath: NSTemporaryDirectory())
+    .appending(path: "grapetest-apple-formats-\(UUID().uuidString)")
+let fixtureApp = appleFixture.appending(path: "Sample.app/Contents")
+let fixtureAssets = appleFixture.appending(path: "Assets.xcassets/AppIcon.appiconset")
+try! FileManager.default.createDirectory(at: fixtureApp, withIntermediateDirectories: true)
+try! FileManager.default.createDirectory(at: fixtureAssets, withIntermediateDirectories: true)
+let fixtureInfo: [String: Any] = ["CFBundleIdentifier": "local.grapecompare.fixture",
+                                  "CFBundleShortVersionString": "1.0", "CFBundleExecutable": "Sample",
+                                  "CFBundlePackageType": "APPL"]
+try! PropertyListSerialization.data(fromPropertyList: fixtureInfo, format: .binary, options: 0)
+    .write(to: fixtureApp.appending(path: "Info.plist"))
+try! Data(#"{"images":[{"filename":"icon.png","idiom":"mac","scale":"1x"}],"info":{"author":"xcode","version":1}}"#.utf8)
+    .write(to: fixtureAssets.appending(path: "Contents.json"))
+let fixturePNG = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")!
+try! fixturePNG.write(to: fixtureAssets.appending(path: "icon.png"))
+check((try! AppleBundleInspector.inspect(appleFixture.appending(path: "Sample.app"))).bundleIdentifier ==
+      "local.grapecompare.fixture", "App Bundle comparison reads metadata without launching bundled code")
+let assetSnapshot = try! AssetCatalogInspector.inspect(appleFixture.appending(path: "Assets.xcassets"))
+check(assetSnapshot.groups == ["AppIcon.appiconset"] && assetSnapshot.imageFiles == ["AppIcon.appiconset/icon.png"],
+      "asset catalog comparison inventories semantic Contents.json and image inputs " +
+      "(groups=\(assetSnapshot.groups), images=\(assetSnapshot.imageFiles))")
+let unsignedSignature = try! CodeSignatureInspector.inspect(appleFixture.appending(path: "Sample.app"))
+check(!unsignedSignature.isValid,
+      "code signature inspection reports invalid or unsigned bundles without executing them")
+let assetsLink = appleFixture.appending(path: "Linked.xcassets")
+try! FileManager.default.createSymbolicLink(at: assetsLink,
+    withDestinationURL: appleFixture.appending(path: "Assets.xcassets"))
+do {
+    _ = try AssetCatalogInspector.inspect(assetsLink)
+    check(false, "Apple developer format inspectors reject a symlink root")
+} catch {
+    check(true, "Apple developer format inspectors reject a symlink root")
+}
+do {
+    _ = try ProvisioningProfileInspector.inspect(Data("not a profile".utf8))
+    check(false, "provisioning profile inspection rejects malformed CMS data")
+} catch {
+    check(true, "provisioning profile inspection rejects malformed CMS data")
+}
+try! FileManager.default.removeItem(at: appleFixture)
+
 // MARK: - Image comparison
 
 let imageLeft = try! ImageRaster(
@@ -468,6 +528,31 @@ check(changedImageResult.dimensionsMatch &&
       "image comparison reports pixel and maximum channel differences")
 check(changedImageResult.heatmap.rgba == Data([255, 0, 0, 0, 255, 0, 0, 255]),
       "image comparison produces a transparent-to-red difference heatmap")
+let thresholdImageResult = ImageComparisonEngine.compare(
+    left: imageLeft, right: imageChanged,
+    options: ImageComparisonOptions(threshold: 255, channels: .all))
+check(thresholdImageResult.differingPixelCount == 0,
+      "image comparison threshold suppresses differences at or below the limit")
+let alphaOnlyResult = ImageComparisonEngine.compare(
+    left: imageLeft, right: imageChanged,
+    options: ImageComparisonOptions(channels: .alpha))
+check(alphaOnlyResult.identical,
+      "image comparison can isolate the alpha channel")
+let shiftedImageResult = ImageComparisonEngine.compare(
+    left: imageLeft, right: imageSame,
+    options: ImageComparisonOptions(rightOffsetX: 1))
+check(shiftedImageResult.comparedPixelCount == 3 && shiftedImageResult.differingPixelCount == 3,
+      "image comparison applies explicit alignment offsets without clipping the canvas")
+let alignmentLeft = try! ImageRaster(width: 3, height: 1, rgba: Data([
+    0, 0, 0, 255, 255, 0, 0, 255, 0, 255, 0, 255
+]))
+let alignmentRight = try! ImageRaster(width: 2, height: 1, rgba: Data([
+    255, 0, 0, 255, 0, 255, 0, 255
+]))
+let alignment = ImageAlignmentEngine.bestTranslation(
+    left: alignmentLeft, right: alignmentRight, maximumOffset: 1)
+check(alignment.x == 1 && alignment.y == 0,
+      "local image alignment finds a bounded translation without network access")
 
 let imageLarger = try! ImageRaster(
     width: 3,
@@ -486,6 +571,14 @@ do {
     check(true, "image decode enforces the pixel budget before raster allocation")
 } catch {
     check(false, "image decode reports the pixel-budget error consistently")
+}
+let svgFixture = Data(##"<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"><rect width="2" height="1" fill="#ff0000"/></svg>"##.utf8)
+do {
+    let svgRaster = try ImageRaster.decode(svgFixture, formatHint: "svg", maximumPixels: 10)
+    check(svgRaster.width == 2 && svgRaster.height == 1 && svgRaster.rgba.count == 8,
+          "SVG comparison rasterizes vector input through the local system renderer")
+} catch {
+    check(false, "SVG comparison rasterizes vector input through the local system renderer")
 }
 
 // MARK: - Git repository comparison
@@ -528,12 +621,56 @@ check(gitRoot.resolvingSymlinksInPath().path == gitTmp.resolvingSymlinksInPath()
 let gitReferences = try! GitRepositoryComparator.references(in: gitTmp)
 check(Set(gitReferences.map(\.name)).isSuperset(of: ["main", "feature"]),
       "Git comparison lists local branches")
+let branchContext = try! GitRepositoryComparator.branchContext(
+    in: gitTmp, comparisonRevision: "feature")
+check(branchContext.branch == "main" && branchContext.upstream == nil &&
+      branchContext.mergeBaseObjectID?.count == 40,
+      "Git workspace reports branch, absent upstream, and merge base")
+let commitGraphPage = try! GitRepositoryComparator.commitGraph(in: gitTmp, limit: 1)
+let commitGraphNextPage = try! GitRepositoryComparator.commitGraph(in: gitTmp, limit: 1, skip: 1)
+check(commitGraphPage.count == 1 && commitGraphNextPage.count == 1 &&
+      commitGraphPage[0].id != commitGraphNextPage[0].id,
+      "Git workspace commit graph paginates with stable identities")
+let worktreeTmp = URL(fileURLWithPath: NSTemporaryDirectory())
+    .appending(path: "grapetest-worktree-\(UUID().uuidString)")
+runGit(["worktree", "add", "--detach", worktreeTmp.path, "feature"], in: gitTmp)
+let worktrees = try! GitRepositoryComparator.worktrees(in: gitTmp)
+check(worktrees.count == 2 && worktrees.contains {
+        $0.path.lastPathComponent == worktreeTmp.lastPathComponent && $0.isDetached
+      },
+      "Git workspace discovers linked and detached worktrees")
+runGit(["worktree", "remove", "--force", worktreeTmp.path], in: gitTmp)
+let repositoryLibraryURL = URL(fileURLWithPath: NSTemporaryDirectory())
+    .appending(path: "grapetest-library-\(UUID().uuidString)/repositories.json")
+let repositoryLibrary = GitRepositoryLibraryStore(
+    storageURL: repositoryLibraryURL, maximumEntries: 2, usesSecurityScopedBookmarks: false)
+let rememberedRepositories = try! repositoryLibrary.remember(gitTmp)
+let resolvedRepository = try! repositoryLibrary.resolve(rememberedRepositories[0]).url
+check(rememberedRepositories.count == 1 &&
+      resolvedRepository.lastPathComponent == gitTmp.lastPathComponent,
+      "Git repository library persists and resolves a security-scoped bookmark")
+try! FileManager.default.removeItem(at: repositoryLibraryURL.deletingLastPathComponent())
 let branchChanges = try! GitRepositoryComparator.changes(
     in: gitTmp,
     from: .revision("main"),
     to: .revision("feature"))
 check(branchChanges == [GitChange(kind: .modified, path: "tracked.txt", oldPath: nil)],
       "Git comparison compares two branch tips")
+let changesetTree = GitChangesetTreeBuilder.build([
+    GitChange(kind: .modified, path: "Sources/App/main.swift", oldPath: nil),
+    GitChange(kind: .added, path: "Sources/Core/Diff.swift", oldPath: nil),
+    GitChange(kind: .deleted, path: "README.md", oldPath: nil)
+])
+check(changesetTree.map(\.name) == ["Sources", "README.md"] &&
+      changesetTree[0].children.map(\.name) == ["App", "Core"],
+      "Git changeset tree groups paths with deterministic directory-first ordering")
+let largeChangeset = (0..<10_000).map {
+    GitChange(kind: .modified, path: "Sources/Module\($0 % 100)/File\($0).swift", oldPath: nil)
+}
+let treeStarted = Date()
+let largeTree = GitChangesetTreeBuilder.build(largeChangeset)
+check(largeTree.count == 1 && Date().timeIntervalSince(treeStarted) < 2,
+      "Git changeset tree builds 10,000 paths within the performance budget")
 do {
     _ = try GitRepositoryComparator.changes(
         in: gitTmp, from: .revision("--ext-diff"), to: .workingTree)
@@ -751,6 +888,44 @@ check(node("sub")?.isFolder == true, "sub is folder")
 check(node("sub")?.status == .different, "sub folder rollup -> different")
 check(node("sub")?.children?.first { $0.name == "nested.txt" }?.status == .same, "sub/nested.txt -> same")
 check(node("sub")?.children?.first { $0.name == "diff.txt" }?.status == .different, "sub/diff.txt -> different")
+let mirrorDrafts = FolderSyncPlanner.drafts(
+    root: tree, leftRoot: L, rightRoot: R, mode: .mirror)
+check(mirrorDrafts.count == 4 &&
+      mirrorDrafts.contains { $0.kind == .copy && $0.relativePath == "onlyleft.txt" } &&
+      mirrorDrafts.contains { $0.kind == .trash && $0.relativePath == "onlyright.txt" },
+      "mirror sync plans copy, replace, and recoverable destination trash operations")
+let ignoredDrafts = FolderSyncPlanner.drafts(
+    root: tree, leftRoot: L, rightRoot: R, mode: .mirror,
+    ignoreProfile: FolderIgnoreProfile(name: "Text", patterns: ["*.txt"]))
+check(ignoredDrafts.isEmpty, "folder sync ignore profiles exclude matching leaves and descendants")
+let mirrorPlan = try! FileOperationEngine(testTrashDirectory: tmp.appending(path: "Trash"))
+    .prepare(drafts: mirrorDrafts)
+let mirrorReport = FileOperationReport(plan: mirrorPlan, dryRun: true,
+                                       createdAt: Date(timeIntervalSince1970: 0))
+let reportDecoder = JSONDecoder()
+reportDecoder.dateDecodingStrategy = .iso8601
+let decodedMirrorReport = try! reportDecoder.decode(
+    FileOperationReport.self, from: mirrorReport.encodedJSON())
+check(decodedMirrorReport == mirrorReport && mirrorReport.rows.count == mirrorDrafts.count,
+      "folder sync dry-run report is deterministic and machine-readable")
+let metadataBefore = try! FileMetadataComparator.snapshot(at: L.appending(path: "same.txt"))
+try! FileManager.default.setAttributes([.posixPermissions: 0o600],
+                                       ofItemAtPath: L.appending(path: "same.txt").path)
+let metadataAfter = try! FileMetadataComparator.snapshot(at: L.appending(path: "same.txt"))
+check(metadataBefore.permissions != metadataAfter.permissions,
+      "folder metadata comparison detects POSIX permission changes")
+let xattrValue = Data("fixture".utf8)
+let xattrStatus = xattrValue.withUnsafeBytes { bytes in
+    setxattr(L.appending(path: "same.txt").path, "local.grapecompare.fixture",
+             bytes.baseAddress, bytes.count, 0, XATTR_NOFOLLOW)
+}
+let metadataWithXattr = try! FileMetadataComparator.snapshot(at: L.appending(path: "same.txt"))
+check(xattrStatus == 0 && metadataWithXattr.extendedAttributes["local.grapecompare.fixture"] != nil,
+      "folder metadata comparison fingerprints extended attributes without following links")
+let metadataTree = try! FolderComparator.compareCancellable(
+    leftRoot: L, rightRoot: R, compareMetadata: true)
+check(metadataTree.children?.first { $0.name == "same.txt" }?.status == .different,
+      "folder comparison exposes permission and extended-attribute differences when enabled")
 check(node("sub")?.containsDifferences == true && node("same.txt")?.containsDifferences == false, "containsDifferences")
 
 let stats = FolderComparator.stats(for: tree)
