@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.1 — 2026-08-22
+
+### Compatibility and distribution
+
+- Lowered the minimum supported system to macOS 15 while retaining the complete Finder, Git, CLI, and comparison workflows.
+- Made direct-distribution releases universal for Apple silicon and Intel Macs and added minimum-version and architecture validation.
+- Staple notarization tickets before packaging the final archive, then regenerate its checksum for reliable offline Gatekeeper verification.
+- Aligned Homebrew, CI, issue templates, and English and Chinese documentation with the supported system range.
+
 ## 1.8.0 — 2026-08-02
 
 ### Text actions and merge

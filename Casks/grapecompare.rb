@@ -1,5 +1,5 @@
 cask "grapecompare" do
-  version "1.8.0"
+  version "1.8.1"
   sha256 "TO_BE_SET_BY_RELEASE_WORKFLOW"
 
   url "https://github.com/everettjf/grapecompare/releases/download/v#{version}/GrapeCompare-#{version}.zip"
@@ -7,7 +7,7 @@ cask "grapecompare" do
   desc "Native file and folder comparison for macOS"
   homepage "https://xnu.app/grapecompare/"
 
-  depends_on macos: :tahoe
+  depends_on macos: ">= :sequoia"
   app "GrapeCompare.app"
 
   zap trash: [

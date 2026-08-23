@@ -39,7 +39,7 @@ body:
     id: macos
     attributes:
       label: macOS version and Mac model
-      placeholder: "For example: macOS 27.0, MacBook Pro with Apple silicon"
+      placeholder: "For example: macOS 15.6, MacBook Pro with Apple silicon"
     validations:
       required: true
 
