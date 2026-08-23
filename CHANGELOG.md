@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.19.0 — 2026-08-22
+## 1.0.0 — 2026-08-22
 
 ### Repository, image, sync, and Apple developer workflows
 
