@@ -5,7 +5,30 @@ import UniformTypeIdentifiers
 nonisolated let quickActionPathsKey = "pendingCompareFilesIntentPaths"
 
 extension Notification.Name {
-    static let compareFilesIntentReceived = Notification.Name("CompareFilesIntentReceived")
+    nonisolated static let compareFilesIntentReceived = Notification.Name("CompareFilesIntentReceived")
+    nonisolated static let externalCompareRequestReceived = Notification.Name("ExternalCompareRequestReceived")
+}
+
+nonisolated enum ExternalCompareRequest {
+    static func store(_ urls: [URL]) {
+        let paths = urls.filter(\.isFileURL).map { $0.standardizedFileURL.path }
+        guard paths.count == 2 else { return }
+        UserDefaults.standard.set(paths, forKey: quickActionPathsKey)
+        NotificationCenter.default.post(name: .externalCompareRequestReceived, object: nil)
+    }
+
+    static func decode(_ url: URL) -> [URL] {
+        guard url.scheme?.lowercased() == "grapecompare",
+              url.host?.lowercased() == "compare",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return [] }
+        let items = components.queryItems ?? []
+        return ["left", "right"].compactMap { key in
+            items.first(where: { $0.name == key })?.value.flatMap { value in
+                if let url = URL(string: value), url.isFileURL { return url }
+                return URL(fileURLWithPath: value)
+            }
+        }
+    }
 }
 
 @available(macOS 15.0, *)

@@ -35,6 +35,8 @@ struct ImageComparisonView: View {
     @State private var rightImage: NSImage?
     @State private var pixel: PixelInspection?
     @State private var loadError: String?
+    @State private var canvasSize = CGSize.zero
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var currentResult: ImageDifferenceResult {
         guard let leftRaster, let rightRaster else { return result }
@@ -53,7 +55,7 @@ struct ImageComparisonView: View {
         }
         .task(id: "\(leftURL?.path ?? "")|\(rightURL?.path ?? "")") { await load() }
         .task(id: mode) {
-            guard mode == .blink else { return }
+            guard mode == .blink, !reduceMotion else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(450))
                 if !Task.isCancelled { showRight.toggle() }
@@ -71,7 +73,8 @@ struct ImageComparisonView: View {
             Slider(value: $zoom, in: 0.1...8).frame(width: 90)
             Button { zoom = min(8, zoom * 1.25) } label: { Label("Zoom In", systemImage: "plus.magnifyingglass") }
                 .labelStyle(.iconOnly)
-            Button("Actual Size") { zoom = 1; pan = .zero }
+            Button("Fit") { zoom = 1; pan = .zero }
+            Button("Actual Pixels") { showActualPixels() }
             Menu("Channels") {
                 channelButton("Red", .red); channelButton("Green", .green)
                 channelButton("Blue", .blue); channelButton("Alpha", .alpha)
@@ -144,6 +147,7 @@ struct ImageComparisonView: View {
                     case .ended: pixel = nil
                     }
                 }.accessibilityLabel(Text(label))
+                .onChange(of: proxy.size, initial: true) { _, size in canvasSize = size }
         }
     }
 
@@ -176,6 +180,7 @@ struct ImageComparisonView: View {
             Text("Right: \(value.rightWidth)×\(value.rightHeight)")
             Text("\(value.differingPixelCount) / \(value.comparedPixelCount) pixels")
             Text(value.meanAbsoluteDifference, format: .percent.precision(.fractionLength(3)))
+            Text("Zoom: \(zoom, format: .percent.precision(.fractionLength(0)))")
             Text("Maximum channel difference: \(value.maximumChannelDifference)")
             Spacer()
             Text(value.identical ? "Images are identical" : "Images differ")
@@ -216,6 +221,13 @@ struct ImageComparisonView: View {
             offsetX = alignment.x
             offsetY = alignment.y
         }
+    }
+
+    private func showActualPixels() {
+        guard let raster = leftRaster, canvasSize.width > 0, canvasSize.height > 0 else { return }
+        let fit = min(canvasSize.width / Double(raster.width), canvasSize.height / Double(raster.height))
+        zoom = min(8, max(0.1, 1 / fit))
+        pan = .zero
     }
 
     private func inspect(

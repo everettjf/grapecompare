@@ -15,6 +15,10 @@ struct FolderCompareView: View {
     @State private var exportRecipe: FileOperationRecipe?
     @State private var planError: String?
     @State private var useDeveloperIgnoreProfile = false
+    @AppStorage("folderCustomIgnorePatterns") private var customIgnorePatterns = ""
+    @State private var useCustomIgnoreProfile = false
+    @State private var showsIgnoreEditor = false
+    @State private var ignoreDraft = ""
     @State private var appleInspections: [AppleInspectionItem] = []
     @State private var showsAppleInspection = false
 
@@ -70,6 +74,22 @@ struct FolderCompareView: View {
         }
         .sheet(isPresented: $showsAppleInspection) {
             AppleInspectionSheet(items: appleInspections)
+        }
+        .sheet(isPresented: $showsIgnoreEditor) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Custom Ignore Profile").font(.headline)
+                Text("Enter one gitignore-style pattern per line.").foregroundStyle(.secondary)
+                TextEditor(text: $ignoreDraft).font(.body.monospaced()).frame(minWidth: 460, minHeight: 260)
+                HStack {
+                    Spacer()
+                    Button("Cancel", role: .cancel) { showsIgnoreEditor = false }
+                    Button("Save") {
+                        customIgnorePatterns = ignoreDraft
+                        useCustomIgnoreProfile = !ignoreDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        showsIgnoreEditor = false
+                    }.keyboardShortcut(.defaultAction)
+                }
+            }.padding(20)
         }
     }
 
@@ -128,6 +148,12 @@ struct FolderCompareView: View {
 
             Menu {
                 Toggle("Developer Ignore Profile", isOn: $useDeveloperIgnoreProfile)
+                Toggle("Custom Ignore Profile", isOn: $useCustomIgnoreProfile)
+                    .disabled(customIgnorePatterns.isEmpty)
+                Button("Edit Custom Ignore Profile…") {
+                    ignoreDraft = customIgnorePatterns
+                    showsIgnoreEditor = true
+                }
                 Divider()
                 Button("Mirror Left → Right") { generateSyncPlan(.mirror) }
                 Button("Update Left → Right") { generateSyncPlan(.update) }
@@ -464,7 +490,13 @@ struct FolderCompareView: View {
         guard let root = state.folderRoot,
               let leftRoot = state.leftFolderURL,
               let rightRoot = state.rightFolderURL else { return }
-        let profile = useDeveloperIgnoreProfile ? FolderIgnoreProfile.developer : nil
+        let profile: FolderIgnoreProfile? = if useDeveloperIgnoreProfile {
+            .developer
+        } else if useCustomIgnoreProfile {
+            FolderIgnoreProfile(name: "Custom", patterns: customIgnorePatterns.components(separatedBy: .newlines))
+        } else {
+            nil
+        }
         let drafts = FolderSyncPlanner.drafts(
             root: root, leftRoot: leftRoot, rightRoot: rightRoot,
             mode: mode, ignoreProfile: profile)

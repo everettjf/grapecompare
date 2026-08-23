@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3 — Unreleased
+
+### Images, folders, and system integration
+
+- Add distinct Fit and Actual Pixels image zoom controls, a visible zoom readout, and reduced-motion-safe blink comparison.
+- Add a persistent custom folder ignore profile alongside the built-in developer profile.
+- Accept exactly two files or folders from Finder/Open With and add `grapecompare://compare?left=…&right=…` deep-link handling.
+
 ## 1.0.2 — Unreleased
 
 ### Git review and merge parity

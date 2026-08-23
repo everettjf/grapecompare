@@ -19,6 +19,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let stored = UserDefaults.standard.string(forKey: "appearance")
         NSApp.appearance = (AppearanceMode(rawValue: stored ?? "") ?? .system).nsAppearance
     }
+
+    func application(_ sender: NSApplication, openFiles filenames: [String]) {
+        ExternalCompareRequest.store(filenames.map(URL.init(fileURLWithPath:)))
+        sender.reply(toOpenOrPrint: filenames.count == 2 ? .success : .failure)
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        let files = urls.flatMap { $0.isFileURL ? [$0] : ExternalCompareRequest.decode($0) }
+        ExternalCompareRequest.store(files)
+    }
 }
 
 @main
@@ -77,6 +87,12 @@ private struct WindowRootView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .compareFilesIntentReceived)) { _ in
                 state.consumeQuickAction()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .externalCompareRequestReceived)) { _ in
+                state.consumeQuickAction()
+            }
+            .onOpenURL { url in
+                ExternalCompareRequest.store(ExternalCompareRequest.decode(url))
             }
             .focusedSceneValue(\.fileOperationController, state.operations)
             .focusedSceneValue(\.appState, state)
