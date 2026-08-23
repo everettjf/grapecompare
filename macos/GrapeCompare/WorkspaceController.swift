@@ -39,6 +39,7 @@ final class WorkspaceController {
         guard let index = items.firstIndex(where: { $0.id == id }),
               items[index].state.canCloseWorkspaceItem else { return }
         let wasSelected = selectedID == id
+        items[index].state.prepareForClose()
         items.remove(at: index)
         if items.isEmpty {
             let replacement = Item(id: UUID(), state: AppState(processLaunchArguments: false))

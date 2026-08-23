@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 — Unreleased
+
+### Reliability
+
+- Release security-scoped bookmark access when a comparison workspace closes and avoid retaining duplicate access for the same restored path.
+- Cancel active comparison, Git-history, and filesystem-watch work before releasing a closed workspace.
+- Keep the 10,000-file Git changeset and 200-commit history performance fixtures independent so CI measures both dimensions deterministically.
+
 ## 1.0.0 — 2026-08-22
 
 ### First public release

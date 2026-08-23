@@ -546,9 +546,7 @@ final class AppState {
     func openGitRepositoryLibraryEntry(_ entry: GitRepositoryLibraryEntry) {
         do {
             let resolved = try gitRepositoryLibraryStore.resolve(entry)
-            if resolved.url.startAccessingSecurityScopedResource() {
-                restoredSecurityScopedURLs.append(resolved.url)
-            }
+            retainSecurityScopedAccess(to: resolved.url)
             gitRepositoryURL = resolved.url
             startGitComparison()
         } catch {
@@ -942,6 +940,19 @@ final class AppState {
         screen = .home
     }
 
+    /// Ends all work and releases resources owned by this workspace. This is
+    /// intentionally explicit because a closed SwiftUI workspace can remain
+    /// retained briefly while views finish updating.
+    func prepareForClose() {
+        cancelCurrentComparison()
+        stopLiveUpdates()
+        operations.clearDrafts()
+        for url in restoredSecurityScopedURLs {
+            url.stopAccessingSecurityScopedResource()
+        }
+        restoredSecurityScopedURLs.removeAll(keepingCapacity: false)
+    }
+
     func resumeLastSession() {
         guard let resumableSession else { return }
         openSession(resumableSession)
@@ -1189,9 +1200,7 @@ final class AppState {
                 guard !stale, FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
                     throw CocoaError(.fileNoSuchFile)
                 }
-                if url.startAccessingSecurityScopedResource() {
-                    restoredSecurityScopedURLs.append(url)
-                }
+                retainSecurityScopedAccess(to: url)
                 resolved.append(url.standardizedFileURL)
             }
             switch session.kind {
@@ -1300,6 +1309,16 @@ final class AppState {
         filesystemWatcher = nil
         watchedExactPaths.removeAll()
         watchedRootPaths.removeAll()
+    }
+
+    private func retainSecurityScopedAccess(to url: URL) {
+        let standardized = url.standardizedFileURL
+        guard !restoredSecurityScopedURLs.contains(where: {
+            $0.standardizedFileURL.path == standardized.path
+        }) else { return }
+        if standardized.startAccessingSecurityScopedResource() {
+            restoredSecurityScopedURLs.append(standardized)
+        }
     }
 
     private func filesystemEventsArrived(_ changedURLs: [URL]) {
