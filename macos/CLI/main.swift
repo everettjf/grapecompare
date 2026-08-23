@@ -13,17 +13,23 @@ private func writeStandardError(_ message: String) {
 private func usage() -> Never {
     writeStandardError("""
     Usage:
-      grapecompare diff <left> <right> [--patch]
-      grapecompare merge <base> <ours> <theirs> <output>
-      grapecompare structured <json|plist> <left> <right>
-      grapecompare image <left> <right>
-      grapecompare git <repository> <from> <to|INDEX|WORKTREE>
+      grapecompare diff <left> <right> [--patch] [--format json]
+      grapecompare merge <base> <ours> <theirs> <output> [--format json]
+      grapecompare structured <json|plist> <left> <right> [--format json]
+      grapecompare image <left> <right> [--format json]
+      grapecompare git <repository> <from> <to|INDEX|WORKTREE> [--format json]
       grapecompare folder-sync <left> <right> <mirror|update> --dry-run
       grapecompare git-config
 
     Exit status: 0 identical/resolved, 1 different/conflicts, 2 invalid input or failure.
     """)
     exit(Exit.usageOrFailure.rawValue)
+}
+
+private func writeJSON(_ value: Any) throws {
+    let data = try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])
+    FileHandle.standardOutput.write(data)
+    FileHandle.standardOutput.write(Data("\n".utf8))
 }
 
 private func read(_ path: String) throws -> Data {
@@ -69,7 +75,14 @@ private func conflictText(_ result: ThreeWayMergeResult) -> String {
 }
 
 private func run() throws -> Exit {
-    let arguments = Array(CommandLine.arguments.dropFirst())
+    var arguments = Array(CommandLine.arguments.dropFirst())
+    let jsonOutput: Bool
+    if arguments.suffix(2) == ["--format", "json"] {
+        arguments.removeLast(2)
+        jsonOutput = true
+    } else {
+        jsonOutput = false
+    }
     guard let command = arguments.first else { usage() }
     switch command {
     case "diff":
@@ -78,6 +91,7 @@ private func run() throws -> Exit {
         let left = try TextSnapshot(data: read(arguments[1]))
         let right = try TextSnapshot(data: read(arguments[2]))
         let comparison = TextComparisonEngine.compare(left: left, right: right)
+        if jsonOutput && arguments.last == "--patch" { usage() }
         if arguments.last == "--patch", !comparison.exactIdentical {
             print(try UnifiedDiffWriter.makePatch(
                 left: left,
@@ -85,6 +99,14 @@ private func run() throws -> Exit {
                 leftPath: "a/\(URL(fileURLWithPath: arguments[1]).lastPathComponent)",
                 rightPath: "b/\(URL(fileURLWithPath: arguments[2]).lastPathComponent)"),
                 terminator: "")
+        } else if jsonOutput {
+            try writeJSON([
+                "command": "diff",
+                "identical": comparison.exactIdentical,
+                "hunkCount": comparison.hunks.count,
+                "left": URL(fileURLWithPath: arguments[1]).standardizedFileURL.path,
+                "right": URL(fileURLWithPath: arguments[2]).standardizedFileURL.path
+            ])
         } else {
             print(comparison.exactIdentical
                 ? "identical"
@@ -101,11 +123,21 @@ private func run() throws -> Exit {
         if let lines = result.renderedLines() {
             let output = try TextSnapshot(lines: lines, encoding: ours.encoding)
             try atomicWrite(try output.encodedData(), to: arguments[4])
-            print("merged")
+            if jsonOutput {
+                try writeJSON(["command": "merge", "resolved": true,
+                               "conflictCount": 0, "output": arguments[4]])
+            } else {
+                print("merged")
+            }
             return .success
         }
         try atomicWrite(Data(conflictText(result).utf8), to: arguments[4])
-        print("conflicts: \(result.conflictCount)")
+        if jsonOutput {
+            try writeJSON(["command": "merge", "resolved": false,
+                           "conflictCount": result.conflictCount, "output": arguments[4]])
+        } else {
+            print("conflicts: \(result.conflictCount)")
+        }
         return .different
 
     case "structured":
@@ -117,9 +149,20 @@ private func run() throws -> Exit {
         let left = try StructuredDataComparator.decode(read(arguments[2]), format: format)
         let right = try StructuredDataComparator.decode(read(arguments[3]), format: format)
         let differences = StructuredDataComparator.compare(left: left, right: right)
-        for difference in differences {
-            print("\(difference.kind.rawValue)\t\(difference.path)\t" +
-                  "\(difference.left?.summary ?? "-")\t\(difference.right?.summary ?? "-")")
+        if jsonOutput {
+            let rows: [[String: Any]] = differences.map { difference in
+                ["kind": difference.kind.rawValue,
+                 "path": difference.path,
+                 "left": difference.left?.summary as Any? ?? NSNull(),
+                 "right": difference.right?.summary as Any? ?? NSNull()]
+            }
+            try writeJSON(["command": "structured", "format": arguments[1],
+                           "identical": differences.isEmpty, "differences": rows])
+        } else {
+            for difference in differences {
+                print("\(difference.kind.rawValue)\t\(difference.path)\t" +
+                      "\(difference.left?.summary ?? "-")\t\(difference.right?.summary ?? "-")")
+            }
         }
         return differences.isEmpty ? .success : .different
 
@@ -128,10 +171,19 @@ private func run() throws -> Exit {
         let left = try ImageRaster.decode(read(arguments[1]))
         let right = try ImageRaster.decode(read(arguments[2]))
         let result = ImageComparisonEngine.compare(left: left, right: right)
-        print("left=\(result.leftWidth)x\(result.leftHeight) " +
-              "right=\(result.rightWidth)x\(result.rightHeight) " +
-              "pixels=\(result.differingPixelCount)/\(result.comparedPixelCount) " +
-              "mean=\(result.meanAbsoluteDifference)")
+        if jsonOutput {
+            try writeJSON(["command": "image", "identical": result.identical,
+                           "leftWidth": result.leftWidth, "leftHeight": result.leftHeight,
+                           "rightWidth": result.rightWidth, "rightHeight": result.rightHeight,
+                           "differingPixelCount": result.differingPixelCount,
+                           "comparedPixelCount": result.comparedPixelCount,
+                           "meanAbsoluteDifference": result.meanAbsoluteDifference])
+        } else {
+            print("left=\(result.leftWidth)x\(result.leftHeight) " +
+                  "right=\(result.rightWidth)x\(result.rightHeight) " +
+                  "pixels=\(result.differingPixelCount)/\(result.comparedPixelCount) " +
+                  "mean=\(result.meanAbsoluteDifference)")
+        }
         return result.identical ? .success : .different
 
     case "git":
@@ -141,17 +193,26 @@ private func run() throws -> Exit {
             in: try GitRepositoryComparator.repositoryRoot(at: repository),
             from: GitComparisonTarget.parse(arguments[2]),
             to: GitComparisonTarget.parse(arguments[3]))
-        for change in changes {
-            if let oldPath = change.oldPath {
-                print("\(change.kind.rawValue)\t\(oldPath)\t\(change.path)")
-            } else {
-                print("\(change.kind.rawValue)\t\(change.path)")
+        if jsonOutput {
+            let rows: [[String: Any]] = changes.map { change in
+                ["kind": change.kind.rawValue, "path": change.path,
+                 "oldPath": change.oldPath as Any? ?? NSNull()]
+            }
+            try writeJSON(["command": "git", "identical": changes.isEmpty,
+                           "from": arguments[2], "to": arguments[3], "changes": rows])
+        } else {
+            for change in changes {
+                if let oldPath = change.oldPath {
+                    print("\(change.kind.rawValue)\t\(oldPath)\t\(change.path)")
+                } else {
+                    print("\(change.kind.rawValue)\t\(change.path)")
+                }
             }
         }
         return changes.isEmpty ? .success : .different
 
     case "git-config":
-        guard arguments.count == 1 else { usage() }
+        guard arguments.count == 1, !jsonOutput else { usage() }
         let executable = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path
         print("""
         [diff]

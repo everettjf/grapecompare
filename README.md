@@ -10,7 +10,7 @@ Repository: <https://github.com/everettjf/grapecompare>
 **Fast, accurate file and folder comparison for macOS.**<br>
 A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
-**1.0.7 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
+**1.0.8 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -68,6 +68,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Rename-aware paginated file history with arbitrary A/B revision and merge-parent comparison without changing repository state
 - Explicit text, binary, Git LFS pointer, submodule, and bounded large-file inspection
 - Standalone CLI plus Git difftool/mergetool configuration
+- Stable JSON output for text, merge, structured-data, image, Git, and folder dry-run automation
 - Finder Quick Action support through the built-in Compare Files shortcut on macOS 15+
 
 ### Images and structured data
@@ -150,6 +151,7 @@ You can also open `macos/GrapeCompare.xcodeproj` in Xcode and press Run.
 ```bash
 bash macos/CLI/build.sh
 macos/CLI/.build/grapecompare diff left.txt right.txt --patch
+macos/CLI/.build/grapecompare diff left.txt right.txt --format json
 macos/CLI/.build/grapecompare merge base.txt ours.txt theirs.txt merged.txt
 macos/CLI/.build/grapecompare git-config
 macos/CLI/.build/grapecompare folder-sync left-folder right-folder mirror --dry-run
@@ -166,9 +168,10 @@ Run the platform-independent core suite without launching Xcode:
 ```bash
 bash macos/Tests/run-tests.sh
 bash macos/CLI/run-tests.sh
+ruby scripts/run-correctness-audit.rb
 ```
 
-The suite contains focused comparison and transaction checks, 300 randomized shortest-edit-script cases, large-text stress cases, and filesystem safety cases. Pull requests run the same suite in GitHub Actions.
+The suite contains focused comparison and transaction checks, 300 randomized shortest-edit-script cases, large-text stress cases, and filesystem safety cases. The audit also verifies the published screenshots and writes `.audit/correctness-report.json`; CI archives the same report for every pull request.
 
 ```text
 macos/

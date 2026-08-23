@@ -23,14 +23,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Run core tests
-        run: bash macos/Tests/run-tests.sh
+      - name: Run correctness audit
+        run: ruby scripts/run-correctness-audit.rb "$RUNNER_TEMP/correctness-report.json"
 
-      - name: Run CLI and real Git integration tests
-        run: bash macos/CLI/run-tests.sh
-
-      - name: Validate localization coverage
-        run: ruby macos/Tests/validate-localizations.rb
+      - name: Upload correctness and screenshot audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: correctness-audit
+          path: ${{ runner.temp }}/correctness-report.json
 
   release-artifact:
     name: Universal release artifact audit

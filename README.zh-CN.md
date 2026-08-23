@@ -6,7 +6,7 @@
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
 原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
-**1.0.7 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+**1.0.8 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -65,6 +65,7 @@
 - 明确识别文本、二进制、Git LFS 指针、子模块和有界探测的大文件
 - 可追踪重命名的逐文件历史，并可任选 A/B 两个版本比较，全程不 checkout、不改变仓库状态
 - 三方合并、独立 CLI，以及 Git difftool/mergetool 配置
+- 文本、合并、结构化数据、图片、Git 和目录预演均提供稳定 JSON 输出
 
 ### 图片与结构化数据
 
@@ -139,7 +140,9 @@ xcodebuild -project macos/GrapeCompare.xcodeproj \
 ## 命令行
 
 ```bash
-GrapeCompare <左侧路径> <右侧路径>
+bash macos/CLI/build.sh
+macos/CLI/.build/grapecompare diff left.txt right.txt --format json
+macos/CLI/.build/grapecompare folder-sync left-folder right-folder mirror --dry-run
 ```
 
 两个输入都是文件夹时进入文件夹比较，其他情况进入文件比较。Homebrew 版本不受 App Store 沙盒限制，可以直接读取 Git 等工具传入的任意临时路径。
@@ -150,9 +153,11 @@ GrapeCompare <左侧路径> <右侧路径>
 
 ```bash
 bash macos/Tests/run-tests.sh
+bash macos/CLI/run-tests.sh
+ruby scripts/run-correctness-audit.rb
 ```
 
-测试套件包含针对比较与事务的专项检查、300 组随机最短编辑脚本用例、大文本压力场景和文件系统安全场景；Pull Request 会在 GitHub Actions 中运行同一套测试。
+测试套件包含针对比较与事务的专项检查、300 组随机最短编辑脚本用例、大文本压力场景和文件系统安全场景。审计命令还会批量校验官网截图并生成 `.audit/correctness-report.json`；CI 会为每个 Pull Request 归档同类报告。
 
 ```text
 macos/

@@ -29,6 +29,20 @@ else
     exit 1
 fi
 
+set +e
+DIFF_JSON="$($BIN diff "$TMP_ROOT/base.txt" "$TMP_ROOT/ours.txt" --format json)"
+DIFF_JSON_STATUS=$?
+set -e
+if [[ $DIFF_JSON_STATUS -eq 1 ]] && ruby -rjson -e '
+  value = JSON.parse(ARGV.fetch(0))
+  abort unless value["command"] == "diff" && value["identical"] == false && value["hunkCount"] == 1
+' "$DIFF_JSON"; then
+    echo 'PASS: CLI diff emits stable machine-readable JSON'
+else
+    echo 'FAIL: CLI diff emits stable machine-readable JSON'
+    exit 1
+fi
+
 printf '%s\n' "$PATCH_OUTPUT" \
     | sed -e 's@a/base.txt@a/apply.txt@g' -e 's@b/ours.txt@b/apply.txt@g' \
     > "$TMP_ROOT/apply.patch"
@@ -47,6 +61,16 @@ if [[ "$(cat "$TMP_ROOT/merged.txt")" == $'ONE\ntwo\nTHREE' ]]; then
     echo 'PASS: CLI merge writes independent changes'
 else
     echo 'FAIL: CLI merge writes independent changes'
+    exit 1
+fi
+MERGE_JSON="$($BIN merge "$TMP_ROOT/base.txt" "$TMP_ROOT/ours.txt" "$TMP_ROOT/theirs.txt" "$TMP_ROOT/merged-json.txt" --format json)"
+if ruby -rjson -e '
+  value = JSON.parse(ARGV.fetch(0))
+  abort unless value["command"] == "merge" && value["resolved"] == true && value["conflictCount"] == 0
+' "$MERGE_JSON"; then
+    echo 'PASS: CLI merge emits stable machine-readable JSON'
+else
+    echo 'FAIL: CLI merge emits stable machine-readable JSON'
     exit 1
 fi
 
@@ -71,6 +95,16 @@ if [[ -z "$STRUCTURED_OUTPUT" ]]; then
     echo 'PASS: CLI structured comparison ignores JSON key order'
 else
     echo 'FAIL: CLI structured comparison ignores JSON key order'
+    exit 1
+fi
+STRUCTURED_JSON="$($BIN structured json "$TMP_ROOT/left.json" "$TMP_ROOT/right.json" --format json)"
+if ruby -rjson -e '
+  value = JSON.parse(ARGV.fetch(0))
+  abort unless value["command"] == "structured" && value["identical"] == true && value["differences"] == []
+' "$STRUCTURED_JSON"; then
+    echo 'PASS: CLI structured comparison emits stable machine-readable JSON'
+else
+    echo 'FAIL: CLI structured comparison emits stable machine-readable JSON'
     exit 1
 fi
 
@@ -99,6 +133,21 @@ if [[ $GIT_STATUS -eq 1 && "$GIT_OUTPUT" == $'modified\tfile.txt' ]]; then
     echo 'PASS: CLI Git comparison reports working-tree changes'
 else
     echo 'FAIL: CLI Git comparison reports working-tree changes'
+    exit 1
+fi
+
+set +e
+GIT_JSON="$($BIN git "$TMP_ROOT/repo" HEAD WORKTREE --format json)"
+GIT_JSON_STATUS=$?
+set -e
+if [[ $GIT_JSON_STATUS -eq 1 ]] && ruby -rjson -e '
+  value = JSON.parse(ARGV.fetch(0))
+  change = value.fetch("changes").fetch(0)
+  abort unless value["command"] == "git" && change["kind"] == "modified" && change["path"] == "file.txt"
+' "$GIT_JSON"; then
+    echo 'PASS: CLI Git comparison emits stable machine-readable JSON'
+else
+    echo 'FAIL: CLI Git comparison emits stable machine-readable JSON'
     exit 1
 fi
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.8 — 2026-08-23
+
+### Automation and verifiable quality
+
+- Add stable JSON output for CLI text, merge, structured-data, image, and Git comparisons while retaining meaningful exit statuses.
+- Add a single correctness-audit command that records core, CLI, real-Git, localization, and website-screenshot checks in a machine-readable report.
+- Publish the correctness and screenshot audit report as a CI artifact for every push and pull request.
+
 ## 1.0.7 — 2026-08-23
 
 ### Professional inspection workflows
