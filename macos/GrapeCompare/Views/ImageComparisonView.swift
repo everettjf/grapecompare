@@ -36,13 +36,12 @@ struct ImageComparisonView: View {
     @State private var pixel: PixelInspection?
     @State private var loadError: String?
     @State private var canvasSize = CGSize.zero
+    @State private var computedResult: ImageDifferenceResult?
+    @State private var isComputingDifference = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var currentResult: ImageDifferenceResult {
-        guard let leftRaster, let rightRaster else { return result }
-        return ImageComparisonEngine.compare(left: leftRaster, right: rightRaster,
-            options: ImageComparisonOptions(threshold: UInt8(threshold), channels: channels,
-                                            rightOffsetX: offsetX, rightOffsetY: offsetY))
+        computedResult ?? result
     }
 
     var body: some View {
@@ -54,6 +53,10 @@ struct ImageComparisonView: View {
             status
         }
         .task(id: "\(leftURL?.path ?? "")|\(rightURL?.path ?? "")") { await load() }
+        .task(id: "\(Int(threshold))|\(channels.rawValue)|\(offsetX)|\(offsetY)") {
+            try? await Task.sleep(for: .milliseconds(80))
+            await recomputeDifference()
+        }
         .task(id: mode) {
             guard mode == .blink, !reduceMotion else { return }
             while !Task.isCancelled {
@@ -70,17 +73,22 @@ struct ImageComparisonView: View {
             }.pickerStyle(.segmented).frame(maxWidth: 430)
             Button { zoom = max(0.1, zoom / 1.25) } label: { Label("Zoom Out", systemImage: "minus.magnifyingglass") }
                 .labelStyle(.iconOnly)
+                .keyboardShortcut("-", modifiers: .command)
             Slider(value: $zoom, in: 0.1...8).frame(width: 90)
+                .accessibilityLabel("Image zoom")
+                .accessibilityValue(Text(zoom, format: .percent.precision(.fractionLength(0))))
             Button { zoom = min(8, zoom * 1.25) } label: { Label("Zoom In", systemImage: "plus.magnifyingglass") }
                 .labelStyle(.iconOnly)
-            Button("Fit") { zoom = 1; pan = .zero }
-            Button("Actual Pixels") { showActualPixels() }
+                .keyboardShortcut("+", modifiers: .command)
+            Button("Fit") { zoom = 1; pan = .zero }.keyboardShortcut("0", modifiers: .command)
+            Button("Actual Pixels") { showActualPixels() }.keyboardShortcut("1", modifiers: .command)
             Menu("Channels") {
                 channelButton("Red", .red); channelButton("Green", .green)
                 channelButton("Blue", .blue); channelButton("Alpha", .alpha)
             }
             Text("Threshold")
             Slider(value: $threshold, in: 0...255, step: 1).frame(width: 90)
+                .accessibilityLabel("Pixel difference threshold")
             Text(threshold, format: .number.precision(.fractionLength(0))).monospacedDigit()
             Menu("Align") {
                 Stepper("Horizontal: \(offsetX) px", value: $offsetX, in: -10_000...10_000)
@@ -89,6 +97,9 @@ struct ImageComparisonView: View {
                 Button("Reset Alignment") { offsetX = 0; offsetY = 0 }
             }
             Spacer()
+            if isComputingDifference {
+                ProgressView().controlSize(.small).accessibilityLabel("Updating image difference")
+            }
         }.controlSize(.small).padding(10)
     }
 
@@ -207,8 +218,23 @@ struct ImageComparisonView: View {
         case .success(let pair):
             leftRaster = pair.0; rightRaster = pair.1
             leftImage = makeImage(pair.0); rightImage = makeImage(pair.1); loadError = nil
+            await recomputeDifference()
         case .failure(let error): loadError = error.localizedDescription
         }
+    }
+
+    private func recomputeDifference() async {
+        guard let leftRaster, let rightRaster else { return }
+        let options = ImageComparisonOptions(
+            threshold: UInt8(threshold), channels: channels,
+            rightOffsetX: offsetX, rightOffsetY: offsetY)
+        isComputingDifference = true
+        let value = await Task.detached(priority: .userInitiated) {
+            ImageComparisonEngine.compare(left: leftRaster, right: rightRaster, options: options)
+        }.value
+        guard !Task.isCancelled else { return }
+        computedResult = value
+        isComputingDifference = false
     }
 
     private func autoAlign() {

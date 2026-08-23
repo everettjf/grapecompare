@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.4 — Unreleased
+
+### Polish and performance
+
+- Move full-resolution image difference recalculation out of SwiftUI rendering, debounce option changes, and expose progress without blocking interaction.
+- Add standard image zoom keyboard shortcuts, explicit accessibility values, and reduced-motion behavior.
+
 ## 1.0.3 — Unreleased
 
 ### Images, folders, and system integration
