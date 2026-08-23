@@ -127,6 +127,9 @@ final class AppState {
     var mergeSaveError: String?
     var mergeOutputIsDirty = false
     var mergeChoices: [MergeConflict.ID: MergeConflictChoice] = [:]
+    var selectedMergeConflictID: MergeConflict.ID?
+    private var mergeChoiceUndoStack: [[MergeConflict.ID: MergeConflictChoice]] = []
+    private var mergeChoiceRedoStack: [[MergeConflict.ID: MergeConflictChoice]] = []
     var mergeDestinationURL: URL?
     var mergeSentinelURL: URL?
     var isExternalMerge = false
@@ -289,6 +292,9 @@ final class AppState {
         mergeError = nil
         mergeSaveError = nil
         mergeChoices.removeAll()
+        selectedMergeConflictID = nil
+        mergeChoiceUndoStack.removeAll()
+        mergeChoiceRedoStack.removeAll()
         mergeOutputText = ""
         mergeOutputIsDirty = false
         screen = .merge
@@ -319,6 +325,7 @@ final class AppState {
                 self.mergeResult = payload.result
                 self.mergeOutputText = self.renderMergeDraft(payload.result)
                 self.mergeOutputEncoding = payload.ours.encoding
+                self.selectedMergeConflictID = payload.result.conflicts.first?.id
             case .failure(let error):
                 if !(error is CancellationError) {
                     self.mergeError = error.localizedDescription
@@ -386,7 +393,57 @@ final class AppState {
 
     func resolveMergeConflict(_ id: MergeConflict.ID, with choice: MergeConflictChoice) {
         guard let mergeResult else { return }
+        recordMergeChoiceUndo()
         mergeChoices[id] = choice
+        selectedMergeConflictID = id
+        mergeOutputText = renderMergeDraft(mergeResult)
+        mergeOutputIsDirty = true
+    }
+
+    func resolveSelectedMergeConflict(with choice: MergeConflictChoice) {
+        guard let selectedMergeConflictID else { return }
+        resolveMergeConflict(selectedMergeConflictID, with: choice)
+        selectAdjacentMergeConflict(offset: 1, preferringUnresolved: true)
+    }
+
+    func resolveAllMergeConflicts(with choice: MergeConflictChoice) {
+        guard let mergeResult, !mergeResult.conflicts.isEmpty else { return }
+        recordMergeChoiceUndo()
+        for conflict in mergeResult.conflicts { mergeChoices[conflict.id] = choice }
+        mergeOutputText = renderMergeDraft(mergeResult)
+        mergeOutputIsDirty = true
+    }
+
+    func selectAdjacentMergeConflict(offset: Int, preferringUnresolved: Bool = false) {
+        guard let conflicts = mergeResult?.conflicts, !conflicts.isEmpty else { return }
+        let current = conflicts.firstIndex { $0.id == selectedMergeConflictID } ?? (offset > 0 ? -1 : 0)
+        for step in 1...conflicts.count {
+            let index = (current + offset * step + conflicts.count * 2) % conflicts.count
+            let candidate = conflicts[index]
+            if !preferringUnresolved || mergeChoices[candidate.id] == nil {
+                selectedMergeConflictID = candidate.id
+                return
+            }
+        }
+        let index = (current + offset + conflicts.count) % conflicts.count
+        selectedMergeConflictID = conflicts[index].id
+    }
+
+    var canUndoMergeResolution: Bool { !mergeChoiceUndoStack.isEmpty }
+    var canRedoMergeResolution: Bool { !mergeChoiceRedoStack.isEmpty }
+
+    func undoMergeResolution() {
+        guard let mergeResult, let previous = mergeChoiceUndoStack.popLast() else { return }
+        mergeChoiceRedoStack.append(mergeChoices)
+        mergeChoices = previous
+        mergeOutputText = renderMergeDraft(mergeResult)
+        mergeOutputIsDirty = true
+    }
+
+    func redoMergeResolution() {
+        guard let mergeResult, let next = mergeChoiceRedoStack.popLast() else { return }
+        mergeChoiceUndoStack.append(mergeChoices)
+        mergeChoices = next
         mergeOutputText = renderMergeDraft(mergeResult)
         mergeOutputIsDirty = true
     }
@@ -742,6 +799,11 @@ final class AppState {
             }
         }
         return output
+    }
+
+    private func recordMergeChoiceUndo() {
+        mergeChoiceUndoStack.append(mergeChoices)
+        mergeChoiceRedoStack.removeAll()
     }
 
     private func materializeGitFile(

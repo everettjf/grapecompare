@@ -80,6 +80,20 @@ struct MergeView: View {
             pathLabel("Theirs", url: state.theirsFileURL, color: .purple)
             Spacer()
             if let result = state.mergeResult {
+                Button {
+                    state.selectAdjacentMergeConflict(offset: -1)
+                } label: {
+                    Label("Previous Conflict", systemImage: "chevron.up")
+                }
+                .keyboardShortcut(.upArrow, modifiers: [.command])
+                .disabled(result.conflicts.isEmpty)
+                Button {
+                    state.selectAdjacentMergeConflict(offset: 1)
+                } label: {
+                    Label("Next Conflict", systemImage: "chevron.down")
+                }
+                .keyboardShortcut(.downArrow, modifiers: [.command])
+                .disabled(result.conflicts.isEmpty)
                 Text("\(result.conflictCount) conflicts")
                     .foregroundStyle(result.conflictCount == 0 ? .green : .orange)
                 if state.isExternalMerge {
@@ -123,7 +137,10 @@ struct MergeView: View {
                     systemImage: "checkmark.seal.fill",
                     description: Text("Independent and identical changes were merged automatically."))
             } else {
-                List(result.conflicts) { conflict in
+                List(result.conflicts, selection: Binding(
+                    get: { state.selectedMergeConflictID },
+                    set: { state.selectedMergeConflictID = $0 }
+                )) { conflict in
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Base lines \(rangeDescription(conflict.baseRange))")
                             .font(.caption)
@@ -141,6 +158,9 @@ struct MergeView: View {
                     }
                     .padding(.vertical, 5)
                     .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Conflict at base lines \(rangeDescription(conflict.baseRange))")
+                    .accessibilityValue(state.mergeChoices[conflict.id]?.rawValue ?? "Unresolved")
+                    .tag(conflict.id)
                 }
             }
         }
@@ -176,6 +196,7 @@ struct MergeView: View {
         Button(title) { state.resolveMergeConflict(conflict.id, with: choice) }
             .buttonStyle(.bordered)
             .tint(state.mergeChoices[conflict.id] == choice ? .accentColor : .secondary)
+            .accessibilityValue(state.mergeChoices[conflict.id] == choice ? "Selected" : "Not selected")
     }
 
     private func preview(_ conflict: MergeConflict) -> String {

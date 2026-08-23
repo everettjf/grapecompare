@@ -38,6 +38,7 @@ struct GrapeCompareApp: App {
         // prevents the window from being created at all (macOS 27 beta).
         .commands {
             FileOperationCommands()
+            MergeCommands()
             CommandMenu("Appearance") {
                 Picker("Appearance", selection: Binding(
                     get: { appearance.mode },
@@ -75,6 +76,7 @@ private struct WindowRootView: View {
                 state.consumeQuickAction()
             }
             .focusedSceneValue(\.fileOperationController, state.operations)
+            .focusedSceneValue(\.appState, state)
             .sheet(isPresented: Binding(
                 get: { state.operations.historyPresented },
                 set: { state.operations.historyPresented = $0 }
@@ -96,6 +98,51 @@ private struct WindowRootView: View {
 
 extension FocusedValues {
     @Entry var fileOperationController: FileOperationController?
+    @Entry var appState: AppState?
+}
+
+private struct MergeCommands: Commands {
+    @FocusedValue(\.appState) private var state
+
+    private var isMerging: Bool { state?.screen == .merge && state?.mergeResult != nil }
+
+    var body: some Commands {
+        CommandMenu("Merge") {
+            Button("Previous Conflict") { state?.selectAdjacentMergeConflict(offset: -1) }
+                .keyboardShortcut(.upArrow, modifiers: [.command])
+                .disabled(!isMerging)
+            Button("Next Conflict") { state?.selectAdjacentMergeConflict(offset: 1) }
+                .keyboardShortcut(.downArrow, modifiers: [.command])
+                .disabled(!isMerging)
+            Divider()
+            Button("Accept Base for Conflict") { state?.resolveSelectedMergeConflict(with: .base) }
+                .keyboardShortcut("1", modifiers: [.command])
+                .disabled(!isMerging || state?.selectedMergeConflictID == nil)
+            Button("Accept Ours for Conflict") { state?.resolveSelectedMergeConflict(with: .ours) }
+                .keyboardShortcut("2", modifiers: [.command])
+                .disabled(!isMerging || state?.selectedMergeConflictID == nil)
+            Button("Accept Theirs for Conflict") { state?.resolveSelectedMergeConflict(with: .theirs) }
+                .keyboardShortcut("3", modifiers: [.command])
+                .disabled(!isMerging || state?.selectedMergeConflictID == nil)
+            Button("Accept Both for Conflict") { state?.resolveSelectedMergeConflict(with: .both) }
+                .keyboardShortcut("4", modifiers: [.command])
+                .disabled(!isMerging || state?.selectedMergeConflictID == nil)
+            Divider()
+            Button("Accept Ours for All Conflicts") { state?.resolveAllMergeConflicts(with: .ours) }
+                .keyboardShortcut("2", modifiers: [.command, .shift])
+                .disabled(!isMerging)
+            Button("Accept Theirs for All Conflicts") { state?.resolveAllMergeConflicts(with: .theirs) }
+                .keyboardShortcut("3", modifiers: [.command, .shift])
+                .disabled(!isMerging)
+            Divider()
+            Button("Undo Conflict Resolution") { state?.undoMergeResolution() }
+                .keyboardShortcut("z", modifiers: [.command, .option])
+                .disabled(state?.canUndoMergeResolution != true)
+            Button("Redo Conflict Resolution") { state?.redoMergeResolution() }
+                .keyboardShortcut("z", modifiers: [.command, .option, .shift])
+                .disabled(state?.canRedoMergeResolution != true)
+        }
+    }
 }
 
 private struct FileOperationCommands: Commands {

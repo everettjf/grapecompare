@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.0 — 2026-08-22
+
+### Professional merge workflow
+
+- Added previous/next conflict navigation with persistent selection and accessible conflict status.
+- Added keyboard commands for resolving the selected conflict as base, ours, theirs, or both, plus batch accept-ours and accept-theirs actions.
+- Added undo and redo for individual and batch conflict-resolution decisions.
+- Exposed every merge action in the macOS Merge menu with discoverable keyboard shortcuts.
+
 ## 1.9.0 — 2026-08-22
 
 ### Wider compatibility
