@@ -90,7 +90,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Ignore profiles and Mirror/Update/Custom synchronization plans with POSIX permission and extended-attribute comparison
 - Machine-readable dry-run reports in the GUI and CLI, plus verified APFS clone-copy acceleration with safe fallback
 
-The contracts and acceptance criteria are documented in [the v1.3 safe-operations plan](docs/v1.3-safe-operations.md), [the v1.4 durable-workflows plan](docs/v1.4-durable-workflows.md), [the v1.5 text-actions plan](docs/v1.5-text-actions.md), and [the v1.6–v1.8 integration contract](docs/v1.6-v1.8-integration.md).
+The pre-release engineering milestones and acceptance criteria are preserved in [the safe-operations plan](docs/v1.3-safe-operations.md), [the durable-workflows plan](docs/v1.4-durable-workflows.md), [the text-actions plan](docs/v1.5-text-actions.md), and [the integration contract](docs/v1.6-v1.8-integration.md). These internal milestone numbers were never public releases; 1.0.0 is the first public version.
 
 ## Performance
 
