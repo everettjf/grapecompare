@@ -158,6 +158,26 @@ measurements.append(measure("large text / churn end-to-end", detail: "split + di
 })
 precondition(churnResult.differenceCount == churnCount - churnCount / 100)
 
+let volatileLeftText = (0..<lineCount).map {
+    "event 2026-08-23T10:11:12Z id 550e8400-e29b-41d4-a716-446655440000 worker-\($0)"
+}.joined(separator: "\n")
+let volatileRightText = (0..<lineCount).map {
+    "event 2026-08-23T10:15:59Z id 123e4567-e89b-42d3-a456-426614174000 worker-\($0 + 1)"
+}.joined(separator: "\n")
+let volatileLeftSnapshot = try! TextSnapshot(text: volatileLeftText)
+let volatileRightSnapshot = try! TextSnapshot(text: volatileRightText)
+var volatileEquivalent = false
+measurements.append(measure("large text / regex filters", detail: "\(lineCount) volatile lines") {
+    volatileEquivalent = TextComparisonEngine.compare(
+        left: volatileLeftSnapshot,
+        right: volatileRightSnapshot,
+        options: TextComparisonOptions(
+            ignoreTimestamps: true,
+            ignoreUUIDs: true,
+            customFilterPatterns: [#"worker-\d+"#])).equivalentUnderOptions
+})
+precondition(volatileEquivalent)
+
 let imageSide = 1_024
 var imageAData = Data(repeating: 0x7F, count: imageSide * imageSide * 4)
 var imageBData = imageAData
@@ -213,6 +233,7 @@ if ProcessInfo.processInfo.environment["GRAPECOMPARE_VERIFY_PERFORMANCE"] == "1"
     let timeBudgets: [String: Double] = [
         "large text / sparse end-to-end": 0.25,
         "large text / churn end-to-end": 0.25,
+        "large text / regex filters": 2.0,
         "image difference": 0.25,
         "large folder": max(2.0, Double(folderFileCount) / 10_000 * 2.0),
         "folder sync planning": max(0.25, Double(folderFileCount) / 10_000 * 0.25),

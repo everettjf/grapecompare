@@ -208,13 +208,13 @@ nonisolated struct TextSnapshot: Equatable, Sendable {
     }
 }
 
-nonisolated enum WhitespaceComparison: String, CaseIterable, Sendable {
+nonisolated enum WhitespaceComparison: String, CaseIterable, Codable, Sendable {
     case exact
     case ignoreChanges
     case ignoreAll
 }
 
-nonisolated struct TextComparisonOptions: Equatable, Sendable {
+nonisolated struct TextComparisonOptions: Equatable, Codable, Sendable {
     var whitespace: WhitespaceComparison = .exact
     var ignoreCase = false
     var ignoreLineEndingFormat = true
@@ -222,6 +222,10 @@ nonisolated struct TextComparisonOptions: Equatable, Sendable {
     var ignoreCStyleLineComments = false
     var ignoreShellLineComments = false
     var ignoreHTMLComments = false
+    var ignoreTimestamps = false
+    var ignoreUUIDs = false
+    var ignoreHexAddresses = false
+    var customFilterPatterns: [String] = []
 
     static let exact = TextComparisonOptions(ignoreLineEndingFormat: false)
 }
@@ -264,8 +268,10 @@ nonisolated enum TextComparisonEngine {
         for snapshot: TextSnapshot,
         options: TextComparisonOptions
     ) -> [String] {
-        snapshot.lines.enumerated().map { index, line in
+        let filters = compiledFilters(options: options)
+        return snapshot.lines.enumerated().map { index, line in
             var content = normalizeComments(line.content, options: options)
+            content = normalizeFilteredContent(content, filters: filters)
             content = normalizeWhitespace(content, policy: options.whitespace)
             if options.ignoreCase {
                 content = content.folding(
@@ -282,6 +288,44 @@ nonisolated enum TextComparisonEngine {
                 ending = line.ending.text
             }
             return content + "\u{0}" + ending
+        }
+    }
+
+    static func invalidFilterPatterns(_ patterns: [String]) -> [String] {
+        patterns.filter { pattern in
+            !pattern.isEmpty && (try? NSRegularExpression(pattern: pattern)) == nil
+        }
+    }
+
+    private static func compiledFilters(
+        options: TextComparisonOptions
+    ) -> [NSRegularExpression] {
+        var patterns = options.customFilterPatterns.filter { !$0.isEmpty }
+        var builtInPatterns: [String] = []
+        if options.ignoreTimestamps {
+            builtInPatterns.append(#"(?<![A-Za-z0-9])(?:\d{4}-\d{2}-\d{2}[T ][0-2]\d:[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?|[0-2]\d:[0-5]\d:[0-5]\d(?:\.\d+)?)(?![A-Za-z0-9])"#)
+        }
+        if options.ignoreUUIDs {
+            builtInPatterns.append(#"(?i:\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)"#)
+        }
+        if options.ignoreHexAddresses {
+            builtInPatterns.append(#"(?i:\b0x[0-9a-f]{6,16}\b)"#)
+        }
+        if !builtInPatterns.isEmpty {
+            patterns.append(builtInPatterns.map { "(?:\($0))" }.joined(separator: "|"))
+        }
+        return patterns.compactMap { try? NSRegularExpression(pattern: $0) }
+    }
+
+    private static func normalizeFilteredContent(
+        _ value: String,
+        filters: [NSRegularExpression]
+    ) -> String {
+        filters.reduce(value) { result, expression in
+            expression.stringByReplacingMatches(
+                in: result,
+                range: NSRange(result.startIndex..., in: result),
+                withTemplate: "<filtered>")
         }
     }
 

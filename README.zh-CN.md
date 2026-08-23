@@ -6,7 +6,7 @@
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
 原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
-**1.0.9 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+**1.0.10 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -48,7 +48,7 @@
 
 - 自适应 Myers 行 diff，大范围重写使用低频公共行锚点分段
 - 修改行内的字符级精确高亮
-- 搜索、行跳转、含注释文本过滤的比较规则、语法着色、可选自动换行，以及外部编辑器/访达操作
+- 搜索、行跳转、可持久复用的注释/时间戳/UUID/地址/自定义正则过滤规则、语法着色、可选自动换行，以及外部编辑器/访达操作
 - 按差异块接受左侧/右侧内容、可编辑输出，以及统一 Diff/Patch 导出
 - 新增、删除、修改统计与差异导航
 - 窗口内 Workspace 支持多个独立比较任务，并保护未保存的输出

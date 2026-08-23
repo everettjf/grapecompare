@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.10 — 2026-08-23
+
+### Reusable text filters
+
+- Ignore volatile timestamps, UUIDs, and hexadecimal memory addresses without modifying source text or exact-identity results.
+- Add any number of custom regular-expression filters with validation before applying them.
+- Persist the complete comparison-rule profile for reuse across files and app launches.
+- Precompile filters once per comparison and combine built-in rules into one scan; the 100,000-line worst-case filter benchmark completes in about 0.84 seconds.
+
 ## 1.0.9 — 2026-08-23
 
 ### Image comparison precision

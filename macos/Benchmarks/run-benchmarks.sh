@@ -15,5 +15,7 @@ swiftc -O -whole-module-optimization -o "$BIN" \
     ../GrapeCompare/Core/FileOperations.swift \
     ../GrapeCompare/Core/FolderSync.swift \
     ../GrapeCompare/Core/ImageComparison.swift \
+    ../GrapeCompare/Core/TextComparison.swift \
+    ../GrapeCompare/Core/ThreeWayMerge.swift \
     main.swift
 "$BIN" "$@"

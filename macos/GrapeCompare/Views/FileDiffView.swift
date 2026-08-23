@@ -16,6 +16,7 @@ struct FileDiffView: View {
     @State private var patchText = ""
     @State private var exportError: String?
     @State private var pendingNavigation: PendingNavigation?
+    @State private var editsCustomFilters = false
 
     private enum PendingNavigation {
         case back, swap
@@ -77,6 +78,16 @@ struct FileDiffView: View {
         } message: {
             Text("The editable output contains changes that have not been saved.")
         }
+        .sheet(isPresented: $editsCustomFilters) {
+            TextFilterEditor(patterns: state.textComparisonOptions.customFilterPatterns) { patterns in
+                var options = state.textComparisonOptions
+                options.customFilterPatterns = patterns
+                state.updateTextComparisonOptions(options)
+                editsCustomFilters = false
+            } onCancel: {
+                editsCustomFilters = false
+            }
+        }
     }
 
     private var textActionBar: some View {
@@ -116,6 +127,11 @@ struct FileDiffView: View {
                 Toggle("Ignore C-style line comments", isOn: optionBinding(\.ignoreCStyleLineComments))
                 Toggle("Ignore shell line comments", isOn: optionBinding(\.ignoreShellLineComments))
                 Toggle("Ignore single-line HTML comments", isOn: optionBinding(\.ignoreHTMLComments))
+                Divider()
+                Toggle("Ignore timestamps", isOn: optionBinding(\.ignoreTimestamps))
+                Toggle("Ignore UUIDs", isOn: optionBinding(\.ignoreUUIDs))
+                Toggle("Ignore hexadecimal addresses", isOn: optionBinding(\.ignoreHexAddresses))
+                Button("Custom Regular Expressions…") { editsCustomFilters = true }
             } label: {
                 Label("Rules", systemImage: "slider.horizontal.3")
             }
@@ -550,6 +566,58 @@ struct FileDiffView: View {
                 options[keyPath: keyPath] = $0
                 state.updateTextComparisonOptions(options)
             })
+    }
+}
+
+private struct TextFilterEditor: View {
+    @State private var patternText: String
+    @State private var invalidPatterns: [String] = []
+    let onSave: ([String]) -> Void
+    let onCancel: () -> Void
+
+    init(
+        patterns: [String],
+        onSave: @escaping ([String]) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        _patternText = State(initialValue: patterns.joined(separator: "\n"))
+        self.onSave = onSave
+        self.onCancel = onCancel
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Custom Text Filters").font(.title2.bold())
+            Text("Enter one regular expression per line. Matching text is replaced with the same comparison-only placeholder; source files are never modified.")
+                .foregroundStyle(.secondary)
+            TextEditor(text: $patternText)
+                .font(.body.monospaced())
+                .frame(minWidth: 560, minHeight: 220)
+                .border(invalidPatterns.isEmpty ? Color.secondary.opacity(0.35) : .red)
+                .accessibilityLabel("Custom regular expressions")
+            if !invalidPatterns.isEmpty {
+                Text("Invalid regular expression: \(invalidPatterns.joined(separator: ", "))")
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+            }
+            HStack {
+                Button("Clear All") { patternText = "" }
+                Spacer()
+                Button("Cancel", role: .cancel, action: onCancel)
+                    .keyboardShortcut(.cancelAction)
+                Button("Save Filters") { save() }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+    }
+
+    private func save() {
+        let patterns = patternText.split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        invalidPatterns = TextComparisonEngine.invalidFilterPatterns(patterns)
+        if invalidPatterns.isEmpty { onSave(patterns) }
     }
 }
 

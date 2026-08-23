@@ -247,6 +247,7 @@ final class AppState {
     @ObservationIgnored private var isLiveRefresh = false
     @ObservationIgnored private let gitReviewDefaultsKey = "gitReviewedChanges.v1"
     @ObservationIgnored private let gitReviewNotesDefaultsKey = "gitReviewNotes.v1"
+    @ObservationIgnored private let textComparisonOptionsDefaultsKey = "textComparisonOptions.v1"
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
@@ -255,6 +256,10 @@ final class AppState {
         recentComparisons = savedSessions.recents
         resumableSession = savedSessions.current
         gitRepositoryLibrary = gitRepositoryLibraryStore.load()
+        if let data = UserDefaults.standard.data(forKey: textComparisonOptionsDefaultsKey),
+           let stored = try? JSONDecoder().decode(TextComparisonOptions.self, from: data) {
+            textComparisonOptions = stored
+        }
         guard processLaunchArguments else { return }
         let args = ProcessInfo.processInfo.arguments
         if let request = ExternalMergeRequest(commandLineArguments: args) {
@@ -965,6 +970,9 @@ final class AppState {
     func updateTextComparisonOptions(_ options: TextComparisonOptions) {
         guard textComparisonOptions != options, !outputIsDirty else { return }
         textComparisonOptions = options
+        if let data = try? JSONEncoder().encode(options) {
+            UserDefaults.standard.set(data, forKey: textComparisonOptionsDefaultsKey)
+        }
         runFileDiff(left: diffLeftURL, right: diffRightURL)
     }
 

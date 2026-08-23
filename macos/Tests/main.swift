@@ -230,6 +230,28 @@ let ignoredComments = TextComparisonEngine.compare(
 check(ignoredComments.equivalentUnderOptions,
       "text filters ignore C-style, shell, and single-line HTML comment changes without stripping quoted URLs")
 
+let volatileLeft = try! TextSnapshot(text: """
+event 2026-08-23T10:11:12Z id 550e8400-e29b-41d4-a716-446655440000 ptr 0x7ffee12abcde
+build worker-12345 completed
+""")
+let volatileRight = try! TextSnapshot(text: """
+event 2026-08-23T10:15:59Z id 123e4567-e89b-42d3-a456-426614174000 ptr 0x7ffee98fedcb
+build worker-98765 completed
+""")
+let volatileOptions = TextComparisonOptions(
+    ignoreTimestamps: true,
+    ignoreUUIDs: true,
+    ignoreHexAddresses: true,
+    customFilterPatterns: [#"worker-\d+"#])
+check(TextComparisonEngine.compare(
+    left: volatileLeft, right: volatileRight, options: volatileOptions).equivalentUnderOptions,
+      "reusable text filters ignore timestamps, UUIDs, addresses, and custom regex matches")
+check(TextComparisonEngine.invalidFilterPatterns([#"worker-\d+"#, "["]) == ["["],
+      "custom text filter validation rejects malformed regular expressions")
+let encodedTextOptions = try! JSONEncoder().encode(volatileOptions)
+check(try! JSONDecoder().decode(TextComparisonOptions.self, from: encodedTextOptions) == volatileOptions,
+      "text comparison filter profiles round-trip for persistent reuse")
+
 let newlineLeft = try! TextSnapshot(data: Data("same".utf8))
 let newlineRight = try! TextSnapshot(data: Data("same\r\n".utf8))
 let newlineVisible = TextComparisonEngine.compare(

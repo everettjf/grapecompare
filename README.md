@@ -10,7 +10,7 @@ Repository: <https://github.com/everettjf/grapecompare>
 **Fast, accurate file and folder comparison for macOS.**<br>
 A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
-**1.0.9 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
+**1.0.10 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -52,7 +52,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 
 - Adaptive Myers line diff with low-occurrence anchors for large rewrites
 - Character-level highlighting inside modified lines
-- Search and line navigation, comparison rules including comment-text filters, syntax colors, optional line wrapping, and external-editor/Finder actions
+- Search and line navigation, persistent comparison rules for comments, timestamps, UUIDs, addresses, and validated custom regex filters, syntax colors, optional line wrapping, and external-editor/Finder actions
 - Hunk-level left/right acceptance, editable output, and unified diff/patch export
 - Added, removed, and modified counts with keyboard-friendly navigation
 - Window workspaces with multiple independent comparison tasks and safe close protection
