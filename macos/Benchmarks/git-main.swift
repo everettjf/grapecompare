@@ -41,6 +41,10 @@ private enum GitBenchmark {
     try runGit(["init", "-q", "-b", "main"], in: root)
     try runGit(["config", "user.email", "benchmark@grapecompare.local"], in: root)
     try runGit(["config", "user.name", "GrapeCompare Benchmark"], in: root)
+    // Keep the synthetic repository deterministic. Background auto-GC can race
+    // the history query on constrained CI runners while commits are still being
+    // generated, producing transient missing-object failures unrelated to the app.
+    try runGit(["config", "gc.auto", "0"], in: root)
 
     print("Preparing \(changedFileCount) tracked files…")
     for index in 0..<changedFileCount {
@@ -67,17 +71,27 @@ private enum GitBenchmark {
       fatalError("Expected \(expectedChanges) staged/unstaged changes, got \(changes.count)")
     }
 
-    try runGit(["add", "."], in: root)
-    try runGit(["commit", "-q", "-m", "changed files"], in: root)
-    let historyFile = root.appending(path: "history.txt")
+    // Keep the two benchmark dimensions independent. Reusing the 10,000-file
+    // tree for every history commit multiplies unrelated fixture costs and can
+    // overwhelm Git object storage on constrained CI temporary volumes.
+    let historyRoot = FileManager.default.temporaryDirectory
+      .appending(path: "grapecompare-git-history-benchmark-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: historyRoot, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: historyRoot) }
+    try runGit(["init", "-q", "-b", "main"], in: historyRoot)
+    try runGit(["config", "user.email", "benchmark@grapecompare.local"], in: historyRoot)
+    try runGit(["config", "user.name", "GrapeCompare Benchmark"], in: historyRoot)
+    try runGit(["config", "gc.auto", "0"], in: historyRoot)
+
+    let historyFile = historyRoot.appending(path: "history.txt")
     for index in 0..<historyCommitCount {
       try Data("revision \(index)\n".utf8).write(to: historyFile)
-      try runGit(["add", "history.txt"], in: root)
-      try runGit(["commit", "-q", "-m", "history \(index)"], in: root)
+      try runGit(["add", "history.txt"], in: historyRoot)
+      try runGit(["commit", "-q", "-m", "history \(index)"], in: historyRoot)
     }
     let (history, historySeconds) = try measure {
       try GitRepositoryComparator.fileRevisions(
-        in: root, path: "history.txt", limit: historyCommitCount)
+        in: historyRoot, path: "history.txt", limit: historyCommitCount)
     }
     guard history.count == historyCommitCount else {
       fatalError("Expected \(historyCommitCount) history entries, got \(history.count)")
@@ -85,7 +99,7 @@ private enum GitBenchmark {
     let pageSize = min(50, historyCommitCount / 2)
     let (historyPage, paginationSeconds) = try measure {
       try GitRepositoryComparator.fileRevisions(
-        in: root, path: "history.txt", limit: pageSize, skip: pageSize)
+        in: historyRoot, path: "history.txt", limit: pageSize, skip: pageSize)
     }
     guard historyPage.count == pageSize,
           Set(history.map(\.id)).isSuperset(of: historyPage.map(\.id)) else {

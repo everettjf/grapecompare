@@ -6,6 +6,8 @@
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
 原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
+**1.0.0 是第一个公开版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
 ![macOS](https://img.shields.io/badge/macOS-14%2B-111827?style=flat-square&logo=apple)
@@ -46,6 +48,8 @@
 
 - 自适应 Myers 行 diff，大范围重写使用低频公共行锚点分段
 - 修改行内的字符级精确高亮
+- 搜索、行跳转、比较规则、语法着色、可选自动换行
+- 按差异块接受左侧/右侧内容、可编辑输出，以及统一 Diff/Patch 导出
 - 新增、删除、修改统计与差异导航
 - 窗口内 Workspace 支持多个独立比较任务，并保护未保存的输出
 - 文件、文件夹、合并和 Git 比较支持合并去抖的实时刷新；存在未保存输出时会自动暂停
@@ -54,11 +58,19 @@
 
 ### 合并与开发者工作流
 
+- 三方 base/ours/theirs 合并，支持逐冲突、批量接受以及撤销/重做
 - 分支、提交、暂存区和工作区 Changeset，按已暂存、未暂存、未跟踪分组，并支持目标快捷方式、状态/路径筛选、提交上下文和实时刷新
+- 持久仓库库、关联 Worktree 切换、upstream/ahead/behind 状态、Merge Base、提交图、树状 Changeset、跨文件审阅导航和持久审阅状态
 - 支持跨重命名分页的文件历史、任意 A/B 版本和合并父提交比较，无需切换仓库状态
 - 明确识别文本、二进制、Git LFS 指针、子模块和有界探测的大文件
 - 可追踪重命名的逐文件历史，并可任选 A/B 两个版本比较，全程不 checkout、不改变仓库状态
 - 三方合并、独立 CLI，以及 Git difftool/mergetool 配置
+
+### 图片与结构化数据
+
+- Two-Up、One-Up、Split、Blink 和 Difference 图片模式，共享缩放/平移、导航器、像素检查、阈值、通道隔离、本地对齐和 SVG 支持
+- JSON、plist、`.xcstrings` 和 `.pbxproj` 语义比较，路径稳定且不受对象键顺序影响
+- App Bundle、嵌套代码、代码签名、Entitlements、Provisioning Profile、Mach-O 架构和 Asset Catalog 检查，全程不会启动被检查的代码
 
 ### 文件夹比较
 
@@ -73,6 +85,8 @@
 - 持久保存撤销历史并保护已被用户修改的输出，重启 App 后仍可安全撤销；跨卷移动会先复制并逐字节验证，再将源项目移入废纸篓
 - 执行前明确选择“首次失败即停止”或“失败后继续”，执行中显示速度与预计剩余时间
 - 支持导入/导出安全的 `.grapeplan` 方案，将经过校验的相对路径操作映射到当前文件夹对
+- 可复用忽略配置，以及 Mirror/Update/Custom 同步规划，支持 POSIX 权限和扩展属性比较
+- GUI 与 CLI 均可生成机器可读的 Dry Run 报告，并使用经过验证的 APFS Clone Copy 加速和安全回退
 
 公开发布前的内部工程里程碑与验收条件保留在[安全文件操作方案](docs/v1.3-safe-operations.md)和[持久工作流方案](docs/v1.4-durable-workflows.md)中。这些编号从未作为公开版本发布；1.0.0 是第一个公开版本。
 
