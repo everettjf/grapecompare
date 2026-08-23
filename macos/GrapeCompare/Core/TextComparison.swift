@@ -219,6 +219,9 @@ nonisolated struct TextComparisonOptions: Equatable, Sendable {
     var ignoreCase = false
     var ignoreLineEndingFormat = true
     var ignoreFinalNewline = false
+    var ignoreCStyleLineComments = false
+    var ignoreShellLineComments = false
+    var ignoreHTMLComments = false
 
     static let exact = TextComparisonOptions(ignoreLineEndingFormat: false)
 }
@@ -262,7 +265,8 @@ nonisolated enum TextComparisonEngine {
         options: TextComparisonOptions
     ) -> [String] {
         snapshot.lines.enumerated().map { index, line in
-            var content = normalizeWhitespace(line.content, policy: options.whitespace)
+            var content = normalizeComments(line.content, options: options)
+            content = normalizeWhitespace(content, policy: options.whitespace)
             if options.ignoreCase {
                 content = content.folding(
                     options: [.caseInsensitive],
@@ -279,6 +283,64 @@ nonisolated enum TextComparisonEngine {
             }
             return content + "\u{0}" + ending
         }
+    }
+
+    private static func normalizeComments(
+        _ value: String,
+        options: TextComparisonOptions
+    ) -> String {
+        var result = value
+        if options.ignoreHTMLComments {
+            while let start = result.range(of: "<!--"),
+                  let end = result.range(of: "-->", range: start.upperBound..<result.endIndex) {
+                result.removeSubrange(start.lowerBound..<end.upperBound)
+            }
+        }
+        if options.ignoreCStyleLineComments,
+           let index = unquotedDelimiter("//", in: result, requiresLeadingWhitespace: false) {
+            result.removeSubrange(index..<result.endIndex)
+        }
+        if options.ignoreShellLineComments,
+           let index = unquotedDelimiter("#", in: result, requiresLeadingWhitespace: true) {
+            result.removeSubrange(index..<result.endIndex)
+        }
+        return result
+    }
+
+    private static func unquotedDelimiter(
+        _ delimiter: String,
+        in value: String,
+        requiresLeadingWhitespace: Bool
+    ) -> String.Index? {
+        var quote: Character?
+        var escaped = false
+        var index = value.startIndex
+        while index < value.endIndex {
+            let character = value[index]
+            if escaped {
+                escaped = false
+                index = value.index(after: index)
+                continue
+            }
+            if character == "\\" {
+                escaped = true
+                index = value.index(after: index)
+                continue
+            }
+            if character == "\"" || character == "'" {
+                quote = quote == character ? nil : (quote == nil ? character : quote)
+                index = value.index(after: index)
+                continue
+            }
+            if quote == nil, value[index...].hasPrefix(delimiter) {
+                if !requiresLeadingWhitespace || index == value.startIndex ||
+                    value[value.index(before: index)].isWhitespace {
+                    return index
+                }
+            }
+            index = value.index(after: index)
+        }
+        return nil
     }
 
     private static func normalizeWhitespace(

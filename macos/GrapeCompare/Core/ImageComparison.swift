@@ -113,6 +113,66 @@ nonisolated struct ImageRaster: Equatable, Sendable {
     }
 }
 
+nonisolated struct ImageMetadata: Equatable, Sendable {
+    let formatIdentifier: String
+    let width: Int
+    let height: Int
+    let depth: Int?
+    let colorModel: String?
+    let profileName: String?
+    let dpiWidth: Double?
+    let dpiHeight: Double?
+    let hasAlpha: Bool?
+    let byteCount: Int
+
+    static func inspect(
+        _ data: Data,
+        formatHint: String? = nil
+    ) throws -> ImageMetadata {
+        if formatHint?.lowercased() == "svg" {
+            let raster = try ImageRaster.decode(data, formatHint: formatHint)
+            return ImageMetadata(
+                formatIdentifier: "public.svg-image",
+                width: raster.width,
+                height: raster.height,
+                depth: nil,
+                colorModel: "RGB",
+                profileName: nil,
+                dpiWidth: nil,
+                dpiHeight: nil,
+                hasAlpha: true,
+                byteCount: data.count)
+        }
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil)
+                as? [CFString: Any],
+              let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue,
+              let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue else {
+            throw ImageComparisonError.cannotDecode
+        }
+        let image = CGImageSourceCreateImageAtIndex(
+            source, 0, [kCGImageSourceShouldCache: false] as CFDictionary)
+        let alpha: Bool? = image.map {
+            switch $0.alphaInfo {
+            case .none, .noneSkipFirst, .noneSkipLast: false
+            default: true
+            }
+        }
+        return ImageMetadata(
+            formatIdentifier: (CGImageSourceGetType(source) as String?) ??
+                (formatHint.map { "public.\($0.lowercased())" } ?? "public.image"),
+            width: width,
+            height: height,
+            depth: (properties[kCGImagePropertyDepth] as? NSNumber)?.intValue,
+            colorModel: properties[kCGImagePropertyColorModel] as? String,
+            profileName: properties[kCGImagePropertyProfileName] as? String,
+            dpiWidth: (properties[kCGImagePropertyDPIWidth] as? NSNumber)?.doubleValue,
+            dpiHeight: (properties[kCGImagePropertyDPIHeight] as? NSNumber)?.doubleValue,
+            hasAlpha: alpha,
+            byteCount: data.count)
+    }
+}
+
 nonisolated struct ImageDifferenceResult: Equatable, Sendable {
     let leftWidth: Int
     let leftHeight: Int

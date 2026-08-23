@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.7 — 2026-08-23
+
+### Professional inspection workflows
+
+- Preview selected folder-comparison items with macOS Quick Look, including the Space bar shortcut.
+- Open either compared file in its default editor or reveal it in Finder.
+- Ignore changes to unquoted C-style, shell, or single-line HTML comment text without treating quoted URL fragments as comments.
+- Inspect image format, dimensions, encoded size, color model, profile, bit depth, alpha, and resolution.
+- Lock a pixel sample while navigating and inspect its RGBA, HSB, and CIELAB values.
+
 ## 1.0.6 — 2026-08-23
 
 ### Git workflow

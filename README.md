@@ -10,7 +10,7 @@ Repository: <https://github.com/everettjf/grapecompare>
 **Fast, accurate file and folder comparison for macOS.**<br>
 A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
-**1.0.6 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
+**1.0.7 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -52,7 +52,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 
 - Adaptive Myers line diff with low-occurrence anchors for large rewrites
 - Character-level highlighting inside modified lines
-- Search and line navigation, comparison rules, syntax colors, and optional line wrapping
+- Search and line navigation, comparison rules including comment-text filters, syntax colors, optional line wrapping, and external-editor/Finder actions
 - Hunk-level left/right acceptance, editable output, and unified diff/patch export
 - Added, removed, and modified counts with keyboard-friendly navigation
 - Window workspaces with multiple independent comparison tasks and safe close protection
@@ -72,7 +72,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 
 ### Images and structured data
 
-- Image Two-Up, One-Up, Split, Blink, and Difference modes with synchronized zoom/pan, navigator, pixel inspector, thresholds, channel isolation, bounded local alignment, and SVG support
+- Image Two-Up, One-Up, Split, Blink, and Difference modes with synchronized zoom/pan, metadata inspection, lockable RGBA/HSB/Lab pixel sampling, thresholds, channel isolation, bounded local alignment, and SVG support
 - Semantic JSON, plist, `.xcstrings`, and section-aware `.pbxproj` comparison with stable paths and object-key-order independence
 - App Bundle, nested code, code-signature, entitlement, provisioning-profile, Mach-O architecture, and Asset Catalog inspection without launching bundled code
 
@@ -84,6 +84,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Correct traversal of package directories and comparison of symbolic-link targets
 - Fast subtree filtering through pre-aggregated status indexes
 - Per-item and multi-row **Left → Right / Right → Left** operation planning
+- Space-bar Quick Look for selected comparison items
 - Preflight review with real item/byte counts, overwrite warnings, progress, cancellation, and per-item results
 - Safe copy, backup-before-replace, destination-empty move, and recoverable **Move to Trash**
 - Durable undo history with changed-output protection, including across app relaunches; cross-volume moves are copied and byte-verified before the source enters Trash

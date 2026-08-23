@@ -1,4 +1,5 @@
 import AppKit
+import QuickLookUI
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -21,6 +22,7 @@ struct FolderCompareView: View {
     @State private var ignoreDraft = ""
     @State private var appleInspections: [AppleInspectionItem] = []
     @State private var showsAppleInspection = false
+    @State private var quickLookController = FolderQuickLookController()
 
     enum Filter: CaseIterable, Identifiable {
         case all, differences, onlyLeft, onlyRight
@@ -245,6 +247,9 @@ struct FolderCompareView: View {
                     .onKeyPress(.return) {
                         openSelectedNode()
                     }
+                    .onKeyPress(.space) {
+                        previewSelectedNodes()
+                    }
                 }
             }
         }
@@ -409,6 +414,11 @@ struct FolderCompareView: View {
 
     private var operationMenu: some View {
         Menu {
+            Button("Quick Look", systemImage: "eye") {
+                _ = previewSelectedNodes()
+            }
+            .disabled(selectedNodes.isEmpty)
+            Divider()
             Section("Copy or Replace") {
                 Button("Queue Left → Right") {
                     queue(nodes: selectedNodes, kind: .copy, direction: .leftToRight)
@@ -444,6 +454,20 @@ struct FolderCompareView: View {
         }
         .disabled(selectedNodeIDs.isEmpty || state.isComparingFolder)
         .help("Queue an operation for the selected rows")
+    }
+
+    private func previewSelectedNodes() -> KeyPress.Result {
+        guard let leftRoot = state.leftFolderURL, let rightRoot = state.rightFolderURL else {
+            return .ignored
+        }
+        let urls = selectedNodes.compactMap { node -> URL? in
+            if node.left != nil { return leftRoot.appending(path: node.relativePath) }
+            if node.right != nil { return rightRoot.appending(path: node.relativePath) }
+            return nil
+        }
+        guard !urls.isEmpty else { return .ignored }
+        quickLookController.preview(urls)
+        return .handled
     }
 
     private func canQueueCopy(_ node: FolderNode, direction: Direction) -> Bool {
@@ -692,6 +716,29 @@ private struct AppleInspectionSheet: View {
                 }
             }
         }.padding().frame(minWidth: 780, minHeight: 480)
+    }
+}
+
+@MainActor
+private final class FolderQuickLookController: NSObject, QLPreviewPanelDataSource {
+    private var items: [URL] = []
+
+    func preview(_ urls: [URL]) {
+        items = urls
+        guard let panel = QLPreviewPanel.shared() else { return }
+        panel.dataSource = self
+        panel.currentPreviewItemIndex = 0
+        panel.reloadData()
+        panel.makeKeyAndOrderFront(nil)
+    }
+
+    func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int {
+        items.count
+    }
+
+    func previewPanel(_ panel: QLPreviewPanel!, previewItemAt index: Int) -> QLPreviewItem! {
+        guard items.indices.contains(index) else { return nil }
+        return items[index] as NSURL
     }
 }
 

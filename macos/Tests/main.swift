@@ -218,6 +218,18 @@ let allWhitespaceResult = TextComparisonEngine.compare(
 check(allWhitespaceResult.equivalentUnderOptions,
       "ignore-all-whitespace removes horizontal whitespace from matching keys")
 
+let commentLeft = try! TextSnapshot(text: "let url = \"https://xnu.app\" // old note\n# old shell note\n<p><!--old-->value</p>\n")
+let commentRight = try! TextSnapshot(text: "let url = \"https://xnu.app\" // new note\n# new shell note\n<p><!--new-->value</p>\n")
+let ignoredComments = TextComparisonEngine.compare(
+    left: commentLeft,
+    right: commentRight,
+    options: TextComparisonOptions(
+        ignoreCStyleLineComments: true,
+        ignoreShellLineComments: true,
+        ignoreHTMLComments: true))
+check(ignoredComments.equivalentUnderOptions,
+      "text filters ignore C-style, shell, and single-line HTML comment changes without stripping quoted URLs")
+
 let newlineLeft = try! TextSnapshot(data: Data("same".utf8))
 let newlineRight = try! TextSnapshot(data: Data("same\r\n".utf8))
 let newlineVisible = TextComparisonEngine.compare(
@@ -630,6 +642,10 @@ check(!resizedImageResult.dimensionsMatch && resizedImageResult.differingPixelCo
 
 let onePixelPNG = Data(base64Encoded:
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")!
+let onePixelMetadata = try! ImageMetadata.inspect(onePixelPNG, formatHint: "png")
+check(onePixelMetadata.width == 1 && onePixelMetadata.height == 1 &&
+      onePixelMetadata.formatIdentifier.contains("png") && onePixelMetadata.byteCount == onePixelPNG.count,
+      "image metadata reports format, dimensions, and encoded size without rendering UI")
 do {
     _ = try ImageRaster.decode(onePixelPNG, maximumPixels: 0)
     check(false, "image decode enforces the pixel budget before raster allocation")

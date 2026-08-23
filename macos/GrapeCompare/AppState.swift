@@ -610,6 +610,16 @@ final class AppState {
             configuration: NSWorkspace.OpenConfiguration())
     }
 
+    func openComparedFileExternally(left: Bool) {
+        guard let url = left ? diffLeftURL : diffRightURL else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    func revealComparedFileInFinder(left: Bool) {
+        guard let url = left ? diffLeftURL : diffRightURL else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
     func openGitRepositoryLibraryEntry(_ entry: GitRepositoryLibraryEntry) {
         do {
             let resolved = try gitRepositoryLibraryStore.resolve(entry)

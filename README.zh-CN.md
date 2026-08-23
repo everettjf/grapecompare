@@ -6,7 +6,7 @@
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
 原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
-**1.0.6 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+**1.0.7 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -48,7 +48,7 @@
 
 - 自适应 Myers 行 diff，大范围重写使用低频公共行锚点分段
 - 修改行内的字符级精确高亮
-- 搜索、行跳转、比较规则、语法着色、可选自动换行
+- 搜索、行跳转、含注释文本过滤的比较规则、语法着色、可选自动换行，以及外部编辑器/访达操作
 - 按差异块接受左侧/右侧内容、可编辑输出，以及统一 Diff/Patch 导出
 - 新增、删除、修改统计与差异导航
 - 窗口内 Workspace 支持多个独立比较任务，并保护未保存的输出
@@ -68,7 +68,7 @@
 
 ### 图片与结构化数据
 
-- Two-Up、One-Up、Split、Blink 和 Difference 图片模式，共享缩放/平移、导航器、像素检查、阈值、通道隔离、本地对齐和 SVG 支持
+- Two-Up、One-Up、Split、Blink 和 Difference 图片模式，共享缩放/平移、图像元数据、可锁定的 RGBA/HSB/Lab 像素采样、阈值、通道隔离、本地对齐和 SVG 支持
 - JSON、plist、`.xcstrings` 和 `.pbxproj` 语义比较，路径稳定且不受对象键顺序影响
 - App Bundle、嵌套代码、代码签名、Entitlements、Provisioning Profile、Mach-O 架构和 Asset Catalog 检查，全程不会启动被检查的代码
 
@@ -80,6 +80,7 @@
 - 正确遍历 package 目录，并按链接目标比较符号链接
 - 通过预汇总状态索引快速筛选超大目录树
 - 支持逐项和多选批量规划**左 → 右 / 右 → 左**操作
+- 对选中的比较项按空格键快速查看
 - 执行前预检真实项目数与字节数，并显示覆盖警告、进度、取消和逐项结果
 - 支持安全复制、备份后覆盖、目标不存在时移动，以及可恢复的**移入废纸篓**
 - 持久保存撤销历史并保护已被用户修改的输出，重启 App 后仍可安全撤销；跨卷移动会先复制并逐字节验证，再将源项目移入废纸篓

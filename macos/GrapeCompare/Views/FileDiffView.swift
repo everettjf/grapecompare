@@ -112,6 +112,10 @@ struct FileDiffView: View {
                 Toggle("Ignore case", isOn: ignoreCaseBinding)
                 Toggle("Ignore line-ending format", isOn: ignoreLineEndingBinding)
                 Toggle("Ignore final newline", isOn: ignoreFinalNewlineBinding)
+                Divider()
+                Toggle("Ignore C-style line comments", isOn: optionBinding(\.ignoreCStyleLineComments))
+                Toggle("Ignore shell line comments", isOn: optionBinding(\.ignoreShellLineComments))
+                Toggle("Ignore single-line HTML comments", isOn: optionBinding(\.ignoreHTMLComments))
             } label: {
                 Label("Rules", systemImage: "slider.horizontal.3")
             }
@@ -187,6 +191,23 @@ struct FileDiffView: View {
                 Text(state.rightFileName).bold().lineLimit(1).truncationMode(.middle)
             }
             .layoutPriority(1)
+
+            Menu {
+                Section("Left") {
+                    Button("Open in Default Editor") { state.openComparedFileExternally(left: true) }
+                        .disabled(state.diffLeftURL == nil)
+                    Button("Reveal in Finder") { state.revealComparedFileInFinder(left: true) }
+                        .disabled(state.diffLeftURL == nil)
+                }
+                Section("Right") {
+                    Button("Open in Default Editor") { state.openComparedFileExternally(left: false) }
+                        .disabled(state.diffRightURL == nil)
+                    Button("Reveal in Finder") { state.revealComparedFileInFinder(left: false) }
+                        .disabled(state.diffRightURL == nil)
+                }
+            } label: {
+                Label("External Editor", systemImage: "arrow.up.forward.app")
+            }
 
             Spacer()
 

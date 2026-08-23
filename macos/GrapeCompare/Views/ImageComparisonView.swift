@@ -34,6 +34,10 @@ struct ImageComparisonView: View {
     @State private var leftImage: NSImage?
     @State private var rightImage: NSImage?
     @State private var pixel: PixelInspection?
+    @State private var lockedPixel: PixelInspection?
+    @State private var leftMetadata: ImageMetadata?
+    @State private var rightMetadata: ImageMetadata?
+    @State private var showsMetadata = false
     @State private var loadError: String?
     @State private var canvasSize = CGSize.zero
     @State private var computedResult: ImageDifferenceResult?
@@ -96,6 +100,14 @@ struct ImageComparisonView: View {
                 Button("Auto Align Locally") { autoAlign() }
                 Button("Reset Alignment") { offsetX = 0; offsetY = 0 }
             }
+            Button("Image Inspector", systemImage: "info.circle") {
+                showsMetadata.toggle()
+            }
+            .popover(isPresented: $showsMetadata) {
+                ImageMetadataInspector(left: leftMetadata, right: rightMetadata)
+                    .frame(width: 520)
+                    .padding(16)
+            }
             Spacer()
             if isComputingDifference {
                 ProgressView().controlSize(.small).accessibilityLabel("Updating image difference")
@@ -155,7 +167,7 @@ struct ImageComparisonView: View {
                 .onContinuousHover { phase in
                     switch phase {
                     case .active(let point): pixel = raster.flatMap { inspect($0, point, proxy.size, aligned: aligned) }
-                    case .ended: pixel = nil
+                    case .ended: if lockedPixel == nil { pixel = nil }
                     }
                 }.accessibilityLabel(Text(label))
                 .onChange(of: proxy.size, initial: true) { _, size in canvasSize = size }
@@ -177,9 +189,13 @@ struct ImageComparisonView: View {
                 Image(nsImage: preview).resizable().aspectRatio(contentMode: .fit).frame(width: 120, height: 80)
                     .background(.black.opacity(0.5)).overlay(Rectangle().stroke(.white.opacity(0.8)))
             }
-            if let pixel {
-                Text("x:\(pixel.x) y:\(pixel.y)  RGBA \(pixel.r),\(pixel.g),\(pixel.b),\(pixel.a)")
+            if let sample = lockedPixel ?? pixel {
+                Text(sample.summary)
                     .font(.caption2.monospaced()).padding(5).background(.regularMaterial, in: .rect(cornerRadius: 4))
+                Button(lockedPixel == nil ? "Lock Pixel Sample" : "Unlock Pixel Sample") {
+                    lockedPixel = lockedPixel == nil ? sample : nil
+                }
+                .controlSize(.mini)
             }
         }.accessibilityElement(children: .combine).accessibilityLabel("Image navigator and pixel inspector")
     }
@@ -208,15 +224,22 @@ struct ImageComparisonView: View {
 
     private func load() async {
         guard let leftURL, let rightURL else { return }
-        let loaded = await Task.detached(priority: .userInitiated) { () -> Result<(ImageRaster, ImageRaster), Error> in
-            Result { (try ImageRaster.decode(Data(contentsOf: leftURL, options: .mappedIfSafe),
-                                              formatHint: leftURL.pathExtension),
-                      try ImageRaster.decode(Data(contentsOf: rightURL, options: .mappedIfSafe),
-                                              formatHint: rightURL.pathExtension)) }
+        let loaded = await Task.detached(priority: .userInitiated) {
+            () -> Result<(ImageRaster, ImageRaster, ImageMetadata, ImageMetadata), Error> in
+            Result {
+                let leftData = try Data(contentsOf: leftURL, options: .mappedIfSafe)
+                let rightData = try Data(contentsOf: rightURL, options: .mappedIfSafe)
+                return (
+                    try ImageRaster.decode(leftData, formatHint: leftURL.pathExtension),
+                    try ImageRaster.decode(rightData, formatHint: rightURL.pathExtension),
+                    try ImageMetadata.inspect(leftData, formatHint: leftURL.pathExtension),
+                    try ImageMetadata.inspect(rightData, formatHint: rightURL.pathExtension))
+            }
         }.value
         switch loaded {
         case .success(let pair):
             leftRaster = pair.0; rightRaster = pair.1
+            leftMetadata = pair.2; rightMetadata = pair.3
             leftImage = makeImage(pair.0); rightImage = makeImage(pair.1); loadError = nil
             await recomputeDifference()
         case .failure(let error): loadError = error.localizedDescription
@@ -294,4 +317,78 @@ struct ImageComparisonView: View {
 private struct PixelInspection {
     let x: Int; let y: Int
     let r: UInt8; let g: UInt8; let b: UInt8; let a: UInt8
+
+    var summary: String {
+        let red = Double(r) / 255
+        let green = Double(g) / 255
+        let blue = Double(b) / 255
+        let maximum = max(red, max(green, blue))
+        let minimum = min(red, min(green, blue))
+        let delta = maximum - minimum
+        let saturation = maximum == 0 ? 0 : delta / maximum
+        var hue = 0.0
+        if delta > 0 {
+            if maximum == red { hue = ((green - blue) / delta).truncatingRemainder(dividingBy: 6) }
+            else if maximum == green { hue = (blue - red) / delta + 2 }
+            else { hue = (red - green) / delta + 4 }
+            hue = (hue * 60 + 360).truncatingRemainder(dividingBy: 360)
+        }
+        let lab = Self.lab(red: red, green: green, blue: blue)
+        return String(
+            format: "x:%d y:%d  RGBA %d,%d,%d,%d  HSB %.0f°,%.0f%%,%.0f%%  Lab %.1f,%.1f,%.1f",
+            x, y, r, g, b, a, hue, saturation * 100, maximum * 100, lab.0, lab.1, lab.2)
+    }
+
+    private static func lab(red: Double, green: Double, blue: Double) -> (Double, Double, Double) {
+        func linear(_ value: Double) -> Double {
+            value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        let r = linear(red), g = linear(green), b = linear(blue)
+        let x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047
+        let y = r * 0.2126 + g * 0.7152 + b * 0.0722
+        let z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883
+        func curve(_ value: Double) -> Double {
+            value > 0.008856 ? pow(value, 1 / 3) : 7.787 * value + 16 / 116
+        }
+        let fx = curve(x), fy = curve(y), fz = curve(z)
+        return (116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz))
+    }
+}
+
+private struct ImageMetadataInspector: View {
+    let left: ImageMetadata?
+    let right: ImageMetadata?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Image Inspector").font(.headline)
+            HStack(alignment: .top, spacing: 20) {
+                metadataColumn("Left", left)
+                Divider()
+                metadataColumn("Right", right)
+            }
+        }
+    }
+
+    private func metadataColumn(_ title: LocalizedStringResource, _ metadata: ImageMetadata?) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.subheadline.bold())
+            if let metadata {
+                LabeledContent("Format", value: metadata.formatIdentifier)
+                LabeledContent("Dimensions", value: "\(metadata.width) × \(metadata.height)")
+                LabeledContent("Encoded Size", value: ByteCountFormatter.string(
+                    fromByteCount: Int64(metadata.byteCount), countStyle: .file))
+                LabeledContent("Color Model", value: metadata.colorModel ?? "—")
+                LabeledContent("Color Profile", value: metadata.profileName ?? "—")
+                LabeledContent("Bit Depth", value: metadata.depth.map(String.init) ?? "—")
+                LabeledContent("Alpha Channel", value: metadata.hasAlpha == true ? String(localized: "Yes") : String(localized: "No"))
+                if let x = metadata.dpiWidth, let y = metadata.dpiHeight {
+                    LabeledContent("Resolution", value: String(format: "%.0f × %.0f DPI", x, y))
+                }
+            } else {
+                ProgressView()
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 }
