@@ -48,6 +48,7 @@
 - 修改行内的字符级精确高亮
 - 新增、删除、修改统计与差异导航
 - 窗口内 Workspace 支持多个独立比较任务，并保护未保存的输出
+- 文件、文件夹、合并和 Git 比较支持合并去抖的实时刷新；存在未保存输出时会自动暂停
 - CRLF/LF 归一化、末尾换行提示与二进制文件检测
 - 大文件使用内存映射读取，避免在进入 diff 前复制两份完整内容
 
@@ -83,7 +84,10 @@
 ```bash
 bash macos/Benchmarks/run-benchmarks.sh
 bash macos/Benchmarks/run-benchmarks.sh 100000 50000
+GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-benchmarks.sh 100000 10000
 ```
+
+CI 性能门会在任一端到端文本场景超过 0.25 秒、1 万文件目录场景超过 2 秒，或峰值常驻内存超过 1 GiB 时失败。
 
 Diff 设计基于 [Myers O(ND) 算法](https://doi.org/10.1007/BF01840446)，并采纳了 [Git diff 算法文档](https://git-scm.com/docs/diff-algorithm-option.html)中的低频元素锚定思路。
 

@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 private struct Measurement {
     let name: String
@@ -175,4 +176,38 @@ precondition(folderStats.same == folderFileCount - expectedBucket * 4)
 print("\nPerformance results (Release, lower is better)")
 for result in measurements {
     print(String(format: "  %-30s %8.3f s  %@", (result.name as NSString).utf8String!, result.seconds, result.detail))
+}
+
+var usage = rusage()
+getrusage(RUSAGE_SELF, &usage)
+let peakResidentMB = Double(usage.ru_maxrss) / 1_048_576
+print(String(
+    format: "  %-30s %8.1f MB",
+    ("peak resident memory" as NSString).utf8String!, peakResidentMB))
+
+if ProcessInfo.processInfo.environment["GRAPECOMPARE_VERIFY_PERFORMANCE"] == "1" {
+    let timeBudgets: [String: Double] = [
+        "large text / sparse end-to-end": 0.25,
+        "large text / churn end-to-end": 0.25,
+        "large folder": max(2.0, Double(folderFileCount) / 10_000 * 2.0),
+    ]
+    var violations: [String] = []
+    for measurement in measurements {
+        if let budget = timeBudgets[measurement.name], measurement.seconds > budget {
+            violations.append(String(
+                format: "%@ took %.3fs (budget %.3fs)",
+                measurement.name, measurement.seconds, budget))
+        }
+    }
+    let memoryBudgetMB = 1_024.0
+    if peakResidentMB > memoryBudgetMB {
+        violations.append(String(
+            format: "peak memory was %.1fMB (budget %.1fMB)",
+            peakResidentMB, memoryBudgetMB))
+    }
+    if !violations.isEmpty {
+        for violation in violations { fputs("PERFORMANCE REGRESSION: \(violation)\n", stderr) }
+        exit(2)
+    }
+    print("PERFORMANCE BUDGETS PASSED")
 }

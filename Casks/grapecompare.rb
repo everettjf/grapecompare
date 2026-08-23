@@ -1,5 +1,5 @@
 cask "grapecompare" do
-  version "1.12.0"
+  version "1.13.0"
   sha256 "TO_BE_SET_BY_RELEASE_WORKFLOW"
 
   url "https://github.com/everettjf/grapecompare/releases/download/v#{version}/GrapeCompare-#{version}.zip"

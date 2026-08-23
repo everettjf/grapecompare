@@ -54,6 +54,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Hunk-level left/right acceptance, editable output, and unified diff/patch export
 - Added, removed, and modified counts with keyboard-friendly navigation
 - Window workspaces with multiple independent comparison tasks and safe close protection
+- Live, coalesced refresh for files, folders, merges, and Git changes, paused whenever editable output is dirty
 - CRLF/LF normalization, final-newline reporting, and binary-file detection
 - Memory-mapped input to avoid duplicating large files in memory
 
@@ -101,7 +102,10 @@ Timings exclude fixture generation and vary by hardware and storage. Run them lo
 ```bash
 bash macos/Benchmarks/run-benchmarks.sh
 bash macos/Benchmarks/run-benchmarks.sh 100000 50000
+GRAPECOMPARE_VERIFY_PERFORMANCE=1 bash macos/Benchmarks/run-benchmarks.sh 100000 10000
 ```
+
+The CI gate fails when either end-to-end text scenario exceeds 0.25 seconds, the 10k-file folder scenario exceeds 2 seconds, or peak resident memory exceeds 1 GiB.
 
 The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF01840446) and the low-occurrence anchoring ideas documented in [Git's diff algorithms](https://git-scm.com/docs/diff-algorithm-option.html).
 

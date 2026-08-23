@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.13.0 — 2026-08-22
+
+### Live comparisons and performance defenses
+
+- Added layered FSEvents, vnode, and constant-cost root monitoring for active file, folder, merge, and Git comparisons.
+- Coalesce filesystem bursts into one refresh, cancel superseded work, and never follow symbolic links while scanning.
+- Pause live refresh when editable output is dirty so external changes cannot overwrite unsaved work.
+- Added visible per-workspace live-update controls and lifecycle cleanup when tasks switch or close.
+- Added reproducible performance budgets for large text and directory fixtures in CI.
+
 ## 1.12.0 — 2026-08-22
 
 ### Comparison workspaces

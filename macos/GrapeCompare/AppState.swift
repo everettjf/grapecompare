@@ -145,6 +145,10 @@ final class AppState {
     var gitLeftTarget = "HEAD"
     var gitRightTarget = "WORKTREE"
     var gitError: String?
+    var liveUpdatesEnabled = true
+    var liveUpdatePausedReason: String?
+    var lastLiveRefresh: Date?
+    private(set) var liveRefreshCount = 0
 
     // MARK: 文件夹比较
 
@@ -205,6 +209,11 @@ final class AppState {
     @ObservationIgnored private var gitTemporaryDirectories: [URL] = []
     @ObservationIgnored private let sessionStore = ComparisonSessionStore()
     @ObservationIgnored private var restoredSecurityScopedURLs: [URL] = []
+    @ObservationIgnored private var filesystemWatcher: FilesystemWatcher?
+    @ObservationIgnored private var liveRefreshTask: Task<Void, Never>?
+    @ObservationIgnored private var watchedExactPaths: Set<String> = []
+    @ObservationIgnored private var watchedRootPaths: [String] = []
+    @ObservationIgnored private var isLiveRefresh = false
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
@@ -272,14 +281,14 @@ final class AppState {
 
     func startFileCompare() {
         guard let l = leftFileURL, let r = rightFileURL else { return }
-        recordSession(kind: .files, urls: [l, r])
+        if !isLiveRefresh { recordSession(kind: .files, urls: [l, r]) }
         diffReturnScreen = .home
         runFileDiff(left: l, right: r)
     }
 
     func startFolderCompare() {
         guard let l = leftFolderURL, let r = rightFolderURL else { return }
-        recordSession(kind: .folders, urls: [l, r])
+        if !isLiveRefresh { recordSession(kind: .folders, urls: [l, r]) }
         if operationLeftRoot != l.standardizedFileURL || operationRightRoot != r.standardizedFileURL {
             operations.clearDrafts()
             operationLeftRoot = l.standardizedFileURL
@@ -325,7 +334,9 @@ final class AppState {
         guard let baseURL = baseFileURL,
               let oursURL = oursFileURL,
               let theirsURL = theirsFileURL else { return }
-        if !isExternalMerge { recordSession(kind: .merge, urls: [baseURL, oursURL, theirsURL]) }
+        if !isExternalMerge && !isLiveRefresh {
+            recordSession(kind: .merge, urls: [baseURL, oursURL, theirsURL])
+        }
         let (request, cancellation) = beginComparison(.merge)
         mergeResult = nil
         mergeError = nil
@@ -376,7 +387,7 @@ final class AppState {
 
     func startGitComparison() {
         guard let selectedRepository = gitRepositoryURL else { return }
-        recordSession(kind: .git, urls: [selectedRepository])
+        if !isLiveRefresh { recordSession(kind: .git, urls: [selectedRepository]) }
         let left = GitComparisonTarget.parse(gitLeftTarget)
         let right = GitComparisonTarget.parse(gitRightTarget)
         let (request, cancellation) = beginComparison(.git)
@@ -620,6 +631,7 @@ final class AppState {
 
     func goHome() {
         cancelCurrentComparison()
+        stopLiveUpdates()
         operations.clearDrafts()
         screen = .home
     }
@@ -647,6 +659,12 @@ final class AppState {
     func discardWorkspaceOutput() {
         outputIsDirty = false
         mergeOutputIsDirty = false
+    }
+
+    func setLiveUpdatesEnabled(_ enabled: Bool) {
+        liveUpdatesEnabled = enabled
+        liveUpdatePausedReason = nil
+        if enabled { configureLiveUpdates() } else { stopLiveUpdates() }
     }
 
     func loadFileDemo() {
@@ -892,6 +910,7 @@ final class AppState {
         comparisonPhase = .idle
         comparisonTask = nil
         comparisonCancellation = nil
+        configureLiveUpdates()
     }
 
     private func cancelCurrentComparison() {
@@ -901,6 +920,98 @@ final class AppState {
         comparisonTask = nil
         comparisonCancellation = nil
         comparisonPhase = .idle
+        stopLiveUpdates()
+    }
+
+    private func configureLiveUpdates() {
+        stopLiveUpdates()
+        guard liveUpdatesEnabled, comparisonPhase == .idle else { return }
+
+        let roots: [URL]
+        let exactURLs: [URL]
+        switch screen {
+        case .fileDiff:
+            guard diffReturnScreen != .git else { return }
+            exactURLs = [diffLeftURL, diffRightURL].compactMap { $0 }
+            roots = exactURLs.map { $0.deletingLastPathComponent() }
+        case .folderCompare:
+            exactURLs = []
+            roots = [leftFolderURL, rightFolderURL].compactMap { $0 }
+        case .merge:
+            guard !isExternalMerge else { return }
+            exactURLs = [baseFileURL, oursFileURL, theirsFileURL].compactMap { $0 }
+            roots = exactURLs.map { $0.deletingLastPathComponent() }
+        case .git:
+            exactURLs = []
+            roots = [gitRepositoryURL].compactMap { $0 }
+        case .home:
+            return
+        }
+        guard !roots.isEmpty else { return }
+        watchedExactPaths = Set(exactURLs.map { $0.standardizedFileURL.path(percentEncoded: false) })
+        watchedRootPaths = roots.map { $0.standardizedFileURL.path(percentEncoded: false) }
+        let watcher = FilesystemWatcher()
+        filesystemWatcher = watcher
+        watcher.start(watching: roots) { [weak self] changedURLs in
+            Task { @MainActor [weak self] in self?.filesystemEventsArrived(changedURLs) }
+        }
+    }
+
+    private func stopLiveUpdates() {
+        liveRefreshTask?.cancel()
+        liveRefreshTask = nil
+        filesystemWatcher?.stop()
+        filesystemWatcher = nil
+        watchedExactPaths.removeAll()
+        watchedRootPaths.removeAll()
+    }
+
+    private func filesystemEventsArrived(_ changedURLs: [URL]) {
+        guard liveUpdatesEnabled, comparisonPhase == .idle else { return }
+        let paths = changedURLs.map { $0.standardizedFileURL.path(percentEncoded: false) }
+        let isRelevant: Bool
+        if !watchedExactPaths.isEmpty {
+            isRelevant = paths.contains { path in
+                watchedExactPaths.contains(path) || watchedRootPaths.contains(path)
+            }
+        } else {
+            isRelevant = paths.contains { path in
+                watchedRootPaths.contains { path == $0 || path.hasPrefix($0 + "/") }
+            }
+        }
+        guard isRelevant else { return }
+        if workspaceHasUnsavedOutput {
+            liveUpdatePausedReason = String(localized: "Live updates are paused to protect unsaved output.")
+            return
+        }
+        liveUpdatePausedReason = nil
+        liveRefreshTask?.cancel()
+        liveRefreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled, let self else { return }
+            self.liveRefreshTask = nil
+            self.performLiveRefresh()
+        }
+    }
+
+    private func performLiveRefresh() {
+        guard comparisonPhase == .idle, !workspaceHasUnsavedOutput else { return }
+        isLiveRefresh = true
+        defer { isLiveRefresh = false }
+        liveRefreshCount &+= 1
+        lastLiveRefresh = Date()
+        switch screen {
+        case .fileDiff:
+            runFileDiff(left: diffLeftURL, right: diffRightURL)
+        case .folderCompare:
+            startFolderCompare()
+        case .merge:
+            startThreeWayMerge()
+        case .git:
+            startGitComparison()
+        case .home:
+            break
+        }
     }
 
     nonisolated private static func checkMergeCancellation(

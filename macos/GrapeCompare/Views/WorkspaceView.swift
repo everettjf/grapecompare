@@ -75,10 +75,40 @@ struct WorkspaceView: View {
             }
             .help("New Comparison")
             .accessibilityLabel("New Comparison")
+            if workspace.selectedState.screen != .home {
+                Button {
+                    workspace.selectedState.setLiveUpdatesEnabled(
+                        !workspace.selectedState.liveUpdatesEnabled)
+                } label: {
+                    Image(systemName: liveUpdateSymbol)
+                }
+                .buttonStyle(.plain)
+                .help(liveUpdateHelp)
+                .accessibilityLabel(liveUpdateHelp)
+                .accessibilityValue(
+                    workspace.selectedState.liveUpdatesEnabled
+                        ? String(localized: "Enabled")
+                        : String(localized: "Disabled"))
+            }
         }
         .padding(.horizontal, 8)
         .frame(height: 38)
         .background(.bar)
+    }
+
+    private var liveUpdateSymbol: String {
+        let state = workspace.selectedState
+        if !state.liveUpdatesEnabled { return "bell.slash" }
+        if state.liveUpdatePausedReason != nil { return "exclamationmark.triangle" }
+        return "bell.badge"
+    }
+
+    private var liveUpdateHelp: String {
+        let state = workspace.selectedState
+        if let reason = state.liveUpdatePausedReason { return reason }
+        return state.liveUpdatesEnabled
+            ? String(localized: "Live updates are enabled")
+            : String(localized: "Live updates are disabled")
     }
 
     private func requestClose(_ item: WorkspaceController.Item) {

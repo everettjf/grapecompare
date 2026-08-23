@@ -1330,6 +1330,25 @@ do {
     check(false, "comparison session persistence tests complete without error: \(error)")
 }
 
+// FSEvents intentionally does not guarantee journal delivery for macOS's
+// per-user temporary hierarchy. Exercise it on a normal filesystem path.
+let watcherRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    .appending(path: ".filesystem-watcher-\(UUID().uuidString)")
+try! FileManager.default.createDirectory(at: watcherRoot, withIntermediateDirectories: true)
+let changed = DispatchSemaphore(value: 0)
+let watcher = FilesystemWatcher()
+watcher.start(watching: [watcherRoot], latency: 0.05) { urls in
+    if !urls.isEmpty {
+        changed.signal()
+    }
+}
+Thread.sleep(forTimeInterval: 0.1)
+write("changed", watcherRoot.appending(path: "changed.txt"))
+check(changed.wait(timeout: .now() + 3) == .success,
+      "filesystem watcher reports a mutation inside a watched root")
+watcher.stop()
+try? FileManager.default.removeItem(at: watcherRoot)
+
 try? FileManager.default.removeItem(at: tmp)
 
 print(failures == 0 ? "\nALL TESTS PASSED" : "\n\(failures) TEST(S) FAILED")

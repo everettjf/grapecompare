@@ -46,3 +46,17 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET=14.0
           CODE_SIGNING_ALLOWED=NO
           build
+
+  performance-budget:
+    name: Large-input performance budgets
+    runs-on: xcode-27
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify time and memory budgets
+        env:
+          GRAPECOMPARE_VERIFY_PERFORMANCE: '1'
+        run: bash macos/Benchmarks/run-benchmarks.sh 100000 10000
