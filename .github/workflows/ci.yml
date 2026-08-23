@@ -43,6 +43,6 @@ jobs:
           -destination 'platform=macOS'
           -configuration Release
           -derivedDataPath "$RUNNER_TEMP/GrapeCompareDerivedData"
-          MACOSX_DEPLOYMENT_TARGET=15.0
+          MACOSX_DEPLOYMENT_TARGET=14.0
           CODE_SIGNING_ALLOWED=NO
           build

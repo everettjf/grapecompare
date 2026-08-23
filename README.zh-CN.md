@@ -8,7 +8,7 @@
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
-![macOS](https://img.shields.io/badge/macOS-15%2B-111827?style=flat-square&logo=apple)
+![macOS](https://img.shields.io/badge/macOS-14%2B-111827?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-5-F05138?style=flat-square&logo=swift&logoColor=white)
 
 [Homebrew](#安装) · [官网](https://xnu.app/grapecompare/) · [English](README.md) · [更新记录](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
@@ -94,7 +94,7 @@ Diff 设计基于 [Myers O(ND) 算法](https://doi.org/10.1007/BF01840446)，并
 brew install --cask everettjf/tap/grapecompare
 ```
 
-GrapeCompare 支持 macOS 15 及更高版本。从源码构建需要 Xcode 26 或更高版本：
+GrapeCompare 支持 macOS 14 及更高版本；Finder 快速操作需要 macOS 15 或更高版本。从源码构建需要 Xcode 26 或更高版本：
 
 ```bash
 xcodebuild -project macos/GrapeCompare.xcodeproj \

@@ -8,6 +8,7 @@ extension Notification.Name {
     static let compareFilesIntentReceived = Notification.Name("CompareFilesIntentReceived")
 }
 
+@available(macOS 15.0, *)
 struct CompareFilesIntent: AppIntent {
     static let title: LocalizedStringResource = "Compare Files"
     static let description = IntentDescription("Open two files in GrapeCompare and compare them.")
@@ -37,6 +38,7 @@ struct CompareFilesIntent: AppIntent {
     }
 }
 
+@available(macOS 15.0, *)
 struct SelectedFileEntity: FileEntity {
     static let supportedContentTypes: [UTType] = [.item]
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "File"
@@ -48,6 +50,7 @@ struct SelectedFileEntity: FileEntity {
     var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
 }
 
+@available(macOS 15.0, *)
 struct SelectedFileQuery: EntityQuery {
     func entities(for identifiers: [FileEntityIdentifier]) async throws -> [SelectedFileEntity] {
         var entities: [SelectedFileEntity] = []
@@ -65,6 +68,7 @@ enum CompareFilesIntentError: LocalizedError {
     var errorDescription: String? { String(localized: "Choose exactly two local files.") }
 }
 
+@available(macOS 15.0, *)
 struct GrapeCompareShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: CompareFilesIntent(),

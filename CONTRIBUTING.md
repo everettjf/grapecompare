@@ -11,7 +11,7 @@ Thanks for helping make file and folder comparison faster, clearer, and more rel
 
 ## Development setup
 
-The application supports macOS 15 and later and requires Xcode 26 or later to build. Open `macos/GrapeCompare.xcodeproj`, select the `GrapeCompare` scheme, and run the app.
+The application supports macOS 14 and later and requires Xcode 26 or later to build. The Finder App Intent is availability-gated to macOS 15. Open `macos/GrapeCompare.xcodeproj`, select the `GrapeCompare` scheme, and run the app.
 
 The comparison engines and their tests can also be compiled directly with the Swift toolchain:
 

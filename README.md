@@ -12,7 +12,7 @@ A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
-![macOS](https://img.shields.io/badge/macOS-15%2B-111827?style=flat-square&logo=apple)
+![macOS](https://img.shields.io/badge/macOS-14%2B-111827?style=flat-square&logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-5-F05138?style=flat-square&logo=swift&logoColor=white)
 
 [Homebrew](#install) · [Website](https://xnu.app/grapecompare/) · [中文说明](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
@@ -61,7 +61,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - Three-way base/ours/theirs merge with explicit conflict resolution
 - Branch, commit, index, and working-tree comparison without changing repository state
 - Standalone CLI plus Git difftool/mergetool configuration
-- Finder Quick Action support through the built-in Compare Files shortcut
+- Finder Quick Action support through the built-in Compare Files shortcut on macOS 15+
 
 ### Images and structured data
 
@@ -112,7 +112,7 @@ Install the signed and notarized direct-distribution build with Homebrew:
 brew install --cask everettjf/tap/grapecompare
 ```
 
-GrapeCompare supports macOS 15 and later. To build from source, use Xcode 26 or later:
+GrapeCompare supports macOS 14 and later. The Finder Quick Action requires macOS 15 or later. To build from source, use Xcode 26 or later:
 
 ```bash
 xcodebuild -project macos/GrapeCompare.xcodeproj \

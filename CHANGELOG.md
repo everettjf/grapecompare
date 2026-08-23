@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0 — 2026-08-22
+
+### Wider compatibility
+
+- Lowered the minimum supported system to macOS 14 for the app, CLI, Git integration, and all comparison and merge workflows.
+- Availability-gated the Finder Compare Files App Intent to macOS 15, where the required file-entity APIs are available.
+- Updated CI, release validation, Homebrew metadata, and user documentation for the new compatibility boundary.
+
 ## 1.8.1 — 2026-08-22
 
 ### Compatibility and distribution
