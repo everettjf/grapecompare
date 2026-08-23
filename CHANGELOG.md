@@ -1,13 +1,11 @@
 # Changelog
 
-## 1.0.4 — Unreleased
+## 1.0.4 — 2026-08-23
 
 ### Polish and performance
 
 - Move full-resolution image difference recalculation out of SwiftUI rendering, debounce option changes, and expose progress without blocking interaction.
 - Add standard image zoom keyboard shortcuts, explicit accessibility values, and reduced-motion behavior.
-
-## 1.0.3 — Unreleased
 
 ### Images, folders, and system integration
 
@@ -15,14 +13,10 @@
 - Add a persistent custom folder ignore profile alongside the built-in developer profile.
 - Accept exactly two files or folders from Finder/Open With and add `grapecompare://compare?left=…&right=…` deep-link handling.
 
-## 1.0.2 — Unreleased
-
 ### Git review and merge parity
 
 - Add durable local review notes, reviewed-file progress, and one-click comparison with the previous file revision.
 - Add merge-resolution progress and prevent export or mergetool completion while standard conflict markers remain in editable output.
-
-## 1.0.1 — Unreleased
 
 ### Reliability
 
