@@ -10,7 +10,7 @@ Repository: <https://github.com/everettjf/grapecompare>
 **Fast, accurate file and folder comparison for macOS.**<br>
 A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 
-**1.0.10 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
+**1.0.11 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -63,7 +63,7 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 ### Merge and developer workflows
 
 - Three-way base/ours/theirs merge with explicit conflict resolution
-- Branch, commit, index, and working-tree changesets grouped as staged, unstaged, and untracked, with target shortcuts, filters, commit context, and live refresh
+- Branch, commit, index, and working-tree changesets grouped as staged, unstaged, and untracked, with target shortcuts, filters, commit context, persistent live refresh, opt-in local notifications, and rich file context actions
 - Persistent repository library, linked-worktree switching, upstream/ahead/behind context, merge-base shortcuts, flat/tree changesets, commit graph, cross-file review navigation, and durable reviewed state
 - Rename-aware paginated file history with arbitrary A/B revision and merge-parent comparison without changing repository state
 - Explicit text, binary, Git LFS pointer, submodule, and bounded large-file inspection

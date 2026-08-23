@@ -84,6 +84,14 @@ struct GitCompareView: View {
                 }
             }
         }
+        .alert("Git Action Failed", isPresented: Binding(
+            get: { state.gitActionError != nil },
+            set: { if !$0 { state.gitActionError = nil } }
+        )) {
+            Button("OK") { state.gitActionError = nil }
+        } message: {
+            Text(state.gitActionError ?? "")
+        }
     }
 
     private var header: some View {
@@ -277,6 +285,7 @@ struct GitCompareView: View {
                         }
                     }
                 }
+                .contextMenu { gitChangeContextMenu(change) }
             }
             TableColumn("Action") { change in
                 Button("Compare") { state.openGitChange(change) }.buttonStyle(.borderless)
@@ -298,12 +307,30 @@ struct GitCompareView: View {
                             .foregroundStyle(change.kind.color)
                     }
                     .buttonStyle(.plain)
+                    .contextMenu { gitChangeContextMenu(change) }
                 } else {
                     Label(node.name, systemImage: "folder")
                 }
             }
         }
         .accessibilityLabel("Changed files tree")
+    }
+
+    @ViewBuilder
+    private func gitChangeContextMenu(_ change: GitChange) -> some View {
+        Button("Compare") { state.openGitChange(change) }
+        Button("Open File History") {
+            state.gitSelectedChangeID = change.id
+            selection = [change.id]
+            state.loadGitFileHistory(change)
+        }
+        Divider()
+        Button("Copy File Path") { state.copyGitChangePath(change) }
+        Button("Copy File Contents") { state.copyGitChangeContents(change) }
+        Button("Save a Copy…") { state.saveGitChangeCopy(change) }
+        Divider()
+        Button("Open in Default Editor") { state.openGitChangeExternally(change) }
+        Button("Reveal in Finder") { state.revealGitChangeInFinder(change) }
     }
 
     private func commitCard(target: String, commit: GitCommit?, isLeft: Bool) -> some View {

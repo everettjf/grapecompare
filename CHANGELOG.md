@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.11 — 2026-08-23
+
+### Live Git review and contextual actions
+
+- Persist the live-refresh preference and add a separate opt-in Git notification preference.
+- Notify after coalesced working-copy refreshes using only the repository name and filesystem-event count, never file contents.
+- Add changeset actions for comparing, opening file history, copying paths or bounded UTF-8 contents, saving a copy, opening externally, and revealing working-tree files in Finder.
+- Enforce an 8 MiB content-action limit and keep Git path validation, command timeouts, and output limits in effect.
+- Validate source-extracted localization coverage and fill previously missing Simplified Chinese image and ignore-profile strings.
+
 ## 1.0.10 — 2026-08-23
 
 ### Reusable text filters

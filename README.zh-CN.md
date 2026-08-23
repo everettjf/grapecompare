@@ -6,7 +6,7 @@
 **快速、准确的 macOS 文件与文件夹比较工具。**<br>
 原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
 
-**1.0.10 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+**1.0.11 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -59,7 +59,7 @@
 ### 合并与开发者工作流
 
 - 三方 base/ours/theirs 合并，支持逐冲突、批量接受以及撤销/重做
-- 分支、提交、暂存区和工作区 Changeset，按已暂存、未暂存、未跟踪分组，并支持目标快捷方式、状态/路径筛选、提交上下文和实时刷新
+- 分支、提交、暂存区和工作区 Changeset，按已暂存、未暂存、未跟踪分组，并支持目标快捷方式、状态/路径筛选、提交上下文、持久实时刷新、可选本地通知和丰富的文件上下文操作
 - 持久仓库库、关联 Worktree 切换、upstream/ahead/behind 状态、Merge Base、提交图、树状 Changeset、跨文件审阅导航和持久审阅状态
 - 支持跨重命名分页的文件历史、任意 A/B 版本和合并父提交比较，无需切换仓库状态
 - 明确识别文本、二进制、Git LFS 指针、子模块和有界探测的大文件

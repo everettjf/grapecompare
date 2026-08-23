@@ -1,6 +1,7 @@
 import AppKit
 import Observation
 import SwiftUI
+import UserNotifications
 
 /// Appearance preference: follow system, force light, or force dark.
 /// Colors throughout the app are semantic/opacity-based, so both schemes
@@ -170,6 +171,7 @@ final class AppState {
     var gitRightTarget = "WORKTREE"
     var gitError: String?
     var liveUpdatesEnabled = true
+    var liveNotificationsEnabled = false
     var liveUpdatePausedReason: String?
     var lastLiveRefresh: Date?
     private(set) var liveRefreshCount = 0
@@ -191,6 +193,7 @@ final class AppState {
     var recentComparisons: [ComparisonSession] = []
     var resumableSession: ComparisonSession?
     var sessionError: String?
+    var gitActionError: String?
 
     var isComparingFile: Bool { comparisonPhase == .file }
     var isComparingFolder: Bool { comparisonPhase == .folder }
@@ -248,6 +251,9 @@ final class AppState {
     @ObservationIgnored private let gitReviewDefaultsKey = "gitReviewedChanges.v1"
     @ObservationIgnored private let gitReviewNotesDefaultsKey = "gitReviewNotes.v1"
     @ObservationIgnored private let textComparisonOptionsDefaultsKey = "textComparisonOptions.v1"
+    @ObservationIgnored private let liveUpdatesDefaultsKey = "liveUpdatesEnabled.v1"
+    @ObservationIgnored private let liveNotificationsDefaultsKey = "liveNotificationsEnabled.v1"
+    @ObservationIgnored private var pendingLiveEventCount = 0
 
     /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
     /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
@@ -256,6 +262,10 @@ final class AppState {
         recentComparisons = savedSessions.recents
         resumableSession = savedSessions.current
         gitRepositoryLibrary = gitRepositoryLibraryStore.load()
+        if UserDefaults.standard.object(forKey: liveUpdatesDefaultsKey) != nil {
+            liveUpdatesEnabled = UserDefaults.standard.bool(forKey: liveUpdatesDefaultsKey)
+        }
+        liveNotificationsEnabled = UserDefaults.standard.bool(forKey: liveNotificationsDefaultsKey)
         if let data = UserDefaults.standard.data(forKey: textComparisonOptionsDefaultsKey),
            let stored = try? JSONDecoder().decode(TextComparisonOptions.self, from: data) {
             textComparisonOptions = stored
@@ -1106,8 +1116,75 @@ final class AppState {
 
     func setLiveUpdatesEnabled(_ enabled: Bool) {
         liveUpdatesEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: liveUpdatesDefaultsKey)
         liveUpdatePausedReason = nil
         if enabled { configureLiveUpdates() } else { stopLiveUpdates() }
+    }
+
+    func setLiveNotificationsEnabled(_ enabled: Bool) {
+        liveNotificationsEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: liveNotificationsDefaultsKey)
+        guard enabled else { return }
+        Task {
+            do {
+                let granted = try await UNUserNotificationCenter.current().requestAuthorization(
+                    options: [.alert, .sound])
+                if !granted {
+                    liveNotificationsEnabled = false
+                    UserDefaults.standard.set(false, forKey: liveNotificationsDefaultsKey)
+                    gitActionError = String(localized: "Notifications are disabled in System Settings.")
+                }
+            } catch {
+                liveNotificationsEnabled = false
+                UserDefaults.standard.set(false, forKey: liveNotificationsDefaultsKey)
+                gitActionError = error.localizedDescription
+            }
+        }
+    }
+
+    func copyGitChangePath(_ change: GitChange) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(change.path, forType: .string)
+    }
+
+    func copyGitChangeContents(_ change: GitChange) {
+        loadGitChangeContent(change) { data, _ in
+            guard let text = String(data: data, encoding: .utf8) else {
+                self.gitActionError = String(localized: "The selected file is not UTF-8 text.")
+                return
+            }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+        }
+    }
+
+    func saveGitChangeCopy(_ change: GitChange) {
+        loadGitChangeContent(change) { data, filename in
+            let panel = NSSavePanel()
+            panel.nameFieldStringValue = filename
+            guard panel.runModal() == .OK, let destination = panel.url else { return }
+            do {
+                try data.write(to: destination, options: .atomic)
+            } catch {
+                self.gitActionError = error.localizedDescription
+            }
+        }
+    }
+
+    func revealGitChangeInFinder(_ change: GitChange) {
+        guard let url = workingTreeURL(for: change) else {
+            gitActionError = String(localized: "This comparison side is not a working-tree file.")
+            return
+        }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
+    func openGitChangeExternally(_ change: GitChange) {
+        guard let url = workingTreeURL(for: change) else {
+            gitActionError = String(localized: "This comparison side is not a working-tree file.")
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
 
     func loadFileDemo() {
@@ -1435,6 +1512,7 @@ final class AppState {
         filesystemWatcher = nil
         watchedExactPaths.removeAll()
         watchedRootPaths.removeAll()
+        pendingLiveEventCount = 0
     }
 
     private func retainSecurityScopedAccess(to url: URL) {
@@ -1461,6 +1539,7 @@ final class AppState {
             }
         }
         guard isRelevant else { return }
+        pendingLiveEventCount = max(pendingLiveEventCount, changedURLs.count)
         if workspaceHasUnsavedOutput {
             liveUpdatePausedReason = String(localized: "Live updates are paused to protect unsaved output.")
             return
@@ -1481,6 +1560,10 @@ final class AppState {
         defer { isLiveRefresh = false }
         liveRefreshCount &+= 1
         lastLiveRefresh = Date()
+        if screen == .git, liveNotificationsEnabled, pendingLiveEventCount > 0 {
+            postGitLiveNotification(eventCount: pendingLiveEventCount)
+        }
+        pendingLiveEventCount = 0
         switch screen {
         case .fileDiff:
             runFileDiff(left: diffLeftURL, right: diffRightURL)
@@ -1567,5 +1650,63 @@ final class AppState {
         case .comparison:
             return (GitComparisonTarget.parse(gitLeftTarget), GitComparisonTarget.parse(gitRightTarget))
         }
+    }
+
+    private func loadGitChangeContent(
+        _ change: GitChange,
+        completion: @escaping (Data, String) -> Void
+    ) {
+        guard let repository = gitRepositoryURL else { return }
+        let selectedTargets = targets(for: change)
+        Task {
+            let result = await Task.detached(priority: .userInitiated) {
+                Result<(Data, String), Error> {
+                    let policy = GitCommandPolicy(maximumOutputBytes: 8 * 1_024 * 1_024)
+                    if let data = try GitRepositoryComparator.fileData(
+                        in: repository, target: selectedTargets.right,
+                        path: change.path, policy: policy) {
+                        guard data.count <= 8 * 1_024 * 1_024 else {
+                            throw CocoaError(.fileReadTooLarge)
+                        }
+                        return (data, URL(fileURLWithPath: change.path).lastPathComponent)
+                    }
+                    let leftPath = change.oldPath ?? change.path
+                    guard let data = try GitRepositoryComparator.fileData(
+                        in: repository, target: selectedTargets.left,
+                        path: leftPath, policy: policy),
+                          data.count <= 8 * 1_024 * 1_024 else {
+                        throw CocoaError(.fileNoSuchFile)
+                    }
+                    return (data, URL(fileURLWithPath: leftPath).lastPathComponent)
+                }
+            }.value
+            switch result {
+            case .success(let value): completion(value.0, value.1)
+            case .failure(let error): gitActionError = error.localizedDescription
+            }
+        }
+    }
+
+    private func workingTreeURL(for change: GitChange) -> URL? {
+        guard let repository = gitRepositoryURL else { return nil }
+        let selectedTargets = targets(for: change)
+        guard selectedTargets.right == .workingTree else { return nil }
+        let url = repository.appending(path: change.path).standardizedFileURL
+        guard url.path.hasPrefix(repository.standardizedFileURL.path + "/"),
+              FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return url
+    }
+
+    private func postGitLiveNotification(eventCount: Int) {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "GrapeCompare Git changes updated")
+        let repositoryName = gitRepositoryURL?.lastPathComponent ?? String(localized: "Repository")
+        content.body = String(localized: "\(repositoryName): \(eventCount) filesystem events refreshed.")
+        content.sound = .default
+        let request = UNNotificationRequest(
+            identifier: "grapecompare.git.\(UUID().uuidString)",
+            content: content,
+            trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 }
