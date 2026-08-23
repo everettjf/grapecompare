@@ -7,10 +7,10 @@ Repository: <https://github.com/everettjf/grapecompare>
 
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/eGzEaP6TzR)
 
-**Fast, accurate file and folder comparison for macOS.**<br>
-A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
+**Professional comparison for files, folders, images, merges, and Git on macOS.**<br>
+Native, local, open source, and built without a subscription.
 
-**1.0.14 is the latest stable release.** [Download the signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest).
+[Download the latest signed and notarized Universal app](https://github.com/everettjf/grapecompare/releases/latest), or install it with Homebrew.
 
 [![Release](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -20,6 +20,14 @@ A native SwiftUI app inspired by Beyond Compare — no WebView, no cloud upload.
 [Homebrew](#install) · [Website](https://xnu.app/grapecompare/) · [中文说明](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
+
+## Install
+
+```bash
+brew install --cask everettjf/tap/grapecompare
+```
+
+Requires macOS 14 or later. The Homebrew build is a signed and notarized Universal app for Apple silicon and Intel Macs.
 
 ## See every difference clearly
 
@@ -44,7 +52,8 @@ Review aligned lines, character-level edits, totals, and previous/next differenc
 - **Accurate:** byte-exact folder validation, shortest edit scripts for normal changes, visible final-newline differences, and correct handling of symbolic links, packages, and file/folder conflicts.
 - **Fast at scale:** 100,000-line text comparisons complete in about 0.06 seconds; a 10,000-file folder benchmark completes in about 0.38 seconds on the development machine.
 - **Easy to read:** side-by-side lines, character-level highlights, aligned line numbers, difference counts, and previous/next navigation.
-- **Native and private:** a responsive macOS interface, local-only processing, and sandboxed read/write access limited to folders you explicitly select.
+- **Native and private:** a responsive macOS interface, local-only processing, no account, no telemetry, and no cloud upload.
+- **Open and subscription-free:** inspect the implementation, reproduce the benchmarks, and use the complete tool without a recurring fee.
 
 ## Features
 
@@ -127,13 +136,7 @@ The CI gate fails when either end-to-end text scenario exceeds 0.25 seconds, the
 
 The diff design builds on [Myers' O(ND) algorithm](https://doi.org/10.1007/BF01840446) and the low-occurrence anchoring ideas documented in [Git's diff algorithms](https://git-scm.com/docs/diff-algorithm-option.html).
 
-## Install
-
-Install the signed and notarized direct-distribution build with Homebrew:
-
-```bash
-brew install --cask everettjf/tap/grapecompare
-```
+## Requirements and source builds
 
 GrapeCompare supports macOS 14 and later. The Finder Quick Action requires macOS 15 or later. To build from source, use Xcode 26 or later:
 

@@ -3,10 +3,10 @@
 
 # GrapeCompare
 
-**快速、准确的 macOS 文件与文件夹比较工具。**<br>
-原生 SwiftUI，灵感来自 Beyond Compare——不使用 WebView，不上传云端。
+**面向文件、文件夹、图片、合并和 Git 的专业 macOS 比较工具。**<br>
+原生、本地、开源，无需订阅。
 
-**1.0.14 是最新稳定版本。** [下载经过签名和 Apple 公证的 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)。
+[下载最新的签名及 Apple 公证 Universal 应用](https://github.com/everettjf/grapecompare/releases/latest)，或通过 Homebrew 安装。
 
 [![最新版本](https://img.shields.io/github/v/release/everettjf/GrapeCompare?display_name=tag&sort=semver&style=flat-square&color=7c3aed)](https://github.com/everettjf/GrapeCompare/releases/latest)
 [![自动测试](https://img.shields.io/github/actions/workflow/status/everettjf/GrapeCompare/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/everettjf/GrapeCompare/actions/workflows/ci.yml)
@@ -16,6 +16,14 @@
 [Homebrew](#安装) · [官网](https://xnu.app/grapecompare/) · [English](README.md) · [更新记录](CHANGELOG.md) · [参与贡献](CONTRIBUTING.md)
 
 </div>
+
+## 安装
+
+```bash
+brew install --cask everettjf/tap/grapecompare
+```
+
+需要 macOS 14 或更高版本。Homebrew 提供经过签名和 Apple 公证、同时支持 Apple 芯片与 Intel Mac 的 Universal 应用。
 
 ## 每一处差异都清晰可见
 
@@ -40,7 +48,8 @@
 - **准确：** 文件夹内容逐字节校验；常规改动生成最短编辑脚本；末尾换行差异清晰可见；正确处理符号链接、package 目录以及文件/文件夹同路径冲突。
 - **大规模依然快：** 当前开发机上，10 万行文本端到端比较约 0.06 秒，1 万文件的完整文件夹比较约 0.38 秒。
 - **差异清晰：** 左右并排、修改行字符级高亮、对齐行号、差异统计，以及上一处/下一处导航。
-- **原生且私密：** 流畅的 macOS 深色/浅色界面，所有处理均在本地完成；沙盒读写权限仅限您明确选择的文件夹。
+- **原生且私密：** 流畅的 macOS 深色/浅色界面，所有处理均在本地完成；无需账号，不含遥测，也不会上传云端。
+- **开源且无需订阅：** 可以审查实现、复现性能基准，并免费使用完整功能。
 
 ## 功能
 
@@ -118,13 +127,7 @@ CI 性能门会在任一端到端文本场景超过 0.25 秒、1 万文件目录
 
 Diff 设计基于 [Myers O(ND) 算法](https://doi.org/10.1007/BF01840446)，并采纳了 [Git diff 算法文档](https://git-scm.com/docs/diff-algorithm-option.html)中的低频元素锚定思路。
 
-## 安装
-
-通过 Homebrew 安装经过签名和 Apple notarization 的直接分发版本：
-
-```bash
-brew install --cask everettjf/tap/grapecompare
-```
+## 系统要求与源码构建
 
 GrapeCompare 支持 macOS 14 及更高版本；Finder 快速操作需要 macOS 15 或更高版本。从源码构建需要 Xcode 26 或更高版本：
 

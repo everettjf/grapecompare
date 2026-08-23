@@ -3,58 +3,100 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="GrapeCompare is a fast, native file and folder comparison app for macOS.">
-  <title>GrapeCompare — Compare files and folders on macOS</title>
+  <meta name="description" content="GrapeCompare is a fast, native, open-source comparison app for files, folders, images, merges, and Git on macOS.">
+  <meta name="theme-color" content="#100d18">
+  <meta property="og:title" content="GrapeCompare — Professional comparison for macOS">
+  <meta property="og:description" content="Compare files, folders, images, merges, and Git locally—with no account or subscription.">
+  <meta property="og:image" content="https://xnu.app/grapecompare/assets/app-icon.png">
+  <title>GrapeCompare — Professional comparison for macOS</title>
+  <link rel="icon" href="assets/app-icon.png">
+  <link rel="apple-touch-icon" href="assets/app-icon.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="nav wrap">
-    <a class="brand" href="./"><span class="grape">●</span> GrapeCompare</a>
-    <div><a href="#features">Features</a><a href="privacy.html">Privacy</a><a href="https://github.com/everettjf/GrapeCompare">Source</a><a href="https://github.com/everettjf/GrapeCompare/issues">Support</a></div>
+  <nav class="nav wrap" aria-label="Main navigation">
+    <a class="brand" href="./"><img src="assets/app-icon.png" alt="">GrapeCompare</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#performance">Performance</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/everettjf/grapecompare">GitHub</a>
+      <a class="nav-download" href="https://github.com/everettjf/grapecompare/releases/latest">Download</a>
+    </div>
   </nav>
 
   <main>
     <section class="hero wrap">
-      <div class="eyebrow">GrapeCompare 1.0.14 · Latest stable release</div>
-      <h1>See every difference.<br><span>Stay in context.</span></h1>
-      <p class="lead">Compare source files and entire project folders side by side with focused highlighting, aligned trees, and no data leaving your Mac.</p>
+      <div class="hero-icon"><img src="assets/app-icon.png" alt="GrapeCompare pixel-art grape icon"></div>
+      <div class="eyebrow">Native · Local · Open source</div>
+      <h1>See every difference.<br><span>Keep complete control.</span></h1>
+      <p class="lead">A professional macOS workbench for files, folders, images, merges, and Git. Precise results, private by design, without an account or subscription.</p>
       <div class="actions">
-        <code style="display:inline-flex;align-items:center;padding:0 20px;min-height:48px;border-radius:999px;background:#6d28d9;color:white;font-weight:700;white-space:nowrap">brew install --cask everettjf/tap/grapecompare</code>
-        <a class="button primary" href="https://github.com/everettjf/grapecompare/releases/latest">Download</a>
-        <a class="button" href="https://github.com/everettjf/GrapeCompare">View source</a>
-        <a class="button" href="https://github.com/everettjf/GrapeCompare/issues">Get support</a>
+        <a class="button primary" href="https://github.com/everettjf/grapecompare/releases/latest">Download for macOS</a>
+        <a class="button" href="https://github.com/everettjf/grapecompare">View source</a>
       </div>
-      <div class="trust"><span>SwiftUI native</span><span>Local processing</span><span>No account</span><span>No tracking</span></div>
+      <div class="install-command" aria-label="Homebrew install command"><span>$</span><code>brew install --cask everettjf/tap/grapecompare</code></div>
+      <div class="trust"><span>macOS 14+</span><span>Apple silicon + Intel</span><span>Signed &amp; notarized</span><span>No tracking</span></div>
     </section>
 
     <section class="showcase wrap">
-      <div class="window"><img src="assets/folder-diff.png" alt="GrapeCompare showing two aligned project folder trees"></div>
-      <div class="caption"><strong>Folder comparison, aligned.</strong><span>Left and right trees share each row, so changed and missing files are immediately visible.</span></div>
+      <div class="window"><img src="assets/folder-diff.png" alt="GrapeCompare showing an aligned project folder comparison"></div>
+      <div class="caption"><strong>Large trees, aligned.</strong><span>Filter a recursive comparison, inspect exact status, and move directly from a changed file into its detailed diff.</span></div>
     </section>
 
-    <section id="features" class="features wrap">
-      <article><span class="number">01</span><h2>Two-pane folder diff</h2><p>Recursively compare project trees with synchronized expansion, sizes, filters, and clear left-only or right-only markers.</p></article>
-      <article><span class="number">02</span><h2>Readable code changes</h2><p>Line and character-level highlighting plus persistent comment, timestamp, UUID, address, and custom regex filters keep relevant edits easy to scan.</p></article>
-      <article><span class="number">03</span><h2>Git-native workflows</h2><p>Inspect branches, commits, the index, working tree, worktrees, merge bases, history, live notifications, review state, and contextual file actions without changing repository state.</p></article>
-      <article><span class="number">04</span><h2>Three-way merge</h2><p>Resolve conflicts individually or in batches with keyboard navigation, undo and redo, editable output, and Git mergetool integration.</p></article>
-      <article><span class="number">05</span><h2>Image comparison</h2><p>Use Two-Up, Split, Blink, Difference, synchronized zoom and pan, metadata inspection, lockable RGBA/HSB/Lab sampling, configurable absolute or proportional rendering, thresholds, channel isolation, and local alignment.</p></article>
-      <article><span class="number">06</span><h2>Safe folder sync</h2><p>Preview Mirror, Update, or Custom plans, inspect dry-run reports, then execute transactional, verifiable, and recoverable file operations.</p></article>
-      <article><span class="number">07</span><h2>Apple developer formats</h2><p>Compare XCStrings and Xcode projects, then inspect bundles, signatures, entitlements, profiles, Mach-O architectures, and asset catalogs.</p></article>
-      <article><span class="number">08</span><h2>CLI, Finder, and Git</h2><p>Use the same deterministic comparison core from the native app, Finder Quick Action, JSON-capable CLI, difftool, and mergetool.</p></article>
-      <article><span class="number">09</span><h2>Private by design</h2><p>Everything runs locally. There is no account, subscription, analytics, tracking, advertising, or cloud upload.</p></article>
+    <section class="proof wrap" aria-label="Product principles">
+      <div><strong>Deterministic</strong><span>Exact comparison stays separate from presentation and optional filters.</span></div>
+      <div><strong>Safe by default</strong><span>Reviewable operations, preflight checks, verification, and durable undo.</span></div>
+      <div><strong>One workflow</strong><span>Native app, Finder, Git difftool and mergetool, plus a standalone CLI.</span></div>
+    </section>
+
+    <section id="features" class="section-heading wrap">
+      <div class="eyebrow">Complete comparison workspace</div>
+      <h2>Everything needed to inspect, merge, and act.</h2>
+      <p>Built for developers who need trustworthy results across everyday files and real repositories.</p>
+    </section>
+
+    <section class="features wrap">
+      <article><span class="feature-icon">↔</span><h3>Files and folders</h3><p>Side-by-side line and character diff, recursive directory trees, filters, search, patch export, and safe synchronization.</p></article>
+      <article><span class="feature-icon">⑂</span><h3>Git and history</h3><p>Branches, commits, index, working tree, worktrees, merge bases, commit graph, file history, review state, difftool, and mergetool.</p></article>
+      <article><span class="feature-icon">◇</span><h3>Three-way merge</h3><p>Resolve text and image conflicts with explicit choices, editable output, navigation, validation, and atomic Git handoff.</p></article>
+      <article><span class="feature-icon">◉</span><h3>Image precision</h3><p>Two-Up, Split, Blink, Difference, synchronized zoom, metadata, pixel sampling, thresholds, channels, and local alignment.</p></article>
+      <article><span class="feature-icon">{ }</span><h3>Developer formats</h3><p>Semantic JSON, plist, XCStrings, and Xcode project comparison, plus bundle, signature, entitlement, Mach-O, and asset inspection.</p></article>
+      <article><span class="feature-icon">⌘</span><h3>Automation ready</h3><p>A standalone CLI with stable JSON output, machine-readable folder plans, Git configuration, and deterministic exit statuses.</p></article>
     </section>
 
     <section class="showcase second wrap">
       <div class="window"><img src="assets/file-diff.png" alt="GrapeCompare showing a side-by-side Swift source comparison"></div>
-      <div class="caption"><strong>Designed for real source code.</strong><span>Navigate dozens of changes while additions, deletions, and modified ranges stay precisely aligned.</span></div>
+      <div class="caption"><strong>Designed for real source code.</strong><span>Navigate changes while additions, deletions, modified ranges, and line numbers remain precisely aligned.</span></div>
+    </section>
+
+    <section id="performance" class="performance wrap">
+      <div>
+        <div class="eyebrow">Measured, not assumed</div>
+        <h2>Fast on real projects.</h2>
+        <p>Release benchmarks are reproducible, checked into the repository, and guarded by CI. GrapeCompare has also been verified against two extracted LLVM source trees containing roughly 170,000 leaves and 2.3 GiB each.</p>
+        <a href="https://github.com/everettjf/grapecompare/blob/main/docs/llvm-real-world-benchmark.md">Read the LLVM benchmark →</a>
+      </div>
+      <dl>
+        <div><dt>0.060 s</dt><dd>100k-line sparse edit</dd></div>
+        <div><dt>0.382 s</dt><dd>10k-file generated tree</dd></div>
+        <div><dt>≈ 9.6 s</dt><dd>LLVM 21 vs 22 source trees</dd></div>
+        <div><dt>0.005 s</dt><dd>1024² RGBA image diff</dd></div>
+      </dl>
     </section>
 
     <section class="privacy-callout wrap">
-      <div><div class="eyebrow">Privacy by architecture</div><h2>Your files remain yours.</h2><p>GrapeCompare processes selected files locally. It has no analytics, advertising, tracking, account system, or cloud upload.</p></div>
-      <a class="button" href="privacy.html">Read the privacy policy</a>
+      <div><div class="eyebrow">Privacy by architecture</div><h2>Your files remain yours.</h2><p>Comparison runs locally. GrapeCompare has no account, analytics, advertising, tracking, subscription, or cloud upload.</p></div>
+      <a class="button" href="privacy.html">Privacy policy</a>
+    </section>
+
+    <section class="final-cta wrap">
+      <img src="assets/app-icon.png" alt="">
+      <div><h2>Compare with confidence.</h2><p>Free, open source, native to macOS.</p></div>
+      <a class="button primary" href="https://github.com/everettjf/grapecompare/releases/latest">Download</a>
     </section>
   </main>
 
-  <footer class="wrap"><span>© 2026 XNU</span><span><a href="privacy.html">Privacy</a> · <a href="https://github.com/everettjf/GrapeCompare">Source</a> · <a href="https://github.com/everettjf/GrapeCompare/issues">Support</a></span></footer>
+  <footer class="wrap"><span>© 2026 XNU</span><span><a href="privacy.html">Privacy</a> · <a href="https://github.com/everettjf/grapecompare">Source</a> · <a href="https://github.com/everettjf/grapecompare/issues">Support</a></span></footer>
 </body>
 </html>
