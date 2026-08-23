@@ -4,10 +4,11 @@ cask "grapecompare" do
 
   url "https://github.com/everettjf/grapecompare/releases/download/v#{version}/GrapeCompare-#{version}.zip"
   name "GrapeCompare"
-  desc "Native file and folder comparison for macOS"
+  desc "Native file and folder comparison"
   homepage "https://xnu.app/grapecompare/"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
+
   app "GrapeCompare.app"
 
   zap trash: [
