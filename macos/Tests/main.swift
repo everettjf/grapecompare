@@ -1819,6 +1819,26 @@ check(watcherLock.withLock { watcherCallbackCount } <= 3,
 watcher.stop()
 try? FileManager.default.removeItem(at: watcherRoot)
 
+let exactWatcherRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    .appending(path: ".filesystem-exact-watcher-\(UUID().uuidString)")
+try! FileManager.default.createDirectory(at: exactWatcherRoot, withIntermediateDirectories: true)
+let exactFile = exactWatcherRoot.appending(path: "watched.txt")
+write("initial", exactFile)
+let exactChanged = DispatchSemaphore(value: 0)
+let exactWatcher = FilesystemWatcher()
+exactWatcher.start(watching: [exactWatcherRoot], exactFiles: [exactFile], latency: 0.05) { _ in
+    exactChanged.signal()
+}
+Thread.sleep(forTimeInterval: 0.1)
+write("unrelated", exactWatcherRoot.appending(path: "sibling.txt"))
+check(exactChanged.wait(timeout: .now() + 0.4) == .timedOut,
+      "exact-file watcher ignores sibling mutations reported at the parent root")
+write("updated with a different byte count", exactFile)
+check(exactChanged.wait(timeout: .now() + 3) == .success,
+      "exact-file watcher reports changes to the watched file")
+exactWatcher.stop()
+try? FileManager.default.removeItem(at: exactWatcherRoot)
+
 try? FileManager.default.removeItem(at: tmp)
 
 print(failures == 0 ? "\nALL TESTS PASSED" : "\n\(failures) TEST(S) FAILED")

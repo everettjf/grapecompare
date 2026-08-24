@@ -1576,16 +1576,21 @@ final class AppState {
         leftFileName = left?.lastPathComponent ?? String(localized: "Missing")
         rightFileName = right?.lastPathComponent ?? String(localized: "Missing")
         let (request, cancellation) = beginComparison(.file)
-        fileDiff = nil
-        fileError = nil
-        leftTextSnapshot = nil
-        rightTextSnapshot = nil
-        textComparison = nil
-        imageComparison = nil
-        structuredDifferences = nil
-        structuredError = nil
-        hunkChoices.removeAll()
-        outputError = nil
+        // A live refresh keeps the last complete comparison visible until its
+        // replacement is ready. Clearing these values here makes the entire
+        // comparison view alternate between results and a progress placeholder.
+        if !isLiveRefresh {
+            fileDiff = nil
+            fileError = nil
+            leftTextSnapshot = nil
+            rightTextSnapshot = nil
+            textComparison = nil
+            imageComparison = nil
+            structuredDifferences = nil
+            structuredError = nil
+            hunkChoices.removeAll()
+            outputError = nil
+        }
         let textOptions = textComparisonOptions
         screen = .fileDiff
         comparisonTask = Task { [weak self] in
@@ -1839,7 +1844,7 @@ final class AppState {
         watchedRootPaths = roots.map { $0.standardizedFileURL.path(percentEncoded: false) }
         let watcher = FilesystemWatcher()
         filesystemWatcher = watcher
-        watcher.start(watching: roots) { [weak self] changedURLs in
+        watcher.start(watching: roots, exactFiles: exactURLs) { [weak self] changedURLs in
             Task { @MainActor [weak self] in self?.filesystemEventsArrived(changedURLs) }
         }
     }

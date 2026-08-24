@@ -12,6 +12,7 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
     private var rootSources: [DispatchSourceFileSystemObject] = []
     private var rootPollTimer: DispatchSourceTimer?
     private var rootFingerprints: [String: String] = [:]
+    private var exactFingerprints: [String: String] = [:]
     private var handler: Handler?
     private var pendingPaths: Set<String> = []
     private var deliveryGeneration: UInt = 0
@@ -19,9 +20,17 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
 
     deinit { stop() }
 
-    func start(watching roots: [URL], latency: TimeInterval = 0.2, handler: @escaping Handler) {
+    func start(
+        watching roots: [URL],
+        exactFiles: [URL] = [],
+        latency: TimeInterval = 0.2,
+        handler: @escaping Handler
+    ) {
         stop()
         let paths = Array(Set(roots.map {
+            $0.standardizedFileURL.path(percentEncoded: false)
+        })).filter { !$0.isEmpty }
+        let exactPaths = Array(Set(exactFiles.map {
             $0.standardizedFileURL.path(percentEncoded: false)
         })).filter { !$0.isEmpty }
         guard !paths.isEmpty else { return }
@@ -33,6 +42,9 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
         lock.withLock {
             self.handler = handler
             coalescingDelay = min(max(latency, 0.02), 0.5)
+            exactFingerprints = Dictionary(uniqueKeysWithValues: exactPaths.map {
+                ($0, rootFingerprint($0))
+            })
         }
         var context = FSEventStreamContext(
             version: 0,
@@ -59,7 +71,7 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
                 kFSEventStreamCreateFlagWatchRoot |
                 kFSEventStreamCreateFlagUseCFTypes |
                 kFSEventStreamCreateFlagNoDefer)) else {
-            installRootSources(paths)
+            installRootSources(Array(Set(paths + exactPaths)))
             return
         }
         lock.withLock { stream = created }
@@ -73,7 +85,7 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
             // save cannot race stream registration.
             FSEventStreamFlushSync(created)
         }
-        installRootSources(paths)
+        installRootSources(Array(Set(paths + exactPaths)))
     }
 
     func stop() {
@@ -84,6 +96,7 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
                 rootSources = []
                 rootPollTimer = nil
                 rootFingerprints = [:]
+                exactFingerprints = [:]
                 pendingPaths = []
                 deliveryGeneration &+= 1
                 handler = nil
@@ -116,6 +129,19 @@ nonisolated final class FilesystemWatcher: @unchecked Sendable {
             guard generation == deliveryGeneration else { return (nil, []) }
             let urls = pendingPaths.sorted().map(URL.init(fileURLWithPath:))
             pendingPaths.removeAll(keepingCapacity: true)
+            if !exactFingerprints.isEmpty {
+                let deliveredPaths = Set(urls.map { $0.standardizedFileURL.path(percentEncoded: false) })
+                let exactPaths = Array(exactFingerprints.keys)
+                var exactChangeDetected = exactPaths.contains { deliveredPaths.contains($0) }
+                for path in exactPaths {
+                    let current = rootFingerprint(path)
+                    if exactFingerprints[path] != current {
+                        exactFingerprints[path] = current
+                        exactChangeDetected = true
+                    }
+                }
+                guard exactChangeDetected else { return (nil, []) }
+            }
             return (handler, urls)
         }
         guard !delivery.1.isEmpty else { return }

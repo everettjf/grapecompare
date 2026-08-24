@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.16 — 2026-08-24
+
+### Stable live file comparison
+
+- Keep the last completed file diff visible while a live refresh runs, avoiding full-page flicker.
+- Ignore filesystem events caused by sibling files when watching an exact comparison input.
+
 ## 1.0.15 — 2026-08-23
 
 ### Refined home workspace and pixel-art identity
