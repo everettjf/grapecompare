@@ -625,9 +625,13 @@ final class AppState {
             operationRightRoot = r.standardizedFileURL
         }
         let (request, cancellation) = beginComparison(.folder)
-        folderRoot = nil
-        folderStats = nil
-        folderError = nil
+        // Preserve the last complete tree during a live refresh so the folder
+        // browser keeps its layout and selection until the replacement is ready.
+        if !isLiveRefresh {
+            folderRoot = nil
+            folderStats = nil
+            folderError = nil
+        }
         folderNeedsRefresh = false
         screen = .folderCompare
         let compareMetadata = compareFolderMetadata
@@ -650,6 +654,7 @@ final class AppState {
                   self.requestGeneration == request else { return }
             switch result {
             case .success(let root):
+                self.folderError = nil
                 self.folderRoot = root
                 self.folderStats = FolderComparator.stats(for: root)
                 self.treeVersion += 1

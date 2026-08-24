@@ -193,7 +193,23 @@ struct FolderCompareView: View {
 
     @ViewBuilder
     private var content: some View {
-        if state.isComparingFolder {
+        if state.folderRoot != nil {
+            folderResults
+                .overlay(alignment: .topTrailing) {
+                    if state.isComparingFolder {
+                        HStack(spacing: 7) {
+                            ProgressView().controlSize(.small)
+                            Text("Refreshing…")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.regularMaterial, in: .capsule)
+                        .padding(10)
+                    }
+                }
+        } else if state.isComparingFolder {
             VStack(spacing: 12) {
                 ProgressView()
                 Text("Scanning and comparing folders…").foregroundStyle(.secondary)
@@ -212,45 +228,44 @@ struct FolderCompareView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if state.folderRoot != nil {
-            if visibleItems.isEmpty {
-                VStack(spacing: 14) {
-                    Image(systemName: filter == .all ? "checkmark.seal.fill" : "line.3.horizontal.decrease.circle")
-                        .font(.system(size: 48))
-                        .foregroundStyle(filter == .all ? .green : .secondary)
-                    Text(filter == .all ? "Folder is empty" : "No items match the current filter")
-                        .font(.title3)
+        }
+    }
+
+    @ViewBuilder
+    private var folderResults: some View {
+        if visibleItems.isEmpty {
+            VStack(spacing: 14) {
+                Image(systemName: filter == .all ? "checkmark.seal.fill" : "line.3.horizontal.decrease.circle")
+                    .font(.system(size: 48))
+                    .foregroundStyle(filter == .all ? .green : .secondary)
+                Text(filter == .all ? "Folder is empty" : "No items match the current filter")
+                    .font(.title3)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            VStack(spacing: 0) {
+                columnHeader
+                Divider()
+                List(visibleItems, selection: $selectedNodeIDs) { item in
+                    FolderRow(
+                        node: item.node,
+                        depth: item.depth,
+                        isExpanded: expanded.contains(item.node.id),
+                        onToggle: { toggle(item.node) },
+                        onOpen: { state.openDiff(for: item.node) },
+                        onQueueLeftToRight: canQueueCopy(item.node, direction: .leftToRight)
+                            ? { queue(nodes: [item.node], kind: .copy, direction: .leftToRight) }
+                            : nil,
+                        onQueueRightToLeft: canQueueCopy(item.node, direction: .rightToLeft)
+                            ? { queue(nodes: [item.node], kind: .copy, direction: .rightToLeft) }
+                            : nil)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                VStack(spacing: 0) {
-                    columnHeader
-                    Divider()
-                    List(visibleItems, selection: $selectedNodeIDs) { item in
-                        FolderRow(
-                            node: item.node,
-                            depth: item.depth,
-                            isExpanded: expanded.contains(item.node.id),
-                            onToggle: { toggle(item.node) },
-                            onOpen: { state.openDiff(for: item.node) },
-                            onQueueLeftToRight: canQueueCopy(item.node, direction: .leftToRight)
-                                ? { queue(nodes: [item.node], kind: .copy, direction: .leftToRight) }
-                                : nil,
-                            onQueueRightToLeft: canQueueCopy(item.node, direction: .rightToLeft)
-                                ? { queue(nodes: [item.node], kind: .copy, direction: .rightToLeft) }
-                                : nil)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .onKeyPress(.return) {
-                        openSelectedNode()
-                    }
-                    .onKeyPress(.space) {
-                        previewSelectedNodes()
-                    }
-                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .onKeyPress(.return) { openSelectedNode() }
+                .onKeyPress(.space) { previewSelectedNodes() }
             }
         }
     }
@@ -758,7 +773,6 @@ private struct FolderRow: View {
 
             actionIndicator
                 .frame(width: 118)
-                .frame(maxHeight: .infinity)
                 .background(Color.primary.opacity(0.025))
 
             side(node.right, isLeft: false)
@@ -767,6 +781,7 @@ private struct FolderRow: View {
         .foregroundStyle(.secondary)
         .padding(.vertical, 4)
         .padding(.horizontal, 10)
+        .fixedSize(horizontal: false, vertical: true)
         .background(rowTint)
         .contentShape(Rectangle())
         .help(helpText)

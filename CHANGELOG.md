@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.17 — 2026-08-24
+
+### Stable folder browsing and JSON source comparison
+
+- Keep completed folder results visible during live refreshes and show refresh progress without replacing the page.
+- Prevent folder rows from expanding to the full list height and leaving a large blank area.
+- Switch JSON comparisons between semantic field differences and the original side-by-side source diff.
+
 ## 1.0.16 — 2026-08-24
 
 ### Stable live file comparison

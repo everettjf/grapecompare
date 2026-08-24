@@ -17,9 +17,21 @@ struct FileDiffView: View {
     @State private var exportError: String?
     @State private var pendingNavigation: PendingNavigation?
     @State private var editsCustomFilters = false
+    @State private var structuredViewMode = StructuredViewMode.fields
 
     private enum PendingNavigation {
         case back, swap
+    }
+
+    private enum StructuredViewMode: String, CaseIterable, Identifiable {
+        case fields, source
+        var id: Self { self }
+        var title: LocalizedStringResource {
+            switch self {
+            case .fields: "Fields"
+            case .source: "Source"
+            }
+        }
     }
 
     private struct ScrollRequest: Equatable {
@@ -87,6 +99,9 @@ struct FileDiffView: View {
             } onCancel: {
                 editsCustomFilters = false
             }
+        }
+        .onChange(of: comparisonIdentity) {
+            structuredViewMode = .fields
         }
     }
 
@@ -283,7 +298,7 @@ struct FileDiffView: View {
                 rightURL: state.diffRightURL,
                 result: imageComparison)
         } else if let structuredDifferences = state.structuredDifferences {
-            StructuredComparisonView(differences: structuredDifferences)
+            structuredComparison(structuredDifferences)
         } else if let structuredError = state.structuredError {
             ContentUnavailableView(
                 "Invalid Structured Document",
@@ -325,6 +340,41 @@ struct FileDiffView: View {
                 diffTable(r)
             }
         }
+    }
+
+    private func structuredComparison(_ differences: [StructuredDifference]) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Picker("JSON View", selection: $structuredViewMode) {
+                    ForEach(StructuredViewMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 180)
+                Spacer()
+                if structuredViewMode == .source {
+                    Text("Original serialized content")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            Divider()
+
+            if structuredViewMode == .source, let result = state.fileDiff,
+               !result.isBinary, !result.isTooLarge {
+                diffTable(result)
+            } else {
+                StructuredComparisonView(differences: differences)
+            }
+        }
+    }
+
+    private var comparisonIdentity: String {
+        "\(state.diffLeftURL?.standardizedFileURL.path ?? "")\u{0}\(state.diffRightURL?.standardizedFileURL.path ?? "")"
     }
 
     private var outputEditor: some View {

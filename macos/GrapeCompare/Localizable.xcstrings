@@ -3113,6 +3113,11 @@
     "Resolve text and image conflicts" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "解决文本和图像冲突" } } } },
     "Text, structured data, images, and developer formats" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文本、结构化数据、图像和开发者格式" } } } },
     "Workflows" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作流" } } } },
+    "Fields" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "字段" } } } },
+    "JSON View" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "JSON 视图" } } } },
+    "Original serialized content" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "原始序列化内容" } } } },
+    "Refreshing…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在刷新…" } } } },
+    "Source" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "源文件" } } } },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {
