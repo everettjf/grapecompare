@@ -12,6 +12,7 @@
   <link rel="icon" href="assets/app-icon.png">
   <link rel="apple-touch-icon" href="assets/app-icon.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="copy-command.css">
 </head>
 <body>
   <nav class="nav wrap" aria-label="Main navigation">
@@ -21,7 +22,7 @@
       <a href="#performance">Performance</a>
       <a href="privacy.html">Privacy</a>
       <a href="https://github.com/everettjf/grapecompare">GitHub</a>
-      <a class="nav-download" href="https://github.com/everettjf/grapecompare/releases/latest">Download</a>
+      <a class="nav-download" href="https://github.com/everettjf/grapecompare/releases/latest" target="_blank" rel="noopener noreferrer">Releases</a>
     </div>
   </nav>
 
@@ -32,10 +33,10 @@
       <h1>See every difference.<br><span>Keep complete control.</span></h1>
       <p class="lead">A professional macOS workbench for files, folders, images, merges, and Git. Precise results, private by design, without an account or subscription.</p>
       <div class="actions">
-        <a class="button primary" href="https://github.com/everettjf/grapecompare/releases/latest">Download for macOS</a>
+        <a class="button primary" href="https://github.com/everettjf/grapecompare/releases/latest" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
         <a class="button" href="https://github.com/everettjf/grapecompare">View source</a>
       </div>
-      <div class="install-command" aria-label="Homebrew install command"><span>$</span><code>brew install --cask everettjf/tap/grapecompare</code></div>
+      <div class="install-command" aria-label="Homebrew install command"><span>$</span><code>brew install --cask everettjf/tap/grapecompare</code><button class="copy-button" type="button" data-copy="brew install --cask everettjf/tap/grapecompare" aria-label="Copy Homebrew installation command">Copy</button></div>
       <div class="trust"><span>macOS 14+</span><span>Apple silicon + Intel</span><span>Signed &amp; notarized</span><span>No tracking</span></div>
     </section>
 
@@ -93,10 +94,11 @@
     <section class="final-cta wrap">
       <img src="assets/app-icon.png" alt="">
       <div><h2>Compare with confidence.</h2><p>Free, open source, native to macOS.</p></div>
-      <a class="button primary" href="https://github.com/everettjf/grapecompare/releases/latest">Download</a>
+      <a class="button primary" href="https://github.com/everettjf/grapecompare/releases/latest" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
     </section>
   </main>
 
   <footer class="wrap"><span>© 2026 XNU</span><span><a href="privacy.html">Privacy</a> · <a href="https://github.com/everettjf/grapecompare">Source</a> · <a href="https://github.com/everettjf/grapecompare/issues">Support</a></span></footer>
+  <script src="copy-command.js"></script>
 </body>
 </html>
