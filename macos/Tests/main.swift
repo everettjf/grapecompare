@@ -1829,7 +1829,12 @@ let exactWatcher = FilesystemWatcher()
 exactWatcher.start(watching: [exactWatcherRoot], exactFiles: [exactFile], latency: 0.05) { _ in
     exactChanged.signal()
 }
-Thread.sleep(forTimeInterval: 0.1)
+// Let stream and vnode-source registration settle, then discard any startup
+// notification before testing the sibling mutation itself. FSEvents may replay
+// a checkpoint-adjacent event on slower filesystems even though no new change
+// occurred after start returned.
+Thread.sleep(forTimeInterval: 0.3)
+while exactChanged.wait(timeout: .now()) == .success {}
 write("unrelated", exactWatcherRoot.appending(path: "sibling.txt"))
 check(exactChanged.wait(timeout: .now() + 0.4) == .timedOut,
       "exact-file watcher ignores sibling mutations reported at the parent root")

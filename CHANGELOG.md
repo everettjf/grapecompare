@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.18 — 2026-08-24
+
+### Local-first release discipline
+
+- Make repeatable local regression coverage mandatory for every feature and bug fix.
+- Move product verification and Homebrew delivery fully to the signed, notarized local release process.
+- Remove redundant GitHub product CI and release workflows while retaining GitHub Pages deployment.
+- Stabilize the exact-file watcher regression test against checkpoint-adjacent startup events.
+
 ## 1.0.17 — 2026-08-24
 
 ### Stable folder browsing and JSON source comparison

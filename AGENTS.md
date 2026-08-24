@@ -19,6 +19,24 @@ xcodebuild -project macos/GrapeCompare.xcodeproj -scheme GrapeCompare \
   -destination 'platform=macOS' -configuration Debug build
 ```
 
+Every new feature or bug fix must add or extend a repeatable local test. Run the
+focused regression first, then the complete core, CLI, localization, and Xcode
+build checks before release. Do not rely on GitHub Actions for product quality.
+
+## Delivery
+
+Every completed user-facing change must be committed, pushed, and released as a
+new Homebrew version. Build the Universal direct-distribution app locally, sign
+it with Developer ID, submit it to Apple notarization, staple the ticket, run
+`scripts/validate-release.sh`, and require Gatekeeper to report `Notarized
+Developer ID`. Publish the final zip and checksum as a GitHub Release, update
+`everettjf/homebrew-tap`, then refresh the tap locally and confirm `brew info`
+shows the new version.
+
+After pushing, inspect the repository's GitHub checks. Fix any failure before
+declaring delivery complete. Product CI and release automation intentionally run
+locally; GitHub Actions is reserved for GitHub Pages deployment.
+
 ## Conventions
 
 - Preserve shortest-edit-script correctness and transactional file-operation guarantees.
