@@ -12,6 +12,10 @@ check(!WorkspaceTabBarPolicy.isVisible(itemCount: 1),
       "workspace tab bar stays hidden for one comparison")
 check(WorkspaceTabBarPolicy.isVisible(itemCount: 2),
       "workspace tab bar appears when a second comparison is opened")
+check(WorkspaceTabBarPolicy.usesCompactNewComparisonButton(itemCount: 1),
+      "single comparison keeps a compact New Comparison toolbar button")
+check(!WorkspaceTabBarPolicy.usesCompactNewComparisonButton(itemCount: 2),
+      "multi-tab workspace avoids a duplicate toolbar add button")
 
 // MARK: - DiffEngine 行级 diff
 

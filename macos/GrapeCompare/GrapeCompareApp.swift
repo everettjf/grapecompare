@@ -176,7 +176,7 @@ private struct WorkspaceCommands: Commands {
     @FocusedValue(\.workspaceController) private var workspace
 
     var body: some Commands {
-        CommandGroup(after: .newItem) {
+        CommandGroup(replacing: .newItem) {
             Button("New Comparison") { workspace?.addComparison() }
                 .keyboardShortcut("n", modifiers: [.command])
                 .disabled(workspace == nil)

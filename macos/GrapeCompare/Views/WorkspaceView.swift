@@ -41,6 +41,18 @@ struct WorkspaceView: View {
         } message: {
             Text(workspace.selectedState.reportActionError ?? "")
         }
+        .toolbar {
+            if WorkspaceTabBarPolicy.usesCompactNewComparisonButton(
+                itemCount: workspace.items.count
+            ) {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("New Comparison", systemImage: "plus") {
+                        workspace.addComparison()
+                    }
+                    .help("New Comparison (⌘N)")
+                }
+            }
+        }
     }
 
     private var tabBar: some View {
