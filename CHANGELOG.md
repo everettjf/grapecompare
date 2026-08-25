@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.20 — 2026-08-24
+
+### Cleaner window chrome and rounded icon
+
+- Hide the custom workspace tab bar when only one comparison is open, restoring the reclaimed vertical space to the comparison content.
+- Reveal the tab bar automatically when a second comparison is created with New Comparison.
+- Give every macOS app-icon size transparent rounded corners instead of opaque black corner pixels.
+- Keep the README and website icon assets consistent and validate icon dimensions and transparency locally.
+
 ## 1.0.19 — 2026-08-24
 
 ### Reliable folder drag and drop
