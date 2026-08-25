@@ -6,6 +6,13 @@ func check(_ cond: Bool, _ name: String) {
     if cond { print("PASS: \(name)") } else { print("FAIL: \(name)"); failures += 1 }
 }
 
+check(!WorkspaceTabBarPolicy.isVisible(itemCount: 0),
+      "workspace tab bar stays hidden without comparison items")
+check(!WorkspaceTabBarPolicy.isVisible(itemCount: 1),
+      "workspace tab bar stays hidden for one comparison")
+check(WorkspaceTabBarPolicy.isVisible(itemCount: 2),
+      "workspace tab bar appears when a second comparison is opened")
+
 // MARK: - DiffEngine 行级 diff
 
 let t1 = DiffEngine.diffText(left: "a\nb\nc\n", right: "a\nb\nc\n")

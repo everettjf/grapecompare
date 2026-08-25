@@ -1,5 +1,11 @@
 import Foundation
 
+nonisolated enum WorkspaceTabBarPolicy {
+    static func isVisible(itemCount: Int) -> Bool {
+        itemCount > 1
+    }
+}
+
 nonisolated enum ComparisonSessionKind: String, Codable, Sendable {
     case files
     case folders

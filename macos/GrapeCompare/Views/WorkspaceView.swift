@@ -6,8 +6,10 @@ struct WorkspaceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            tabBar
-            Divider()
+            if WorkspaceTabBarPolicy.isVisible(itemCount: workspace.items.count) {
+                tabBar
+                Divider()
+            }
             ContentView()
                 .environment(workspace.selectedState)
                 .id(workspace.selectedID)
