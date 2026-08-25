@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.22 — 2026-08-24
+
+### Compact file-comparison workspace
+
+- Lower the app content minimum width from 860 to 720 points.
+- Adapt both file-comparison toolbars automatically instead of forcing horizontal overflow.
+- Keep search, difference and hunk navigation, and side selection visible at compact widths.
+- Consolidate rules, wrapping, output, patch export, filenames, and external-editor actions into compact menus when space is constrained.
+
 ## 1.0.21 — 2026-08-24
 
 ### Single-tab New Comparison access

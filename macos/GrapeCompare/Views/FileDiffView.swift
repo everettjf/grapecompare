@@ -106,6 +106,15 @@ struct FileDiffView: View {
     }
 
     private var textActionBar: some View {
+        ViewThatFits(in: .horizontal) {
+            regularTextActionBar
+            compactTextActionBar
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 7)
+    }
+
+    private var regularTextActionBar: some View {
         HStack(spacing: 8) {
             TextField("Search", text: $searchQuery)
                 .textFieldStyle(.roundedBorder)
@@ -130,23 +139,7 @@ struct FileDiffView: View {
                 .accessibilityLabel("Go to line")
 
             Menu {
-                Picker("Whitespace", selection: whitespaceBinding) {
-                    Text("Exact whitespace").tag(WhitespaceComparison.exact)
-                    Text("Ignore whitespace changes").tag(WhitespaceComparison.ignoreChanges)
-                    Text("Ignore all whitespace").tag(WhitespaceComparison.ignoreAll)
-                }
-                Toggle("Ignore case", isOn: ignoreCaseBinding)
-                Toggle("Ignore line-ending format", isOn: ignoreLineEndingBinding)
-                Toggle("Ignore final newline", isOn: ignoreFinalNewlineBinding)
-                Divider()
-                Toggle("Ignore C-style line comments", isOn: optionBinding(\.ignoreCStyleLineComments))
-                Toggle("Ignore shell line comments", isOn: optionBinding(\.ignoreShellLineComments))
-                Toggle("Ignore single-line HTML comments", isOn: optionBinding(\.ignoreHTMLComments))
-                Divider()
-                Toggle("Ignore timestamps", isOn: optionBinding(\.ignoreTimestamps))
-                Toggle("Ignore UUIDs", isOn: optionBinding(\.ignoreUUIDs))
-                Toggle("Ignore hexadecimal addresses", isOn: optionBinding(\.ignoreHexAddresses))
-                Button("Custom Regular Expressions…") { editsCustomFilters = true }
+                comparisonRulesMenu
             } label: {
                 Label("Rules", systemImage: "slider.horizontal.3")
             }
@@ -178,26 +171,108 @@ struct FileDiffView: View {
             }
             .disabled(state.rightTextSnapshot == nil)
 
-            Button {
-                do {
-                    patchText = try state.makePatch()
-                    patchDocument = TextPatchDocument(text: patchText)
-                    exportsPatch = true
-                } catch {
-                    exportError = error.localizedDescription
-                }
-            } label: {
+            Button(action: exportPatch) {
                 Label("Patch", systemImage: "doc.badge.arrow.up")
             }
             .disabled(state.textComparison == nil)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 7)
+    }
+
+    private var compactTextActionBar: some View {
+        HStack(spacing: 6) {
+            TextField("Search", text: $searchQuery)
+                .textFieldStyle(.roundedBorder)
+                .frame(minWidth: 80, idealWidth: 120, maxWidth: 150)
+                .onSubmit { jumpToSearch(1) }
+                .accessibilityLabel("Search both files")
+            Button { jumpToSearch(-1) } label: { Image(systemName: "chevron.up") }
+                .disabled(searchQuery.isEmpty)
+                .help("Previous search result")
+            Button { jumpToSearch(1) } label: { Image(systemName: "chevron.down") }
+                .disabled(searchQuery.isEmpty)
+                .help("Next search result")
+            TextField("Line", text: $goToLine)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 58)
+                .onSubmit { jumpToLine() }
+                .accessibilityLabel("Go to line")
+
+            Spacer(minLength: 4)
+
+            if let comparison = state.textComparison, !comparison.hunks.isEmpty {
+                Button { moveHunk(-1) } label: { Image(systemName: "chevron.left") }
+                    .help("Previous hunk")
+                Text("\(min(currentHunk + 1, comparison.hunks.count))/\(comparison.hunks.count)")
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Hunk \(min(currentHunk + 1, comparison.hunks.count)) of \(comparison.hunks.count)")
+                Button { moveHunk(1) } label: { Image(systemName: "chevron.right") }
+                    .help("Next hunk")
+                Button("Use Left") { acceptCurrentHunk(.left) }
+                Button("Use Right") { acceptCurrentHunk(.right) }
+            }
+
+            Menu {
+                Menu("Rules", systemImage: "slider.horizontal.3") {
+                    comparisonRulesMenu
+                }
+                Toggle("Wrap", systemImage: "arrow.turn.down.right", isOn: $wrapsLines)
+                Divider()
+                Button("Output", systemImage: "square.and.pencil") { state.showOutput() }
+                    .disabled(state.rightTextSnapshot == nil)
+                Button("Patch", systemImage: "doc.badge.arrow.up", action: exportPatch)
+                    .disabled(state.textComparison == nil)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .help("Actions")
+            .accessibilityLabel("Actions")
+        }
+    }
+
+    @ViewBuilder
+    private var comparisonRulesMenu: some View {
+        Picker("Whitespace", selection: whitespaceBinding) {
+            Text("Exact whitespace").tag(WhitespaceComparison.exact)
+            Text("Ignore whitespace changes").tag(WhitespaceComparison.ignoreChanges)
+            Text("Ignore all whitespace").tag(WhitespaceComparison.ignoreAll)
+        }
+        Toggle("Ignore case", isOn: ignoreCaseBinding)
+        Toggle("Ignore line-ending format", isOn: ignoreLineEndingBinding)
+        Toggle("Ignore final newline", isOn: ignoreFinalNewlineBinding)
+        Divider()
+        Toggle("Ignore C-style line comments", isOn: optionBinding(\.ignoreCStyleLineComments))
+        Toggle("Ignore shell line comments", isOn: optionBinding(\.ignoreShellLineComments))
+        Toggle("Ignore single-line HTML comments", isOn: optionBinding(\.ignoreHTMLComments))
+        Divider()
+        Toggle("Ignore timestamps", isOn: optionBinding(\.ignoreTimestamps))
+        Toggle("Ignore UUIDs", isOn: optionBinding(\.ignoreUUIDs))
+        Toggle("Ignore hexadecimal addresses", isOn: optionBinding(\.ignoreHexAddresses))
+        Button("Custom Regular Expressions…") { editsCustomFilters = true }
+    }
+
+    private func exportPatch() {
+        do {
+            patchText = try state.makePatch()
+            patchDocument = TextPatchDocument(text: patchText)
+            exportsPatch = true
+        } catch {
+            exportError = error.localizedDescription
+        }
     }
 
     // MARK: 顶部工具栏
 
     private var header: some View {
+        ViewThatFits(in: .horizontal) {
+            regularHeader
+            compactHeader
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+    }
+
+    private var regularHeader: some View {
         HStack(spacing: 12) {
             Button { requestNavigation(.back) } label: {
                 Label("Back", systemImage: "chevron.left")
@@ -224,18 +299,7 @@ struct FileDiffView: View {
             .layoutPriority(1)
 
             Menu {
-                Section("Left") {
-                    Button("Open in Default Editor") { state.openComparedFileExternally(left: true) }
-                        .disabled(state.diffLeftURL == nil)
-                    Button("Reveal in Finder") { state.revealComparedFileInFinder(left: true) }
-                        .disabled(state.diffLeftURL == nil)
-                }
-                Section("Right") {
-                    Button("Open in Default Editor") { state.openComparedFileExternally(left: false) }
-                        .disabled(state.diffRightURL == nil)
-                    Button("Reveal in Finder") { state.revealComparedFileInFinder(left: false) }
-                        .disabled(state.diffRightURL == nil)
-                }
+                externalEditorMenu
             } label: {
                 Label("External Editor", systemImage: "arrow.up.forward.app")
             }
@@ -270,8 +334,65 @@ struct FileDiffView: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
+    }
+
+    private var compactHeader: some View {
+        HStack(spacing: 8) {
+            Button { requestNavigation(.back) } label: { Image(systemName: "chevron.left") }
+                .keyboardShortcut(.cancelAction)
+                .help("Back")
+
+            Menu {
+                Section("Files") {
+                    Text(state.leftFileName)
+                    Text(state.rightFileName)
+                }
+                Divider()
+                externalEditorMenu
+            } label: {
+                Label("Files", systemImage: "doc.on.doc")
+            }
+
+            Button { requestNavigation(.swap) } label: {
+                Image(systemName: "arrow.left.arrow.right")
+            }
+            .help("Swap sides")
+
+            Spacer(minLength: 4)
+
+            if let r = state.fileDiff, !r.identical, !r.isBinary {
+                Text("\(r.differenceCount) different")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Button { jumpToDiff(-1) } label: { Image(systemName: "chevron.up") }
+                    .disabled(r.differenceCount == 0)
+                    .help("Previous difference")
+                    .keyboardShortcut(.upArrow, modifiers: [.command])
+                Text(r.differenceCount == 0 ? "0/0" : "\(min(currentDiff + 1, r.differenceCount))/\(r.differenceCount)")
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                Button { jumpToDiff(1) } label: { Image(systemName: "chevron.down") }
+                    .disabled(r.differenceCount == 0)
+                    .help("Next difference")
+                    .keyboardShortcut(.downArrow, modifiers: [.command])
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var externalEditorMenu: some View {
+        Section("Left") {
+            Button("Open in Default Editor") { state.openComparedFileExternally(left: true) }
+                .disabled(state.diffLeftURL == nil)
+            Button("Reveal in Finder") { state.revealComparedFileInFinder(left: true) }
+                .disabled(state.diffLeftURL == nil)
+        }
+        Section("Right") {
+            Button("Open in Default Editor") { state.openComparedFileExternally(left: false) }
+                .disabled(state.diffRightURL == nil)
+            Button("Reveal in Finder") { state.revealComparedFileInFinder(left: false) }
+                .disabled(state.diffRightURL == nil)
+        }
     }
 
     // MARK: 内容
