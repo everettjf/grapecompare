@@ -457,31 +457,26 @@ struct DropSlot: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, minHeight: compact ? 72 : 116)
+        .contentShape(Rectangle())
         .background(isTargeted ? Color.accentColor.opacity(0.08) : Color.clear,
                     in: .rect(cornerRadius: 10))
         .overlay {
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.4),
                               style: StrokeStyle(lineWidth: 1.5, dash: [6]))
+                .allowsHitTesting(false)
         }
-        .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
-            guard let provider = providers.first else { return false }
-            _ = provider.loadObject(ofClass: URL.self) { item, _ in
-                DispatchQueue.main.async {
-                    guard let item else { return }
-                    guard item.hasDirectoryPath == self.acceptsFolders else {
-                        if self.acceptsFolders {
-                            self.invalidDropMessage = "Please drop a folder."
-                        } else {
-                            self.invalidDropMessage = "Please drop a file."
-                        }
-                        return
-                    }
-                    self.setURL(item)
-                }
+        .dropDestination(for: URL.self) { items, _ in
+            guard items.count == 1, let item = items.first else { return false }
+            guard ComparisonInputInspector.accepts(item, folders: acceptsFolders) else {
+                invalidDropMessage = acceptsFolders
+                    ? "Please drop a folder."
+                    : "Please drop a file."
+                return false
             }
+            setURL(item.standardizedFileURL)
             return true
-        }
+        } isTargeted: { isTargeted = $0 }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(label))
         .alert("Unsupported Item", isPresented: Binding(
@@ -514,7 +509,14 @@ struct DropSlot: View {
         panel.allowsMultipleSelection = false
         panel.prompt = "Choose"
         if panel.runModal() == .OK {
-            setURL(panel.url)
+            guard let selectedURL = panel.url,
+                  ComparisonInputInspector.accepts(selectedURL, folders: acceptsFolders) else {
+                invalidDropMessage = acceptsFolders
+                    ? "Please choose a folder."
+                    : "Please choose a file."
+                return
+            }
+            setURL(selectedURL.standardizedFileURL)
         }
     }
 }

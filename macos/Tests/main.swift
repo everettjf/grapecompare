@@ -995,6 +995,23 @@ try! FileManager.default.createDirectory(at: L.appending(path: "sub"), withInter
 try! FileManager.default.createDirectory(at: R.appending(path: "sub"), withIntermediateDirectories: true)
 func write(_ s: String, _ url: URL) { try! Data(s.utf8).write(to: url) }
 
+let dropFixture = tmp.appending(path: "drop-fixture.txt")
+write("drop", dropFixture)
+check(ComparisonInputInspector.accepts(L, folders: true),
+      "folder drop validation accepts a real folder")
+check(!ComparisonInputInspector.accepts(L, folders: false),
+      "file drop validation rejects a folder")
+check(ComparisonInputInspector.accepts(dropFixture, folders: false),
+      "file drop validation accepts a regular file")
+check(!ComparisonInputInspector.accepts(dropFixture, folders: true),
+      "folder drop validation rejects a regular file")
+check(ComparisonInputInspector.kind(of: tmp.appending(path: "missing")) == nil,
+      "drop validation rejects a missing path")
+let dropSymlink = tmp.appending(path: "drop-link")
+try! FileManager.default.createSymbolicLink(at: dropSymlink, withDestinationURL: L)
+check(ComparisonInputInspector.kind(of: dropSymlink) == nil,
+      "drop validation does not follow symbolic links")
+
 write("same content", L.appending(path: "same.txt"))
 write("same content", R.appending(path: "same.txt"))
 write("version 1", L.appending(path: "changed.txt"))

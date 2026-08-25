@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.19 — 2026-08-24
+
+### Reliable folder drag and drop
+
+- Make the full left and right comparison slots reliable drag targets, including their transparent padding.
+- Use independent URL drop destinations so either folder slot accepts its own Finder drop consistently.
+- Validate dropped and picker-selected inputs against their real filesystem type without following symbolic links.
+- Add repeatable regression coverage for folders, regular files, missing paths, mismatched inputs, and symbolic links.
+
 ## 1.0.18 — 2026-08-24
 
 ### Local-first release discipline
