@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.23 — 2026-08-25
+
+### Balanced comparison workspace
+
+- Rebuild the home screen around symmetric file and folder entry cards, an equal-width workflow row, and a quieter full-width continuation strip for recent comparisons.
+- Adapt the folder-comparison toolbar to compact windows and consolidate comparison, synchronization, and plan controls into focused menus.
+- Separate folder status from queued actions, reveal row operations on hover, and add a contextual action bar for multi-selection.
+- Highlight the current text difference with a persistent focus outline and add a compact document overview for all added, removed, and modified rows.
+- Make difference statistics readable without relying on color, expose full paths through tooltips and context menus, and add configurable code size and row density.
+- Add Simplified Chinese translations and regression coverage for the new comparison-presentation policies.
+
 ## 1.0.22 — 2026-08-24
 
 ### Compact file-comparison workspace

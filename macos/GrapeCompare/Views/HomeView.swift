@@ -19,43 +19,37 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 22) {
                     HomeHero(showDemoButton: showDemoButton)
+                    DashboardSectionTitle(
+                        title: "Start a Comparison",
+                        subtitle: "Choose a focused workflow or drop two items for a quick comparison")
 
-                    HStack(alignment: .top, spacing: 18) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            DashboardSectionTitle(
-                                title: "Compare",
-                                subtitle: "Choose two files or folders")
-                            CompareCard(
-                                title: "Files",
-                                icon: "doc.text.magnifyingglass",
-                                description: "Text, structured data, images, and developer formats",
-                                acceptsFolders: false,
-                                left: $state.leftFileURL,
-                                right: $state.rightFileURL,
-                                action: state.startFileCompare)
-                            CompareCard(
-                                title: "Folders",
-                                icon: "folder.badge.questionmark",
-                                description: "Recursive comparison with safe, reviewable operations",
-                                acceptsFolders: true,
-                                left: $state.leftFolderURL,
-                                right: $state.rightFolderURL,
-                                action: state.startFolderCompare)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .top, spacing: 16) {
+                            primaryCards
                         }
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        VStack(spacing: 16) {
+                            primaryCardsCompact
+                        }
+                    }
 
-                        VStack(alignment: .leading, spacing: 12) {
-                            DashboardSectionTitle(
-                                title: "Workflows",
-                                subtitle: "Drop, merge, or inspect a repository")
+                    DashboardSectionTitle(
+                        title: "More Workflows",
+                        subtitle: "Quick compare, resolve a merge, or inspect a Git repository")
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .top, spacing: 16) {
+                            QuickCompareDropZone().frame(maxWidth: .infinity)
+                            MergeCard().frame(maxWidth: .infinity)
+                            GitCard().frame(maxWidth: .infinity)
+                        }
+                        VStack(spacing: 16) {
                             QuickCompareDropZone()
                             MergeCard()
                             GitCard()
-                            if state.resumableSession != nil || !state.recentComparisons.isEmpty {
-                                RecentComparisonsView()
-                            }
                         }
-                        .frame(width: 360, alignment: .topLeading)
+                    }
+
+                    if state.resumableSession != nil || !state.recentComparisons.isEmpty {
+                        RecentComparisonsView()
                     }
                 }
                 .frame(maxWidth: 1160)
@@ -89,6 +83,37 @@ struct HomeView: View {
         } message: {
             Text(state.quickCompareError ?? "")
         }
+    }
+
+    @ViewBuilder
+    private var primaryCards: some View {
+        CompareCard(
+            title: "Files",
+            icon: "doc.text.magnifyingglass",
+            description: "Text, structured data, images, and developer formats",
+            acceptsFolders: false,
+            left: urlBinding(\.leftFileURL),
+            right: urlBinding(\.rightFileURL),
+            action: state.startFileCompare)
+        CompareCard(
+            title: "Folders",
+            icon: "folder.badge.questionmark",
+            description: "Recursive comparison with safe, reviewable operations",
+            acceptsFolders: true,
+            left: urlBinding(\.leftFolderURL),
+            right: urlBinding(\.rightFolderURL),
+            action: state.startFolderCompare)
+    }
+
+    @ViewBuilder
+    private var primaryCardsCompact: some View {
+        primaryCards
+    }
+
+    private func urlBinding(_ keyPath: ReferenceWritableKeyPath<AppState, URL?>) -> Binding<URL?> {
+        Binding(
+            get: { state[keyPath: keyPath] },
+            set: { state[keyPath: keyPath] = $0 })
     }
 }
 
@@ -219,39 +244,62 @@ private struct RecentComparisonsView: View {
     @Environment(AppState.self) private var state
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Recent Comparisons", systemImage: "clock.arrow.circlepath")
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 2) {
+                    Label("Continue Comparing", systemImage: "clock.arrow.circlepath")
+                        .font(.headline)
+                    Text("Reopen inputs and compare their current contents")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
                 if state.resumableSession != nil {
-                    Button("Resume Last Session") { state.resumeLastSession() }
+                    Button("Resume Last") { state.resumeLastSession() }
                         .buttonStyle(.borderedProminent)
                         .keyboardShortcut("r", modifiers: [.command, .shift])
                 }
-                Button("Clear", role: .destructive) { state.clearRecentComparisons() }
-                    .disabled(state.recentComparisons.isEmpty)
-            }
-            ForEach(state.recentComparisons.prefix(3)) { session in
-                Button { state.openRecentComparison(session) } label: {
-                    HStack {
-                        Image(systemName: icon(for: session.kind))
-                            .frame(width: 20)
-                        Text(session.displayNames.joined(separator: " ↔ "))
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        Text(session.createdAt, style: .relative)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                Menu {
+                    Button("Clear Recent Comparisons", role: .destructive) {
+                        state.clearRecentComparisons()
                     }
-                    .contentShape(.rect)
+                    .disabled(state.recentComparisons.isEmpty)
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint("Reopens the inputs and compares their current contents")
+                .accessibilityLabel("Recent comparison actions")
+            }
+            if !state.recentComparisons.isEmpty {
+                HStack(spacing: 10) {
+                    ForEach(state.recentComparisons.prefix(3)) { session in
+                        Button { state.openRecentComparison(session) } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Image(systemName: icon(for: session.kind))
+                                    Text(kindTitle(for: session.kind))
+                                        .font(.caption.weight(.semibold))
+                                    Spacer()
+                                    Text(session.createdAt, style: .relative)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Text(session.displayNames.joined(separator: " ↔ "))
+                                    .font(.callout)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                            }
+                            .padding(10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.primary.opacity(0.045), in: .rect(cornerRadius: 10))
+                            .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Reopens the inputs and compares their current contents")
+                    }
+                }
             }
         }
-        .padding(14)
+        .padding(16)
         .dashboardCard()
     }
 
@@ -261,6 +309,15 @@ private struct RecentComparisonsView: View {
         case .folders: "folder.badge.questionmark"
         case .merge: "arrow.triangle.branch"
         case .git: "point.3.connected.trianglepath.dotted"
+        }
+    }
+
+    private func kindTitle(for kind: ComparisonSessionKind) -> LocalizedStringResource {
+        switch kind {
+        case .files: "Files"
+        case .folders: "Folders"
+        case .merge: "Merge"
+        case .git: "Git"
         }
     }
 }
@@ -321,14 +378,30 @@ private struct MergeCard: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(state.baseFileURL == nil || state.oursFileURL == nil || state.theirsFileURL == nil)
             }
-            HStack(spacing: 10) {
-                DropSlot(label: "Base", acceptsFolders: false, url: $state.baseFileURL, compact: true)
-                DropSlot(label: "Ours", acceptsFolders: false, url: $state.oursFileURL, compact: true)
-                DropSlot(label: "Theirs", acceptsFolders: false, url: $state.theirsFileURL, compact: true)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    mergeSlots
+                }
+                VStack(spacing: 8) {
+                    mergeSlots
+                }
             }
         }
         .padding(14)
         .dashboardCard()
+    }
+
+    @ViewBuilder
+    private var mergeSlots: some View {
+        DropSlot(label: "Base", acceptsFolders: false, url: urlBinding(\.baseFileURL), compact: true)
+        DropSlot(label: "Ours", acceptsFolders: false, url: urlBinding(\.oursFileURL), compact: true)
+        DropSlot(label: "Theirs", acceptsFolders: false, url: urlBinding(\.theirsFileURL), compact: true)
+    }
+
+    private func urlBinding(_ keyPath: ReferenceWritableKeyPath<AppState, URL?>) -> Binding<URL?> {
+        Binding(
+            get: { state[keyPath: keyPath] },
+            set: { state[keyPath: keyPath] = $0 })
     }
 }
 

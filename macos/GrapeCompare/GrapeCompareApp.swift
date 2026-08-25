@@ -257,13 +257,22 @@ private struct FileOperationCommands: Commands {
 
 private struct DemoSettingsView: View {
     @AppStorage("showDemoButton") private var showDemoButton = true
+    @AppStorage("codeFontSize") private var codeFontSize = 12.0
+    @AppStorage("comfortableDiffRows") private var comfortableDiffRows = false
 
     var body: some View {
         Form {
-            Toggle("Show Load Demo button on the home screen", isOn: $showDemoButton)
-            Text("Demo data is generated locally and never leaves your Mac.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Section("Comparison") {
+                Stepper("Code size: \(codeFontSize, specifier: "%.0f") pt",
+                        value: $codeFontSize, in: 10...18, step: 1)
+                Toggle("Comfortable diff row spacing", isOn: $comfortableDiffRows)
+            }
+            Section("Home") {
+                Toggle("Show Load Demo button", isOn: $showDemoButton)
+                Text("Demo data is generated locally and never leaves your Mac.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(24)
         .frame(width: 430)

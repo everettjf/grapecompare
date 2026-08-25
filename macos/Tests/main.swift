@@ -18,6 +18,14 @@ check(!WorkspaceTabBarPolicy.usesCompactNewComparisonButton(itemCount: 2),
       "multi-tab workspace avoids a duplicate toolbar add button")
 check(AppLayoutPolicy.minimumContentWidth == 720,
       "app content supports the compact 720-point window width")
+check(ComparisonPresentationPolicy.codeFontSize(8) == 10,
+      "comparison code font size has a readable lower bound")
+check(ComparisonPresentationPolicy.codeFontSize(24) == 18,
+      "comparison code font size has a practical upper bound")
+check(ComparisonPresentationPolicy.currentDifferenceRow(indices: [3, 8, 13], position: 1) == 8,
+      "current difference presentation resolves the selected row")
+check(ComparisonPresentationPolicy.currentDifferenceRow(indices: [3], position: 2) == nil,
+      "current difference presentation safely rejects stale positions")
 
 // MARK: - DiffEngine 行级 diff
 

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -18,6 +19,8 @@ struct FileDiffView: View {
     @State private var pendingNavigation: PendingNavigation?
     @State private var editsCustomFilters = false
     @State private var structuredViewMode = StructuredViewMode.fields
+    @AppStorage("codeFontSize") private var codeFontSize = 12.0
+    @AppStorage("comfortableDiffRows") private var comfortableDiffRows = false
 
     private enum PendingNavigation {
         case back, swap
@@ -286,6 +289,8 @@ struct FileDiffView: View {
                 Text(state.leftFileName).bold().lineLimit(1).truncationMode(.middle)
             }
             .layoutPriority(1)
+            .help(comparedPath(state.diffLeftURL))
+            .contextMenu { comparedFileMenu(left: true) }
 
             Button { requestNavigation(.swap) } label: {
                 Image(systemName: "arrow.left.arrow.right")
@@ -297,6 +302,8 @@ struct FileDiffView: View {
                 Text(state.rightFileName).bold().lineLimit(1).truncationMode(.middle)
             }
             .layoutPriority(1)
+            .help(comparedPath(state.diffRightURL))
+            .contextMenu { comparedFileMenu(left: false) }
 
             Menu {
                 externalEditorMenu
@@ -307,9 +314,12 @@ struct FileDiffView: View {
             Spacer()
 
             if let r = state.fileDiff, !r.identical, !r.isBinary {
-                Text("+\(r.addedCount)").foregroundStyle(.green).font(.callout).bold()
-                Text("−\(r.removedCount)").foregroundStyle(.red).font(.callout).bold()
-                Text("~\(r.modifiedCount)").foregroundStyle(.orange).font(.callout).bold()
+                Label("\(r.addedCount) added", systemImage: "plus")
+                    .foregroundStyle(.green).font(.callout).bold()
+                Label("\(r.removedCount) removed", systemImage: "minus")
+                    .foregroundStyle(.red).font(.callout).bold()
+                Label("\(r.modifiedCount) modified", systemImage: "plusminus")
+                    .foregroundStyle(.orange).font(.callout).bold()
                 if r.finalNewlineDiffers {
                     Text("↵ final newline differs")
                         .font(.callout)
@@ -393,6 +403,27 @@ struct FileDiffView: View {
             Button("Reveal in Finder") { state.revealComparedFileInFinder(left: false) }
                 .disabled(state.diffRightURL == nil)
         }
+    }
+
+    @ViewBuilder
+    private func comparedFileMenu(left: Bool) -> some View {
+        let url = left ? state.diffLeftURL : state.diffRightURL
+        Text(comparedPath(url))
+        Button("Open in Default Editor") { state.openComparedFileExternally(left: left) }
+            .disabled(url == nil)
+        Button("Reveal in Finder") { state.revealComparedFileInFinder(left: left) }
+            .disabled(url == nil)
+        Button("Copy Path") {
+            guard let url else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(url.path(percentEncoded: false), forType: .string)
+        }
+        .disabled(url == nil)
+    }
+
+    private func comparedPath(_ url: URL?) -> String {
+        guard let url else { return String(localized: "Missing") }
+        return (url.path(percentEncoded: false) as NSString).abbreviatingWithTildeInPath
     }
 
     // MARK: 内容
@@ -581,7 +612,12 @@ struct FileDiffView: View {
                                     columnWidth: contentColumnWidth,
                                     wrapsLines: wrapsLines,
                                     searchQuery: searchQuery,
-                                    fileExtension: state.diffRightURL?.pathExtension.lowercased() ?? ""
+                                    fileExtension: state.diffRightURL?.pathExtension.lowercased() ?? "",
+                                    isCurrentDifference: ComparisonPresentationPolicy.currentDifferenceRow(
+                                        indices: r.differenceRowIndices,
+                                        position: currentDiff) == row.id,
+                                    codeFontSize: ComparisonPresentationPolicy.codeFontSize(codeFontSize),
+                                    comfortableRows: comfortableDiffRows
                                 )
                             }
                         }
@@ -601,6 +637,14 @@ struct FileDiffView: View {
                         currentDiff = 0
                     }
                 }
+                .overlay(alignment: .trailing) {
+                    DifferenceOverview(
+                        rows: r.rows,
+                        differenceIndices: r.differenceRowIndices,
+                        currentPosition: currentDiff)
+                        .padding(.trailing, 4)
+                        .padding(.vertical, 6)
+                }
             }
         }
     }
@@ -615,6 +659,7 @@ struct FileDiffView: View {
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.primary.opacity(0.04))
+            .help(comparedPath(url))
     }
 
     // MARK: 差异导航
@@ -792,6 +837,50 @@ private struct TextFilterEditor: View {
     }
 }
 
+private struct DifferenceOverview: View {
+    let rows: [DiffRow]
+    let differenceIndices: [Int]
+    let currentPosition: Int
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Capsule().fill(.black.opacity(0.12))
+                ForEach(Array(differenceIndices.enumerated()), id: \.offset) { position, rowIndex in
+                    if rows.indices.contains(rowIndex) {
+                        Capsule()
+                            .fill(color(for: rows[rowIndex].kind))
+                            .frame(height: position == currentPosition ? 5 : 3)
+                            .overlay {
+                                if position == currentPosition {
+                                    Capsule().strokeBorder(Color.accentColor, lineWidth: 1)
+                                }
+                            }
+                            .offset(y: markerOffset(rowIndex: rowIndex, height: geometry.size.height))
+                    }
+                }
+            }
+        }
+        .frame(width: 8)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func markerOffset(rowIndex: Int, height: CGFloat) -> CGFloat {
+        guard rows.count > 1 else { return 0 }
+        return CGFloat(rowIndex) / CGFloat(rows.count - 1) * max(0, height - 5)
+    }
+
+    private func color(for kind: DiffRowKind) -> Color {
+        switch kind {
+        case .added: .green
+        case .removed: .red
+        case .modified: .orange
+        case .equal: .secondary
+        }
+    }
+}
+
 /// 并排 diff 中的一行
 struct DiffRowView: View {
     let row: DiffRow
@@ -799,6 +888,9 @@ struct DiffRowView: View {
     let wrapsLines: Bool
     let searchQuery: String
     let fileExtension: String
+    let isCurrentDifference: Bool
+    let codeFontSize: Double
+    let comfortableRows: Bool
 
     var body: some View {
         HStack(spacing: 0) {
@@ -811,23 +903,39 @@ struct DiffRowView: View {
                 .clipped()
         }
         .frame(width: columnWidth * 2 + 1, alignment: .leading)
-        .font(Theme.mono)
+        .font(Theme.mono(size: codeFontSize))
+        .overlay(alignment: .leading) {
+            if isCurrentDifference {
+                Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: 3)
+                    .accessibilityHidden(true)
+            }
+        }
+        .overlay {
+            if isCurrentDifference {
+                Rectangle()
+                    .strokeBorder(Color.accentColor.opacity(0.75), lineWidth: 1)
+                    .accessibilityHidden(true)
+            }
+        }
+        .accessibilityValue(isCurrentDifference ? "Current difference" : "")
     }
 
     @ViewBuilder
     private func sideView(_ side: DiffRow.Side?, isLeft: Bool) -> some View {
         HStack(spacing: 0) {
             Text(side.map { String($0.number) } ?? "")
-                .font(Theme.monoSmall)
+                .font(Theme.mono(size: max(9, codeFontSize - 1)))
                 .foregroundStyle(.tertiary)
                 .frame(width: 46, alignment: .trailing)
                 .padding(.trailing, 10)
-                .padding(.vertical, 2)
+                .padding(.vertical, comfortableRows ? 4 : 2)
                 .background(Color.primary.opacity(0.03))
             if let side {
                 Text(highlighted(side, isLeft: isLeft))
                     .fixedSize(horizontal: !wrapsLines, vertical: wrapsLines)
-                    .padding(.vertical, 2)
+                    .padding(.vertical, comfortableRows ? 4 : 2)
                     .padding(.leading, 2)
             }
             Spacer(minLength: 0)

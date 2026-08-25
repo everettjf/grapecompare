@@ -14,4 +14,8 @@ enum Theme {
 
     static let mono = Font.system(size: 12, design: .monospaced)
     static let monoSmall = Font.system(size: 11, design: .monospaced)
+
+    static func mono(size: Double) -> Font {
+        .system(size: size, design: .monospaced)
+    }
 }

@@ -4,6 +4,20 @@ nonisolated enum AppLayoutPolicy {
     static let minimumContentWidth: CGFloat = 720
 }
 
+nonisolated enum ComparisonPresentationPolicy {
+    static let minimumCodeFontSize = 10.0
+    static let maximumCodeFontSize = 18.0
+
+    static func codeFontSize(_ requested: Double) -> Double {
+        min(max(requested, minimumCodeFontSize), maximumCodeFontSize)
+    }
+
+    static func currentDifferenceRow(indices: [Int], position: Int) -> Int? {
+        guard indices.indices.contains(position) else { return nil }
+        return indices[position]
+    }
+}
+
 nonisolated enum WorkspaceTabBarPolicy {
     static func isVisible(itemCount: Int) -> Bool {
         itemCount > 1

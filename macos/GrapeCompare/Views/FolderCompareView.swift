@@ -98,6 +98,15 @@ struct FolderCompareView: View {
     // MARK: 顶部工具栏
 
     private var header: some View {
+        ViewThatFits(in: .horizontal) {
+            regularHeader
+            compactHeader
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+    }
+
+    private var regularHeader: some View {
         HStack(spacing: 12) {
             Button { state.goHome() } label: {
                 Label("Back", systemImage: "chevron.left")
@@ -110,6 +119,9 @@ struct FolderCompareView: View {
                 Image(systemName: "folder.fill").foregroundStyle(.blue)
                 Text(state.leftFolderURL?.lastPathComponent ?? "").bold().lineLimit(1)
             }
+            .help(displayPath(state.leftFolderURL))
+            .contextMenu { folderPathMenu(state.leftFolderURL) }
+            .layoutPriority(1)
             Button { state.swapFolders() } label: {
                 Image(systemName: "arrow.left.arrow.right")
             }
@@ -118,6 +130,9 @@ struct FolderCompareView: View {
                 Image(systemName: "folder.fill").foregroundStyle(.indigo)
                 Text(state.rightFolderURL?.lastPathComponent ?? "").bold().lineLimit(1)
             }
+            .help(displayPath(state.rightFolderURL))
+            .contextMenu { folderPathMenu(state.rightFolderURL) }
+            .layoutPriority(1)
 
             Spacer()
 
@@ -130,63 +145,88 @@ struct FolderCompareView: View {
             .labelsHidden()
             .frame(width: 300)
 
-            Toggle("Metadata", isOn: Binding(
-                get: { state.compareFolderMetadata },
-                set: { state.compareFolderMetadata = $0; state.startFolderCompare() }))
-                .toggleStyle(.button)
-                .help("Compare POSIX permissions, ownership, and extended attributes")
-
             Button { state.startFolderCompare() } label: {
                 Image(systemName: "arrow.clockwise")
             }
             .help("Compare again")
             .keyboardShortcut("r", modifiers: [.command])
 
-            operationMenu
+            comparisonOptionsMenu
+            workflowMenu
+        }
+    }
 
+    private var compactHeader: some View {
+        HStack(spacing: 8) {
+            Button { state.goHome() } label: { Image(systemName: "chevron.left") }
+                .keyboardShortcut(.cancelAction)
+                .help("Back")
+            Menu {
+                Section("Left") { folderPathMenu(state.leftFolderURL) }
+                Section("Right") { folderPathMenu(state.rightFolderURL) }
+            } label: {
+                Label("Folders", systemImage: "folder.on.folder")
+            }
+            Button { state.swapFolders() } label: { Image(systemName: "arrow.left.arrow.right") }
+                .help("Swap sides and compare again")
+            Spacer(minLength: 4)
+            Picker("Filter", selection: $filter) {
+                ForEach(Filter.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            Button { state.startFolderCompare() } label: { Image(systemName: "arrow.clockwise") }
+                .help("Compare again")
+                .keyboardShortcut("r", modifiers: [.command])
+            comparisonOptionsMenu
+            workflowMenu
+        }
+    }
+
+    private var comparisonOptionsMenu: some View {
+        Menu {
+            Toggle("Compare Metadata", isOn: Binding(
+                get: { state.compareFolderMetadata },
+                set: { state.compareFolderMetadata = $0; state.startFolderCompare() }))
+            Toggle("Developer Ignore Profile", isOn: $useDeveloperIgnoreProfile)
+            Toggle("Custom Ignore Profile", isOn: $useCustomIgnoreProfile)
+                .disabled(customIgnorePatterns.isEmpty)
+            Button("Edit Custom Ignore Profile…") {
+                ignoreDraft = customIgnorePatterns
+                showsIgnoreEditor = true
+            }
             if supportsAppleInspection {
+                Divider()
                 Button("Inspect Apple Metadata", systemImage: "apple.logo") { inspectAppleRoots() }
             }
+        } label: {
+            Label("Options", systemImage: "slider.horizontal.3")
+        }
+        .help("Comparison and ignore options")
+    }
 
-            Menu {
-                Toggle("Developer Ignore Profile", isOn: $useDeveloperIgnoreProfile)
-                Toggle("Custom Ignore Profile", isOn: $useCustomIgnoreProfile)
-                    .disabled(customIgnorePatterns.isEmpty)
-                Button("Edit Custom Ignore Profile…") {
-                    ignoreDraft = customIgnorePatterns
-                    showsIgnoreEditor = true
-                }
-                Divider()
+    private var workflowMenu: some View {
+        Menu {
+            Section("Selected Items") { operationMenuItems }
+            Section("Synchronization") {
                 Button("Mirror Left → Right") { generateSyncPlan(.mirror) }
                 Button("Update Left → Right") { generateSyncPlan(.update) }
                 Button("Custom Plan") { state.operations.clearDrafts() }
-                Divider()
                 Button("Copy Dry-Run Report") { copyDryRunReport() }
                     .disabled(state.operations.drafts.isEmpty)
-            } label: {
-                Label("Sync", systemImage: "arrow.triangle.2.circlepath")
             }
-            .help("Build a previewable folder synchronization plan")
-
-            Menu {
-                Button("Import Plan…", systemImage: "square.and.arrow.down") {
-                    isImportingPlan = true
-                }
-                Button("Export Current Plan…", systemImage: "square.and.arrow.up") {
-                    exportPlan()
-                }
-                .disabled(state.operations.drafts.isEmpty)
-                Divider()
+            Section("Plans") {
+                Button("Import Plan…", systemImage: "square.and.arrow.down") { isImportingPlan = true }
+                Button("Export Current Plan…", systemImage: "square.and.arrow.up") { exportPlan() }
+                    .disabled(state.operations.drafts.isEmpty)
                 Button("Operation History", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90") {
                     state.operations.showHistory()
                 }
-            } label: {
-                Label("Plans", systemImage: "doc.badge.gearshape")
             }
-            .help("Import, export, or inspect operation history")
+        } label: {
+            Label("Actions", systemImage: "arrow.left.arrow.right.square")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
+        .help("Queue operations, synchronize folders, or manage plans")
     }
 
     // MARK: 内容
@@ -246,6 +286,10 @@ struct FolderCompareView: View {
             VStack(spacing: 0) {
                 columnHeader
                 Divider()
+                if !selectedNodeIDs.isEmpty {
+                    selectionActionBar
+                    Divider()
+                }
                 List(visibleItems, selection: $selectedNodeIDs) { item in
                     FolderRow(
                         node: item.node,
@@ -279,7 +323,7 @@ struct FolderCompareView: View {
             }
             .padding(.horizontal, 12)
 
-            Text("Action")
+            Text("Status")
                 .frame(width: 118)
                 .padding(.vertical, 6)
                 .background(Color.primary.opacity(0.025))
@@ -329,6 +373,32 @@ struct FolderCompareView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 7)
         .background(.bar)
+    }
+
+    private var selectionActionBar: some View {
+        HStack(spacing: 10) {
+            Label("\(selectedNodeIDs.count) selected", systemImage: "checkmark.circle.fill")
+                .font(.callout.weight(.medium))
+            Button("Copy →") {
+                queue(nodes: selectedNodes, kind: .copy, direction: .leftToRight)
+            }
+            .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .leftToRight) })
+            Button("← Copy") {
+                queue(nodes: selectedNodes, kind: .copy, direction: .rightToLeft)
+            }
+            .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .rightToLeft) })
+            Button("Quick Look") { _ = previewSelectedNodes() }
+            Spacer()
+            operationMenu
+            Button("Clear Selection") { selectedNodeIDs.removeAll() }
+                .buttonStyle(.plain)
+        }
+        .controlSize(.small)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 7)
+        .background(Color.accentColor.opacity(0.075))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Actions for \(selectedNodeIDs.count) selected items")
     }
 
     // MARK: 展开与筛选
@@ -429,46 +499,69 @@ struct FolderCompareView: View {
 
     private var operationMenu: some View {
         Menu {
-            Button("Quick Look", systemImage: "eye") {
-                _ = previewSelectedNodes()
-            }
-            .disabled(selectedNodes.isEmpty)
-            Divider()
-            Section("Copy or Replace") {
-                Button("Queue Left → Right") {
-                    queue(nodes: selectedNodes, kind: .copy, direction: .leftToRight)
-                }
-                .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .leftToRight) })
-                Button("Queue Right → Left") {
-                    queue(nodes: selectedNodes, kind: .copy, direction: .rightToLeft)
-                }
-                .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .rightToLeft) })
-            }
-            Section("Move — destination must be empty") {
-                Button("Move Left → Right") {
-                    queue(nodes: selectedNodes, kind: .move, direction: .leftToRight)
-                }
-                .disabled(!selectedNodes.contains { canQueueMove($0, direction: .leftToRight) })
-                Button("Move Right → Left") {
-                    queue(nodes: selectedNodes, kind: .move, direction: .rightToLeft)
-                }
-                .disabled(!selectedNodes.contains { canQueueMove($0, direction: .rightToLeft) })
-            }
-            Section("Move to Trash") {
-                Button("Trash Left Items", role: .destructive) {
-                    queue(nodes: selectedNodes, kind: .trash, direction: .leftToRight)
-                }
-                .disabled(!selectedNodes.contains { $0.left != nil })
-                Button("Trash Right Items", role: .destructive) {
-                    queue(nodes: selectedNodes, kind: .trash, direction: .rightToLeft)
-                }
-                .disabled(!selectedNodes.contains { $0.right != nil })
-            }
+            operationMenuItems
         } label: {
-            Label("Actions", systemImage: "arrow.left.arrow.right.square")
+            Label("More", systemImage: "ellipsis.circle")
         }
         .disabled(selectedNodeIDs.isEmpty || state.isComparingFolder)
-        .help("Queue an operation for the selected rows")
+        .help("More operations for the selected rows")
+    }
+
+    @ViewBuilder
+    private var operationMenuItems: some View {
+        Button("Quick Look", systemImage: "eye") { _ = previewSelectedNodes() }
+            .disabled(selectedNodes.isEmpty)
+        Section("Copy or Replace") {
+            Button("Queue Left → Right") {
+                queue(nodes: selectedNodes, kind: .copy, direction: .leftToRight)
+            }
+            .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .leftToRight) })
+            Button("Queue Right → Left") {
+                queue(nodes: selectedNodes, kind: .copy, direction: .rightToLeft)
+            }
+            .disabled(!selectedNodes.contains { canQueueCopy($0, direction: .rightToLeft) })
+        }
+        Section("Move — destination must be empty") {
+            Button("Move Left → Right") {
+                queue(nodes: selectedNodes, kind: .move, direction: .leftToRight)
+            }
+            .disabled(!selectedNodes.contains { canQueueMove($0, direction: .leftToRight) })
+            Button("Move Right → Left") {
+                queue(nodes: selectedNodes, kind: .move, direction: .rightToLeft)
+            }
+            .disabled(!selectedNodes.contains { canQueueMove($0, direction: .rightToLeft) })
+        }
+        Section("Move to Trash") {
+            Button("Trash Left Items", role: .destructive) {
+                queue(nodes: selectedNodes, kind: .trash, direction: .leftToRight)
+            }
+            .disabled(!selectedNodes.contains { $0.left != nil })
+            Button("Trash Right Items", role: .destructive) {
+                queue(nodes: selectedNodes, kind: .trash, direction: .rightToLeft)
+            }
+            .disabled(!selectedNodes.contains { $0.right != nil })
+        }
+    }
+
+    @ViewBuilder
+    private func folderPathMenu(_ url: URL?) -> some View {
+        if let url {
+            Text(displayPath(url))
+            Button("Reveal in Finder", systemImage: "finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            }
+            Button("Copy Path", systemImage: "document.on.document") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(url.path(percentEncoded: false), forType: .string)
+            }
+        } else {
+            Text("Missing")
+        }
+    }
+
+    private func displayPath(_ url: URL?) -> String {
+        guard let url else { return String(localized: "Missing") }
+        return (url.path(percentEncoded: false) as NSString).abbreviatingWithTildeInPath
     }
 
     private func previewSelectedNodes() -> KeyPress.Result {
@@ -766,6 +859,7 @@ private struct FolderRow: View {
     let onOpen: () -> Void
     let onQueueLeftToRight: (() -> Void)?
     let onQueueRightToLeft: (() -> Void)?
+    @State private var isHovering = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -785,6 +879,7 @@ private struct FolderRow: View {
         .background(rowTint)
         .contentShape(Rectangle())
         .help(helpText)
+        .onHover { isHovering = $0 }
         .onTapGesture(count: 2) {
             if !node.isFolder { onOpen() }
         }
@@ -844,6 +939,7 @@ private struct FolderRow: View {
                 .buttonStyle(.borderless)
                 .help("Queue Right → Left")
                 .accessibilityLabel("Queue Right to Left")
+                .opacity(isHovering ? 1 : 0)
             }
             statusBadge
             if let onQueueLeftToRight {
@@ -853,6 +949,7 @@ private struct FolderRow: View {
                 .buttonStyle(.borderless)
                 .help("Queue Left → Right")
                 .accessibilityLabel("Queue Left to Right")
+                .opacity(isHovering ? 1 : 0)
             }
         }
         .frame(maxWidth: .infinity)
@@ -861,10 +958,14 @@ private struct FolderRow: View {
     @ViewBuilder
     private var statusBadge: some View {
         switch node.status {
-        case .same: Image(systemName: "equal").foregroundStyle(.secondary).help("Same")
-        case .different: Image(systemName: "not.equal").foregroundStyle(.orange).help("Changed")
-        case .onlyLeft: Image(systemName: "arrow.left.circle").foregroundStyle(.blue).help("Only on the left")
-        case .onlyRight: Image(systemName: "arrow.right.circle").foregroundStyle(.blue).help("Only on the right")
+        case .same:
+            Label("Same", systemImage: "equal").foregroundStyle(.secondary)
+        case .different:
+            Label("Changed", systemImage: "not.equal").foregroundStyle(.orange)
+        case .onlyLeft:
+            Label("Left", systemImage: "arrow.left.circle").foregroundStyle(.blue)
+        case .onlyRight:
+            Label("Right", systemImage: "arrow.right.circle").foregroundStyle(.blue)
         }
     }
 

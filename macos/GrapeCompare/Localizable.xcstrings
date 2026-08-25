@@ -44,6 +44,46 @@
         }
       }
     },
+    "%@  %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@  %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · ↑%lld ↓%lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · ↑%lld ↓%lld"
+          }
+        }
+      }
+    },
+    "%@: %lld filesystem events refreshed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@：已刷新 %lld 个文件系统事件。"
+          }
+        }
+      }
+    },
     "%@/s" : {
       "localizations" : {
         "zh-Hans" : {
@@ -70,12 +110,32 @@
         }
       }
     },
+    "%lld added" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增 %lld 行"
+          }
+        }
+      }
+    },
     "%lld changes" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld 项更改"
+          }
+        }
+      }
+    },
+    "%lld commits" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个提交"
           }
         }
       }
@@ -120,12 +180,52 @@
         }
       }
     },
+    "%lld modified" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改 %lld 行"
+          }
+        }
+      }
+    },
+    "%lld of %lld files reviewed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已审阅 %lld / %lld 个文件"
+          }
+        }
+      }
+    },
     "%lld of %lld operations" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "已完成 %1$lld/%2$lld 项操作"
+          }
+        }
+      }
+    },
+    "%lld of %lld resolved" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已解决 %lld / %lld"
+          }
+        }
+      }
+    },
+    "%lld of %lld reviewed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已审阅 %lld / %lld"
           }
         }
       }
@@ -150,6 +250,16 @@
         }
       }
     },
+    "%lld removed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除 %lld 行"
+          }
+        }
+      }
+    },
     "%lld right only" : {
       "localizations" : {
         "zh-Hans" : {
@@ -166,6 +276,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld 个相同"
+          }
+        }
+      }
+    },
+    "%lld selected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选择 %lld 项"
           }
         }
       }
@@ -190,6 +310,16 @@
         }
       }
     },
+    "← Copy" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "← 复制"
+          }
+        }
+      }
+    },
     "↵ final newline differs" : {
       "localizations" : {
         "zh-Hans" : {
@@ -201,6 +331,7 @@
       }
     },
     "+%lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -211,6 +342,7 @@
       }
     },
     "~%lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -221,6 +353,7 @@
       }
     },
     "−%lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -260,6 +393,76 @@
         }
       }
     },
+    "Absolute" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绝对"
+          }
+        }
+      }
+    },
+    "Accept Base for Conflict" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "冲突采用基准版本"
+          }
+        }
+      }
+    },
+    "Accept Both for Conflict" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "冲突同时采用双方"
+          }
+        }
+      }
+    },
+    "Accept Ours for All Conflicts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有冲突采用我方版本"
+          }
+        }
+      }
+    },
+    "Accept Ours for Conflict" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "冲突采用我方版本"
+          }
+        }
+      }
+    },
+    "Accept Theirs for All Conflicts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有冲突采用对方版本"
+          }
+        }
+      }
+    },
+    "Accept Theirs for Conflict" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "冲突采用对方版本"
+          }
+        }
+      }
+    },
     "Action" : {
       "localizations" : {
         "zh-Hans" : {
@@ -280,12 +483,63 @@
         }
       }
     },
+    "Actions for %lld selected items" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对 %lld 个已选项目执行操作"
+          }
+        }
+      }
+    },
+    "Actual Pixels" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实际像素"
+          }
+        }
+      }
+    },
+    "Actual Size" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实际大小"
+          }
+        }
+      }
+    },
+    "Add a local note for this change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为此变更添加本地备注"
+          }
+        }
+      }
+    },
     "Added" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "已添加"
+          }
+        }
+      }
+    },
+    "Align" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对齐"
           }
         }
       }
@@ -300,12 +554,92 @@
         }
       }
     },
+    "All Stages" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有阶段"
+          }
+        }
+      }
+    },
+    "All Statuses" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有状态"
+          }
+        }
+      }
+    },
+    "Alpha" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透明度"
+          }
+        }
+      }
+    },
+    "Alpha Channel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alpha 通道"
+          }
+        }
+      }
+    },
     "Appearance" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "外观"
+          }
+        }
+      }
+    },
+    "Apple Developer Metadata" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple 开发者元数据"
+          }
+        }
+      }
+    },
+    "Application Identifier" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用标识符"
+          }
+        }
+      }
+    },
+    "Asset Groups" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资源组"
+          }
+        }
+      }
+    },
+    "Auto Align Locally" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地自动对齐"
           }
         }
       }
@@ -340,6 +674,16 @@
         }
       }
     },
+    "Binary" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "二进制"
+          }
+        }
+      }
+    },
     "Binary files differ; cannot show a text diff" : {
       "localizations" : {
         "zh-Hans" : {
@@ -350,12 +694,83 @@
         }
       }
     },
+    "Bit Depth" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位深度"
+          }
+        }
+      }
+    },
+    "Blink" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "闪烁"
+          }
+        }
+      }
+    },
+    "Blue" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "蓝色"
+          }
+        }
+      }
+    },
     "Both" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "两者"
+          }
+        }
+      }
+    },
+    "Both items must be the same kind." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "两个项目必须是同一类型。"
+          }
+        }
+      }
+    },
+    "Branches, commits, index, worktree, and history" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分支、提交、索引、工作树和历史"
+          }
+        }
+      }
+    },
+    "Build a previewable folder synchronization plan" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建可预览的文件夹同步计划"
+          }
+        }
+      }
+    },
+    "Bundle Identifier" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "套件标识符"
           }
         }
       }
@@ -410,6 +825,96 @@
         }
       }
     },
+    "Changed files tree" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "变更文件树"
+          }
+        }
+      }
+    },
+    "Changes in Last 7 Days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 7 天的变更"
+          }
+        }
+      }
+    },
+    "Changes in Last 24 Hours" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 24 小时的变更"
+          }
+        }
+      }
+    },
+    "Changes in Last 30 Days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 30 天的变更"
+          }
+        }
+      }
+    },
+    "Changeset layout" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "变更集布局"
+          }
+        }
+      }
+    },
+    "Channels" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通道"
+          }
+        }
+      }
+    },
+    "Choose" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择"
+          }
+        }
+      }
+    },
+    "Choose a focused workflow or drop two items for a quick comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一种工作流，或拖入两个项目快速比较"
+          }
+        }
+      }
+    },
+    "Choose a row to inspect its revisions." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一个变更行以查看其历史版本。"
+          }
+        }
+      }
+    },
     "Choose exactly two files to compare." : {
       "localizations" : {
         "zh-Hans" : {
@@ -430,6 +935,27 @@
         }
       }
     },
+    "Choose the image to keep" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择要保留的图像"
+          }
+        }
+      }
+    },
+    "Choose two files or folders" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择两个文件或文件夹"
+          }
+        }
+      }
+    },
     "Choose…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -446,6 +972,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "清空"
+          }
+        }
+      }
+    },
+    "Clear All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部清除"
           }
         }
       }
@@ -480,6 +1016,36 @@
         }
       }
     },
+    "Clear Recent Comparisons" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除最近比较"
+          }
+        }
+      }
+    },
+    "Clear Selection" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除选择"
+          }
+        }
+      }
+    },
+    "Clipboard text exceeds the 8 MiB safety limit." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪贴板文本超过 8 MiB 安全限制。"
+          }
+        }
+      }
+    },
     "Close" : {
       "localizations" : {
         "zh-Hans" : {
@@ -490,12 +1056,82 @@
         }
       }
     },
+    "Close %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭 %@"
+          }
+        }
+      }
+    },
+    "Close Comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭比较"
+          }
+        }
+      }
+    },
+    "Code size: %.0f pt" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码字号：%.0f 磅"
+          }
+        }
+      }
+    },
     "Collapse folder" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "折叠文件夹"
+          }
+        }
+      }
+    },
+    "Color Model" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "色彩模型"
+          }
+        }
+      }
+    },
+    "Color Profile" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "色彩配置文件"
+          }
+        }
+      }
+    },
+    "Comfortable diff row spacing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用舒适的差异行间距"
+          }
+        }
+      }
+    },
+    "Commit Graph" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提交图"
           }
         }
       }
@@ -520,6 +1156,16 @@
         }
       }
     },
+    "Compare A ↔ B" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 A ↔ B"
+          }
+        }
+      }
+    },
     "Compare again" : {
       "localizations" : {
         "zh-Hans" : {
@@ -531,6 +1177,7 @@
       }
     },
     "Compare base, ours, and theirs; resolve conflicts into editable output" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -541,6 +1188,7 @@
       }
     },
     "Compare branches, commits, index, and working tree without checkout" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -561,6 +1209,7 @@
       }
     },
     "Compare Folders" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -571,11 +1220,63 @@
       }
     },
     "Compare Git Repository" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "比较 Git 仓库"
+          }
+        }
+      }
+    },
+    "Compare HEAD ↔ INDEX" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 HEAD ↔ 暂存区"
+          }
+        }
+      }
+    },
+    "Compare HEAD ↔ WORKTREE" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 HEAD ↔ 工作区"
+          }
+        }
+      }
+    },
+    "Compare INDEX ↔ WORKTREE" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较暂存区 ↔ 工作区"
+          }
+        }
+      }
+    },
+    "Compare Metadata" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较元数据"
+          }
+        }
+      }
+    },
+    "Compare POSIX permissions, ownership, and extended attributes" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较 POSIX 权限、所有权和扩展属性"
           }
         }
       }
@@ -600,6 +1301,56 @@
         }
       }
     },
+    "Compare this revision with its previous revision" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将此版本与上一版本比较"
+          }
+        }
+      }
+    },
+    "Compare using parent commit %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用父提交 %@ 进行比较"
+          }
+        }
+      }
+    },
+    "Compare with HEAD" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与 HEAD 比较"
+          }
+        }
+      }
+    },
+    "Compare with Parent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与父提交比较"
+          }
+        }
+      }
+    },
+    "Compare with Previous" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与上一版本比较"
+          }
+        }
+      }
+    },
     "Comparing…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -610,12 +1361,52 @@
         }
       }
     },
+    "Comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较"
+          }
+        }
+      }
+    },
+    "Comparison and ignore options" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较和忽略选项"
+          }
+        }
+      }
+    },
     "Completed file operations will appear here." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "已完成的文件操作会显示在这里。"
+          }
+        }
+      }
+    },
+    "Conflict at base lines %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基准版本第 %@ 行存在冲突"
+          }
+        }
+      }
+    },
+    "Conflict markers remain in the output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输出中仍有冲突标记"
           }
         }
       }
@@ -636,6 +1427,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "失败后继续"
+          }
+        }
+      }
+    },
+    "Continue Comparing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续比较"
           }
         }
       }
@@ -680,6 +1481,46 @@
         }
       }
     },
+    "Copy →" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制 →"
+          }
+        }
+      }
+    },
+    "Copy Dry-Run Report" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制预演报告"
+          }
+        }
+      }
+    },
+    "Copy File Contents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制文件内容"
+          }
+        }
+      }
+    },
+    "Copy File Path" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制文件路径"
+          }
+        }
+      }
+    },
     "Copy or Replace" : {
       "localizations" : {
         "zh-Hans" : {
@@ -690,12 +1531,82 @@
         }
       }
     },
+    "Copy Path" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制路径"
+          }
+        }
+      }
+    },
     "Counting hidden items, bytes, links, and current destinations." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在统计隐藏项目、字节、链接和当前目标。"
+          }
+        }
+      }
+    },
+    "Current difference" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前差异"
+          }
+        }
+      }
+    },
+    "Custom Ignore Profile" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义忽略配置"
+          }
+        }
+      }
+    },
+    "Custom Plan" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义计划"
+          }
+        }
+      }
+    },
+    "Custom regular expressions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义正则表达式"
+          }
+        }
+      }
+    },
+    "Custom Regular Expressions…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义正则表达式…"
+          }
+        }
+      }
+    },
+    "Custom Text Filters" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义文本过滤器"
           }
         }
       }
@@ -740,12 +1651,53 @@
         }
       }
     },
+    "Detached HEAD" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分离的 HEAD"
+          }
+        }
+      }
+    },
+    "Developer Ignore Profile" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开发者忽略配置"
+          }
+        }
+      }
+    },
+    "Difference" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差异"
+          }
+        }
+      }
+    },
     "Difference Heatmap" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "差异热图"
+          }
+        }
+      }
+    },
+    "Difference Rendering" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差异渲染"
           }
         }
       }
@@ -756,6 +1708,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "差异"
+          }
+        }
+      }
+    },
+    "Different Pixels" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差异像素"
+          }
+        }
+      }
+    },
+    "Dimensions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尺寸"
+          }
+        }
+      }
+    },
+    "Disabled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停用"
+          }
+        }
+      }
+    },
+    "Discard and Close" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃并关闭"
           }
         }
       }
@@ -776,6 +1768,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "放弃合并输出？"
+          }
+        }
+      }
+    },
+    "Discard unsaved comparison output?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃尚未保存的比较输出？"
           }
         }
       }
@@ -806,6 +1808,67 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将文件夹拖到这里"
+          }
+        }
+      }
+    },
+    "Drop exactly two files or folders to compare immediately" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖入恰好两个文件或文件夹即可立即比较"
+          }
+        }
+      }
+    },
+    "Drop exactly two files or two folders to compare them immediately" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖入恰好两个文件或两个文件夹即可立即比较"
+          }
+        }
+      }
+    },
+    "Drop exactly two files or two folders." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请拖入恰好两个文件或两个文件夹。"
+          }
+        }
+      }
+    },
+    "Drop two items anywhere in this card" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将两个项目拖放到此卡片任意位置"
+          }
+        }
+      }
+    },
+    "Drop, merge, or inspect a repository" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖放、合并或检查仓库"
+          }
+        }
+      }
+    },
+    "Edit Custom Ignore Profile…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑自定义忽略配置…"
           }
         }
       }
@@ -850,12 +1913,72 @@
         }
       }
     },
+    "Enabled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已启用"
+          }
+        }
+      }
+    },
+    "Encoded Size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编码大小"
+          }
+        }
+      }
+    },
+    "Enter one gitignore-style pattern per line." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每行输入一个 gitignore 风格的模式。"
+          }
+        }
+      }
+    },
+    "Enter one regular expression per line. Matching text is replaced with the same comparison-only placeholder; source files are never modified." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每行输入一个正则表达式。匹配文本只会在比较键中替换为相同占位符，源文件永远不会被修改。"
+          }
+        }
+      }
+    },
+    "Entitlements" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "权限声明"
+          }
+        }
+      }
+    },
     "Exact whitespace" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "精确空白"
+          }
+        }
+      }
+    },
+    "Executable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可执行文件"
           }
         }
       }
@@ -890,6 +2013,16 @@
         }
       }
     },
+    "Export Comparison as PDF…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将比较导出为 PDF…"
+          }
+        }
+      }
+    },
     "Export Current Plan…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -906,6 +2039,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "导出失败"
+          }
+        }
+      }
+    },
+    "Export or save the edited output before closing if you want to keep it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如需保留编辑后的输出，请在关闭前导出或保存。"
           }
         }
       }
@@ -930,6 +2073,16 @@
         }
       }
     },
+    "External Editor" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外部编辑器"
+          }
+        }
+      }
+    },
     "Failed to read file: %@" : {
       "localizations" : {
         "zh-Hans" : {
@@ -940,12 +2093,52 @@
         }
       }
     },
+    "Fast" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速"
+          }
+        }
+      }
+    },
+    "Fields" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字段"
+          }
+        }
+      }
+    },
     "File" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "文件"
+          }
+        }
+      }
+    },
+    "File History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件历史"
+          }
+        }
+      }
+    },
+    "File History Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取文件历史"
           }
         }
       }
@@ -1010,6 +2203,26 @@
         }
       }
     },
+    "Fit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适合窗口"
+          }
+        }
+      }
+    },
+    "Flat" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平铺"
+          }
+        }
+      }
+    },
     "Folder comparison is incomplete" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1030,12 +2243,42 @@
         }
       }
     },
+    "Folders" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹"
+          }
+        }
+      }
+    },
     "Follow System" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "Forget %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忘记 %@"
+          }
+        }
+      }
+    },
+    "Format" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "格式"
           }
         }
       }
@@ -1060,12 +2303,72 @@
         }
       }
     },
+    "Git" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git"
+          }
+        }
+      }
+    },
+    "Git Action Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git 操作失败"
+          }
+        }
+      }
+    },
     "Git Comparison Failed" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Git 比较失败"
+          }
+        }
+      }
+    },
+    "Git LFS pointer" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git LFS 指针"
+          }
+        }
+      }
+    },
+    "Git live change notifications" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git 实时变更通知"
+          }
+        }
+      }
+    },
+    "Git Repository" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git 仓库"
+          }
+        }
+      }
+    },
+    "Git submodule" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git 子模块"
           }
         }
       }
@@ -1090,12 +2393,88 @@
         }
       }
     },
+    "GrapeCompare Git changes updated" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GrapeCompare Git 变更已更新"
+          }
+        }
+      }
+    },
+    "Green" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绿色"
+          }
+        }
+      }
+    },
+    "HEAD ↔ INDEX" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEAD ↔ 暂存区"
+          }
+        }
+      }
+    },
+    "HEAD ↔ WORKTREE" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEAD ↔ 工作区"
+          }
+        }
+      }
+    },
     "Hide output" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "隐藏输出"
+          }
+        }
+      }
+    },
+    "Home" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首页"
+          }
+        }
+      }
+    },
+    "Horizontal: %lld px" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "水平：%lld 像素"
+          }
+        }
+      }
+    },
+    "Hunk %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hunk %1$lld of %2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "差异块 %1$lld，共 %2$lld"
           }
         }
       }
@@ -1112,6 +2491,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "差异块 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "Identical Pixels" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相同像素"
           }
         }
       }
@@ -1136,6 +2525,16 @@
         }
       }
     },
+    "Ignore C-style line comments" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略 C 风格行注释"
+          }
+        }
+      }
+    },
     "Ignore case" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1156,6 +2555,16 @@
         }
       }
     },
+    "Ignore hexadecimal addresses" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略十六进制地址"
+          }
+        }
+      }
+    },
     "Ignore line-ending format" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1166,12 +2575,62 @@
         }
       }
     },
+    "Ignore shell line comments" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略 Shell 行注释"
+          }
+        }
+      }
+    },
+    "Ignore single-line HTML comments" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略单行 HTML 注释"
+          }
+        }
+      }
+    },
+    "Ignore timestamps" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略时间戳"
+          }
+        }
+      }
+    },
+    "Ignore UUIDs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略 UUID"
+          }
+        }
+      }
+    },
     "Ignore whitespace changes" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "忽略空白变化"
+          }
+        }
+      }
+    },
+    "Image Conflict Resolution" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像冲突解决"
           }
         }
       }
@@ -1192,6 +2651,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "图片显示"
+          }
+        }
+      }
+    },
+    "Image Inputs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像输入"
+          }
+        }
+      }
+    },
+    "Image Inspector" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像检查器"
+          }
+        }
+      }
+    },
+    "Image navigator and pixel inspector" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像导航器与像素检查器"
+          }
+        }
+      }
+    },
+    "Image Unavailable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像不可用"
+          }
+        }
+      }
+    },
+    "Image zoom" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像缩放"
           }
         }
       }
@@ -1227,6 +2736,7 @@
       }
     },
     "Import, export, or inspect operation history" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1246,6 +2756,16 @@
         }
       }
     },
+    "INDEX ↔ WORKTREE" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂存区 ↔ 工作区"
+          }
+        }
+      }
+    },
     "Inspect Again" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1256,12 +2776,52 @@
         }
       }
     },
+    "Inspect Apple Metadata" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查 Apple 元数据"
+          }
+        }
+      }
+    },
     "Inspecting the real filesystem…" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在检查实际文件系统…"
+          }
+        }
+      }
+    },
+    "Intensity" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "强度"
+          }
+        }
+      }
+    },
+    "Invalid regular expression: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无效的正则表达式：%@"
+          }
+        }
+      }
+    },
+    "Invalid Structured Document" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无效的结构化文档"
           }
         }
       }
@@ -1282,6 +2842,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将移入废纸篓：%lld 个"
+          }
+        }
+      }
+    },
+    "JSON View" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON 视图"
+          }
+        }
+      }
+    },
+    "Large file" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大文件"
+          }
+        }
+      }
+    },
+    "Last live refresh" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次实时刷新"
           }
         }
       }
@@ -1372,12 +2962,92 @@
         }
       }
     },
+    "Live updates are disabled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时更新已停用"
+          }
+        }
+      }
+    },
+    "Live updates are enabled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实时更新已启用"
+          }
+        }
+      }
+    },
+    "Live updates are paused to protect unsaved output." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为保护未保存的输出，实时更新已暂停。"
+          }
+        }
+      }
+    },
     "Load Demo" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "载入演示"
+          }
+        }
+      }
+    },
+    "Load More" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加载更多"
+          }
+        }
+      }
+    },
+    "Loading…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载…"
+          }
+        }
+      }
+    },
+    "Local" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地处理"
+          }
+        }
+      }
+    },
+    "Lock Pixel Sample" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锁定像素采样"
+          }
+        }
+      }
+    },
+    "Mark Reviewed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标记为已审阅"
           }
         }
       }
@@ -1402,6 +3072,16 @@
         }
       }
     },
+    "Merge Base %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并基点 %@"
+          }
+        }
+      }
+    },
     "Merge Failed" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1422,6 +3102,27 @@
         }
       }
     },
+    "Metadata" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元数据"
+          }
+        }
+      }
+    },
+    "Mirror Left → Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "镜像左侧 → 右侧"
+          }
+        }
+      }
+    },
     "Missing" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1438,6 +3139,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已修改"
+          }
+        }
+      }
+    },
+    "More" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多"
+          }
+        }
+      }
+    },
+    "More operations for the selected rows" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对已选行执行更多操作"
+          }
+        }
+      }
+    },
+    "More Workflows" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多工作流"
           }
         }
       }
@@ -1522,12 +3253,73 @@
         }
       }
     },
+    "Native comparison for files, folders, images, merges, and Git" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "面向文件、文件夹、图像、合并和 Git 的原生比较工具"
+          }
+        }
+      }
+    },
     "Native, fast, and professional file & folder comparison" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "原生、快速、专业的文件与文件夹比较工具"
+          }
+        }
+      }
+    },
+    "Nested Code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嵌套代码"
+          }
+        }
+      }
+    },
+    "New Comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建比较"
+          }
+        }
+      }
+    },
+    "New Comparison (⌘N)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建比较 (⌘N)"
+          }
+        }
+      }
+    },
+    "Next Change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一个变更"
+          }
+        }
+      }
+    },
+    "Next Conflict" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一个冲突"
           }
         }
       }
@@ -1562,12 +3354,52 @@
         }
       }
     },
+    "No" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "否"
+          }
+        }
+      }
+    },
+    "No commit exists before the selected time range." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选时间范围之前没有提交。"
+          }
+        }
+      }
+    },
+    "No Commit History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有提交历史"
+          }
+        }
+      }
+    },
     "No Conflicts" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "没有冲突"
+          }
+        }
+      }
+    },
+    "No File History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有文件历史"
           }
         }
       }
@@ -1602,12 +3434,32 @@
         }
       }
     },
+    "Not selected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选择"
+          }
+        }
+      }
+    },
     "Nothing changes until you execute this reviewed plan." : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "在执行已审阅计划前，不会更改任何内容。"
+          }
+        }
+      }
+    },
+    "Notifications are disabled in System Settings." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知已在系统设置中停用。"
           }
         }
       }
@@ -1632,7 +3484,18 @@
         }
       }
     },
+    "One-Up" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单栏"
+          }
+        }
+      }
+    },
     "Only on the left" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1643,11 +3506,22 @@
       }
     },
     "Only on the right" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "仅存在于右侧"
+          }
+        }
+      }
+    },
+    "Open Commit Changeset" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开提交变更集"
           }
         }
       }
@@ -1662,12 +3536,52 @@
         }
       }
     },
+    "Open File History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开文件历史"
+          }
+        }
+      }
+    },
+    "Open in Default Editor" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在默认编辑器中打开"
+          }
+        }
+      }
+    },
     "Open Repository" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "打开仓库"
+          }
+        }
+      }
+    },
+    "Open Repository in Terminal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在终端中打开仓库"
+          }
+        }
+      }
+    },
+    "Open Source" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开源"
           }
         }
       }
@@ -1722,6 +3636,16 @@
         }
       }
     },
+    "Options" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选项"
+          }
+        }
+      }
+    },
     "or choose below" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1732,12 +3656,32 @@
         }
       }
     },
+    "Original serialized content" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原始序列化内容"
+          }
+        }
+      }
+    },
     "Ours" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "我方"
+          }
+        }
+      }
+    },
+    "Ours: %lld px · Theirs: %lld px" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我们的版本：%lld 像素 · 他们的版本：%lld 像素"
           }
         }
       }
@@ -1753,11 +3697,72 @@
       }
     },
     "Overlay" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "叠加"
+          }
+        }
+      }
+    },
+    "Package Type" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "包类型"
+          }
+        }
+      }
+    },
+    "Parents:" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "父提交："
+          }
+        }
+      }
+    },
+    "Partially Staged" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分暂存"
+          }
+        }
+      }
+    },
+    "Paste a file or text for file comparison." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请粘贴文件或文本以进行文件比较。"
+          }
+        }
+      }
+    },
+    "Paste Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到左侧"
+          }
+        }
+      }
+    },
+    "Paste Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到右侧"
           }
         }
       }
@@ -1802,6 +3807,16 @@
         }
       }
     },
+    "Pixel difference threshold" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "像素差异阈值"
+          }
+        }
+      }
+    },
     "Plan complete" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1842,7 +3857,18 @@
         }
       }
     },
+    "Please choose a folder." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择文件夹。"
+          }
+        }
+      }
+    },
     "Please drop a file." : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1882,6 +3908,26 @@
         }
       }
     },
+    "Previous Change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一个变更"
+          }
+        }
+      }
+    },
+    "Previous Conflict" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一个冲突"
+          }
+        }
+      }
+    },
     "Previous difference" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1912,7 +3958,48 @@
         }
       }
     },
+    "Print Comparison…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打印比较…"
+          }
+        }
+      }
+    },
+    "Profile UUID" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "描述文件 UUID"
+          }
+        }
+      }
+    },
+    "Proportional" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按比例"
+          }
+        }
+      }
+    },
+    "Provisioning Profile" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "描述文件"
+          }
+        }
+      }
+    },
     "Queue an operation for the selected rows" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1942,6 +4029,16 @@
         }
       }
     },
+    "Queue operations, synchronize folders, or manage plans" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将操作加入队列、同步文件夹或管理计划"
+          }
+        }
+      }
+    },
     "Queue Right → Left" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1962,6 +4059,66 @@
         }
       }
     },
+    "Quick Compare" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速比较"
+          }
+        }
+      }
+    },
+    "Quick Compare drop zone" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速比较拖放区域"
+          }
+        }
+      }
+    },
+    "Quick Compare Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速比较失败"
+          }
+        }
+      }
+    },
+    "Quick compare, resolve a merge, or inspect a Git repository" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速比较、解决合并冲突或检查 Git 仓库"
+          }
+        }
+      }
+    },
+    "Quick Look" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速查看"
+          }
+        }
+      }
+    },
+    "Reading file history…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取文件历史…"
+          }
+        }
+      }
+    },
     "Reading Git repository…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1972,12 +4129,85 @@
         }
       }
     },
+    "Recent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近使用"
+          }
+        }
+      }
+    },
+    "Recent comparison actions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近比较操作"
+          }
+        }
+      }
+    },
+    "Recent Comparisons" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近比较"
+          }
+        }
+      }
+    },
+    "Recent Repositories" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近的仓库"
+          }
+        }
+      }
+    },
+    "Recursive comparison with safe, reviewable operations" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "递归比较并提供安全、可审查的操作"
+          }
+        }
+      }
+    },
     "Recursively compare folders to find added, missing, and modified files" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "递归比较文件夹，查找新增、缺失和修改的文件"
+          }
+        }
+      }
+    },
+    "Red" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "红色"
+          }
+        }
+      }
+    },
+    "Redo Conflict Resolution" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重做冲突解决"
           }
         }
       }
@@ -1988,6 +4218,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "引用"
+          }
+        }
+      }
+    },
+    "Refresh Git Comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新 Git 比较"
+          }
+        }
+      }
+    },
+    "Refreshing…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在刷新…"
           }
         }
       }
@@ -2022,6 +4272,26 @@
         }
       }
     },
+    "Reopen inputs and compare their current contents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新打开输入项目并比较其当前内容"
+          }
+        }
+      }
+    },
+    "Reopens the inputs and compares their current contents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新打开输入并比较其当前内容"
+          }
+        }
+      }
+    },
     "Replace with backup · Left → Right" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2042,12 +4312,52 @@
         }
       }
     },
+    "Report Failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告操作失败"
+          }
+        }
+      }
+    },
     "Repository" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "仓库"
+          }
+        }
+      }
+    },
+    "Repository Actions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仓库操作"
+          }
+        }
+      }
+    },
+    "Repository commit history" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仓库提交历史"
+          }
+        }
+      }
+    },
+    "Repository History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仓库历史"
           }
         }
       }
@@ -2062,12 +4372,83 @@
         }
       }
     },
+    "Reset Alignment" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置对齐"
+          }
+        }
+      }
+    },
+    "Resolution" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分辨率"
+          }
+        }
+      }
+    },
     "Resolve every conflict before export" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "导出前请解决所有冲突"
+          }
+        }
+      }
+    },
+    "Resolve text and image conflicts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解决文本和图像冲突"
+          }
+        }
+      }
+    },
+    "Resume Last" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复上次比较"
+          }
+        }
+      }
+    },
+    "Resume Last Session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复上次会话"
+          }
+        }
+      }
+    },
+    "Reveal in Finder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中显示"
+          }
+        }
+      }
+    },
+    "Reveal Repository in Finder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中显示仓库"
           }
         }
       }
@@ -2092,12 +4473,42 @@
         }
       }
     },
+    "Review Note" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅备注"
+          }
+        }
+      }
+    },
     "Review Plan" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "审阅计划"
+          }
+        }
+      }
+    },
+    "Review progress" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅进度"
+          }
+        }
+      }
+    },
+    "Reviewed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已审阅"
           }
         }
       }
@@ -2133,6 +4544,7 @@
       }
     },
     "Right image opacity" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2188,6 +4600,26 @@
         }
       }
     },
+    "Save" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "Save a Copy…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另存副本…"
+          }
+        }
+      }
+    },
     "Save and Continue" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2208,22 +4640,32 @@
         }
       }
     },
-    "Save Merge and Close" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保存合并并关闭"
-          }
-        }
-      }
-    },
     "Save Failed" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存失败"
+          }
+        }
+      }
+    },
+    "Save Filters" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存过滤器"
+          }
+        }
+      }
+    },
+    "Save Merge and Close" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存合并并关闭"
           }
         }
       }
@@ -2278,7 +4720,88 @@
         }
       }
     },
+    "Select a changed file" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一个已变更文件"
+          }
+        }
+      }
+    },
+    "Select a Changed File" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一个已变更文件"
+          }
+        }
+      }
+    },
+    "Selected" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选择"
+          }
+        }
+      }
+    },
+    "Selected Items" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选项目"
+          }
+        }
+      }
+    },
+    "Selected: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选择：%@"
+          }
+        }
+      }
+    },
+    "Share Comparison…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享比较…"
+          }
+        }
+      }
+    },
+    "Shortcuts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷比较"
+          }
+        }
+      }
+    },
+    "Show Load Demo button" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示“载入演示”按钮"
+          }
+        }
+      }
+    },
     "Show Load Demo button on the home screen" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2289,6 +4812,7 @@
       }
     },
     "Side by Side" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2299,11 +4823,32 @@
       }
     },
     "Side-by-side diff with line and in-line highlighting" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "并排显示差异，并提供行级与行内高亮"
+          }
+        }
+      }
+    },
+    "Signed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已签名"
+          }
+        }
+      }
+    },
+    "Signing Identifier" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "签名标识符"
           }
         }
       }
@@ -2318,12 +4863,72 @@
         }
       }
     },
+    "Source" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "源文件"
+          }
+        }
+      }
+    },
     "Sources to move: %lld" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "将移动的源项目：%lld 个"
+          }
+        }
+      }
+    },
+    "Split" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分割"
+          }
+        }
+      }
+    },
+    "Stage" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阶段"
+          }
+        }
+      }
+    },
+    "Staged" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暂存"
+          }
+        }
+      }
+    },
+    "Staging index" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂存区"
+          }
+        }
+      }
+    },
+    "Start a Comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始比较"
           }
         }
       }
@@ -2344,6 +4949,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "首次失败即停止"
+          }
+        }
+      }
+    },
+    "Stored locally for this repository and comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅为此仓库和比较保存在本地"
           }
         }
       }
@@ -2378,12 +4993,73 @@
         }
       }
     },
+    "Sync" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步"
+          }
+        }
+      }
+    },
+    "Synchronization" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步"
+          }
+        }
+      }
+    },
+    "Team Identifier" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "团队标识符"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本"
+          }
+        }
+      }
+    },
     "Text diff is not rendered because a file exceeds 256 MB" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "文件超过 256 MB，未渲染文本差异"
+          }
+        }
+      }
+    },
+    "Text, structured data, images, and developer formats" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本、结构化数据、图像和开发者格式"
+          }
+        }
+      }
+    },
+    "The clipboard does not contain a file or text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪贴板中没有文件或文本。"
           }
         }
       }
@@ -2458,6 +5134,16 @@
         }
       }
     },
+    "The merge output still contains conflict markers." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并输出中仍包含冲突标记。"
+          }
+        }
+      }
+    },
     "The operation plan contains an unsafe relative path: %@" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2488,6 +5174,16 @@
         }
       }
     },
+    "The PDF report could not be created." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法创建 PDF 报告。"
+          }
+        }
+      }
+    },
     "The right file is missing; the left file is empty" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2504,6 +5200,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "磁盘上的右侧文件已更改，请重新比较后再保存。"
+          }
+        }
+      }
+    },
+    "The selected file is not UTF-8 text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选文件不是 UTF-8 文本。"
           }
         }
       }
@@ -2544,6 +5250,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "对方"
+          }
+        }
+      }
+    },
+    "This comparison side is not a working-tree file." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此比较侧不是工作树文件。"
           }
         }
       }
@@ -2598,12 +5314,32 @@
         }
       }
     },
+    "This saved comparison can no longer be opened: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法再打开此已保存的比较：%@"
+          }
+        }
+      }
+    },
     "Three-Way Merge" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "三方合并"
+          }
+        }
+      }
+    },
+    "Threshold" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阈值"
           }
         }
       }
@@ -2658,6 +5394,26 @@
         }
       }
     },
+    "Tree" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "树形"
+          }
+        }
+      }
+    },
+    "Two-Up" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双栏"
+          }
+        }
+      }
+    },
     "Type Changed" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2688,6 +5444,16 @@
         }
       }
     },
+    "Unable to Open Saved Comparison" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法打开已保存的比较"
+          }
+        }
+      }
+    },
     "Undo complete" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2704,6 +5470,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "撤销已完成，但无法更新已保存的历史：%@"
+          }
+        }
+      }
+    },
+    "Undo Conflict Resolution" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销冲突解决"
           }
         }
       }
@@ -2798,12 +5574,32 @@
         }
       }
     },
+    "Unlock Pixel Sample" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解锁像素采样"
+          }
+        }
+      }
+    },
     "Unmerged" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "未合并"
+          }
+        }
+      }
+    },
+    "Unstaged" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未暂存"
           }
         }
       }
@@ -2818,12 +5614,62 @@
         }
       }
     },
+    "Untitled commit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无标题提交"
+          }
+        }
+      }
+    },
     "Untracked" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "未跟踪"
+          }
+        }
+      }
+    },
+    "Update Left → Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新左侧 → 右侧"
+          }
+        }
+      }
+    },
+    "Updating image difference" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在更新图像差异"
+          }
+        }
+      }
+    },
+    "Use as A" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为 A"
+          }
+        }
+      }
+    },
+    "Use as B" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为 B"
           }
         }
       }
@@ -2838,12 +5684,62 @@
         }
       }
     },
+    "Use revision as %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将版本用作 %@"
+          }
+        }
+      }
+    },
     "Use Right" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用右侧"
+          }
+        }
+      }
+    },
+    "Valid" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有效"
+          }
+        }
+      }
+    },
+    "Version" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
+          }
+        }
+      }
+    },
+    "Vertical: %lld px" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "垂直：%lld 像素"
+          }
+        }
+      }
+    },
+    "Visible image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示的图像"
           }
         }
       }
@@ -2858,272 +5754,94 @@
         }
       }
     },
-    "Accept Base for Conflict" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "冲突采用基准版本" } } } },
-    "Accept Both for Conflict" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "冲突同时采用双方" } } } },
-    "Accept Ours for All Conflicts" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有冲突采用我方版本" } } } },
-    "Accept Ours for Conflict" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "冲突采用我方版本" } } } },
-    "Accept Theirs for All Conflicts" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有冲突采用对方版本" } } } },
-    "Accept Theirs for Conflict" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "冲突采用对方版本" } } } },
-    "Close %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭 %@" } } } },
-    "Close Comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭比较" } } } },
-    "Conflict at base lines %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "基准版本第 %@ 行存在冲突" } } } },
-    "Disabled" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已停用" } } } },
-    "Discard and Close" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "放弃并关闭" } } } },
-    "Discard unsaved comparison output?" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "放弃尚未保存的比较输出？" } } } },
-    "Enabled" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已启用" } } } },
-    "Export or save the edited output before closing if you want to keep it." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "如需保留编辑后的输出，请在关闭前导出或保存。" } } } },
-    "Git" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Git" } } } },
-    "Live updates are paused to protect unsaved output." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为保护未保存的输出，实时更新已暂停。" } } } },
-    "Live updates are disabled" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实时更新已停用" } } } },
-    "Live updates are enabled" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实时更新已启用" } } } },
-    "New Comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "新建比较" } } } },
-    "Next Conflict" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下一个冲突" } } } },
-    "Not selected" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未选择" } } } },
-    "Previous Conflict" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上一个冲突" } } } },
-    "Recent Comparisons" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近比较" } } } },
-    "Redo Conflict Resolution" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重做冲突解决" } } } },
-    "Reopens the inputs and compares their current contents" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重新打开输入并比较其当前内容" } } } },
-    "Resume Last Session" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "恢复上次会话" } } } },
-    "Selected" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已选择" } } } },
-    "This saved comparison can no longer be opened: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法再打开此已保存的比较：%@" } } } },
-    "Unable to Open Saved Comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法打开已保存的比较" } } } },
-    "Undo Conflict Resolution" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "撤销冲突解决" } } } },
-    "%@  %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@  %2$@" } } } },
-    "%@ · %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ · %2$@" } } } },
-    "All Statuses" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有状态" } } } },
-    "Choose a row to inspect its revisions." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一个变更行以查看其历史版本。" } } } },
-    "Compare A ↔ B" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较 A ↔ B" } } } },
-    "File History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件历史" } } } },
-    "File History Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法读取文件历史" } } } },
-    "Last live refresh" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上次实时刷新" } } } },
-    "No File History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有文件历史" } } } },
-    "Reading file history…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在读取文件历史…" } } } },
-    "Select a Changed File" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一个已变更文件" } } } },
-    "Select a changed file" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择一个已变更文件" } } } },
-    "Staging index" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂存区" } } } },
-    "Untitled commit" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无标题提交" } } } },
-    "Use revision as %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将版本用作 %@" } } } },
-    "Working tree" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作区" } } } },
-    "All Stages" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所有阶段" } } } },
-    "Binary" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "二进制" } } } },
-    "Compare HEAD ↔ INDEX" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较 HEAD ↔ 暂存区" } } } },
-    "Compare HEAD ↔ WORKTREE" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较 HEAD ↔ 工作区" } } } },
-    "Compare INDEX ↔ WORKTREE" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较暂存区 ↔ 工作区" } } } },
-    "Compare using parent commit %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "使用父提交 %@ 进行比较" } } } },
-    "Comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较" } } } },
-    "Git LFS pointer" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Git LFS 指针" } } } },
-    "Git submodule" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Git 子模块" } } } },
-    "HEAD ↔ INDEX" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "HEAD ↔ 暂存区" } } } },
-    "HEAD ↔ WORKTREE" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "HEAD ↔ 工作区" } } } },
-    "INDEX ↔ WORKTREE" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂存区 ↔ 工作区" } } } },
-    "Large file" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "大文件" } } } },
-    "Load More" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "加载更多" } } } },
-    "Loading…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在加载…" } } } },
-    "Parents:" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "父提交：" } } } },
-    "Refresh Git Comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "刷新 Git 比较" } } } },
-    "Shortcuts" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快捷比较" } } } },
-    "Stage" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "阶段" } } } },
-    "Staged" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已暂存" } } } },
-    "Text" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文本" } } } },
-    "Unstaged" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "未暂存" } } } },
-    "Recent Repositories" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近的仓库" } } } },
-    "Forget %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忘记 %@" } } } },
-    "Flat" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "平铺" } } } },
-    "Tree" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "树形" } } } },
-    "Changed files tree" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "变更文件树" } } } },
-    "Worktrees" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作树" } } } },
-    "Changeset layout" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "变更集布局" } } } },
-    "Detached HEAD" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分离的 HEAD" } } } },
-    "%@ · ↑%lld ↓%lld" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@ · ↑%lld ↓%lld" } } } },
-    "Previous Change" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "上一个变更" } } } },
-    "Next Change" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "下一个变更" } } } },
-    "Reviewed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已审阅" } } } },
-    "Mark Reviewed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "标记为已审阅" } } } },
-    "Merge Base %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "合并基点 %@" } } } },
-    "Metadata" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "元数据" } } } },
-    "Compare POSIX permissions, ownership, and extended attributes" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "比较 POSIX 权限、所有权和扩展属性" } } } },
-    "Repository commit history" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仓库提交历史" } } } },
-    "Commit Graph" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "提交图" } } } },
-    "No Commit History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "没有提交历史" } } } },
-    "Repository History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仓库历史" } } } },
-    "%lld commits" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%lld 个提交" } } } },
-    "Compare with HEAD" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "与 HEAD 比较" } } } },
-    "Compare with Parent" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "与父提交比较" } } } },
-    "Inspect Apple Metadata" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "检查 Apple 元数据" } } } },
-    "Build a previewable folder synchronization plan" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "创建可预览的文件夹同步计划" } } } },
-    "Developer Ignore Profile" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开发者忽略配置" } } } },
-    "Mirror Left → Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "镜像左侧 → 右侧" } } } },
-    "Update Left → Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新左侧 → 右侧" } } } },
-    "Custom Plan" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自定义计划" } } } },
-    "Copy Dry-Run Report" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制预演报告" } } } },
-    "Sync" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "同步" } } } },
-    "Apple Developer Metadata" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Apple 开发者元数据" } } } },
-    "Bundle Identifier" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "套件标识符" } } } },
-    "Version" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "版本" } } } },
-    "Executable" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "可执行文件" } } } },
-    "Package Type" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "包类型" } } } },
-    "Provisioning Profile" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "描述文件" } } } },
-    "Profile UUID" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "描述文件 UUID" } } } },
-    "Application Identifier" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "应用标识符" } } } },
-    "Nested Code" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "嵌套代码" } } } },
-    "Signed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已签名" } } } },
-    "Valid" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "有效" } } } },
-    "Signing Identifier" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "签名标识符" } } } },
-    "Team Identifier" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "团队标识符" } } } },
-    "Entitlements" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "权限声明" } } } },
-    "Asset Groups" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "资源组" } } } },
-    "Image Inputs" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像输入" } } } },
-    "Two-Up" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "双栏" } } } },
-    "One-Up" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "单栏" } } } },
-    "Split" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分割" } } } },
-    "Blink" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "闪烁" } } } },
-    "Difference" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "差异" } } } },
-    "Image navigator and pixel inspector" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像导航器与像素检查器" } } } },
-    "Threshold" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "阈值" } } } },
-    "Actual Size" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实际大小" } } } },
-    "Channels" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通道" } } } },
-    "Align" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "对齐" } } } },
-    "Zoom Out" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缩小" } } } },
-    "Zoom In" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "放大" } } } },
-    "Red" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "红色" } } } },
-    "Green" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "绿色" } } } },
-    "Blue" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "蓝色" } } } },
-    "Alpha" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "透明度" } } } },
-    "Horizontal: %lld px" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "水平：%lld 像素" } } } },
-    "Vertical: %lld px" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "垂直：%lld 像素" } } } },
-    "Auto Align Locally" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本地自动对齐" } } } },
-    "Reset Alignment" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "重置对齐" } } } },
-    "Visible image" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "显示的图像" } } } },
-    "x:%lld y:%lld  RGBA %u,%u,%u,%u" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "x:%lld y:%lld  RGBA %u,%u,%u,%u" } } } },
-    "%lld of %lld reviewed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已审阅 %lld / %lld" } } } },
-    "Review progress" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅进度" } } } },
-    "%lld of %lld files reviewed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已审阅 %lld / %lld 个文件" } } } },
-    "Review Note" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "审阅备注" } } } },
-    "Add a local note for this change" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "为此变更添加本地备注" } } } },
-    "Stored locally for this repository and comparison" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仅为此仓库和比较保存在本地" } } } },
-    "Compare this revision with its previous revision" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将此版本与上一版本比较" } } } },
-    "Compare with Previous" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "与上一版本比较" } } } },
-    "Use as A" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设为 A" } } } },
-    "Use as B" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "设为 B" } } } },
-    "Invalid Structured Document" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无效的结构化文档" } } } },
-    "The merge output still contains conflict markers." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "合并输出中仍包含冲突标记。" } } } },
-    "%lld of %lld resolved" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已解决 %lld / %lld" } } } },
-    "Conflict markers remain in the output" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "输出中仍有冲突标记" } } } },
-    "Changes in Last 24 Hours" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 24 小时的变更" } } } },
-    "Changes in Last 7 Days" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 7 天的变更" } } } },
-    "Changes in Last 30 Days" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近 30 天的变更" } } } },
-    "No commit exists before the selected time range." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所选时间范围之前没有提交。" } } } },
-    "Open Commit Changeset" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开提交变更集" } } } },
-    "Open Repository in Terminal" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在终端中打开仓库" } } } },
-    "Partially Staged" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "部分暂存" } } } },
-    "Repository Actions" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "仓库操作" } } } },
-    "Reveal Repository in Finder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在访达中显示仓库" } } } },
-    "Alpha Channel" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Alpha 通道" } } } },
-    "Absolute" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "绝对" } } } },
-    "Bit Depth" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "位深度" } } } },
-    "Color Model" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "色彩模型" } } } },
-    "Color Profile" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "色彩配置文件" } } } },
-    "Clear All" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "全部清除" } } } },
-    "Custom Regular Expressions…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自定义正则表达式…" } } } },
-    "Custom Text Filters" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自定义文本过滤器" } } } },
-    "Custom regular expressions" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自定义正则表达式" } } } },
-    "Dimensions" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "尺寸" } } } },
-    "Difference Rendering" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "差异渲染" } } } },
-    "Different Pixels" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "差异像素" } } } },
-    "Encoded Size" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编码大小" } } } },
-    "External Editor" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "外部编辑器" } } } },
-    "Format" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "格式" } } } },
-    "Ignore C-style line comments" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忽略 C 风格行注释" } } } },
-    "Ignore shell line comments" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忽略 Shell 行注释" } } } },
-    "Ignore single-line HTML comments" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忽略单行 HTML 注释" } } } },
-    "Ignore hexadecimal addresses" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忽略十六进制地址" } } } },
-    "Ignore timestamps" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忽略时间戳" } } } },
-    "Ignore UUIDs" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "忽略 UUID" } } } },
-    "Image Inspector" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像检查器" } } } },
-    "Identical Pixels" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "相同像素" } } } },
-    "Intensity" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "强度" } } } },
-    "Invalid regular expression: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无效的正则表达式：%@" } } } },
-    "Lock Pixel Sample" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "锁定像素采样" } } } },
-    "Open in Default Editor" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在默认编辑器中打开" } } } },
-    "Quick Look" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速查看" } } } },
-    "Proportional" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "按比例" } } } },
-    "Resolution" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分辨率" } } } },
-    "Save Filters" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存过滤器" } } } },
-    "Enter one regular expression per line. Matching text is replaced with the same comparison-only placeholder; source files are never modified." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每行输入一个正则表达式。匹配文本只会在比较键中替换为相同占位符，源文件永远不会被修改。" } } } },
-    "Reveal in Finder" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在访达中显示" } } } },
-    "Unlock Pixel Sample" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "解锁像素采样" } } } },
-    "%@: %lld filesystem events refreshed." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "%@：已刷新 %lld 个文件系统事件。" } } } },
-    "Copy File Contents" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制文件内容" } } } },
-    "Copy File Path" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "复制文件路径" } } } },
-    "Git Action Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Git 操作失败" } } } },
-    "Git live change notifications" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Git 实时变更通知" } } } },
-    "GrapeCompare Git changes updated" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "GrapeCompare Git 变更已更新" } } } },
-    "Notifications are disabled in System Settings." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通知已在系统设置中停用。" } } } },
-    "Open File History" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打开文件历史" } } } },
-    "Save a Copy…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "另存副本…" } } } },
-    "The selected file is not UTF-8 text." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "所选文件不是 UTF-8 文本。" } } } },
-    "This comparison side is not a working-tree file." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "此比较侧不是工作树文件。" } } } },
-    "Actual Pixels" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "实际像素" } } } },
-    "Custom Ignore Profile" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "自定义忽略配置" } } } },
-    "Edit Custom Ignore Profile…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑自定义忽略配置…" } } } },
-    "Enter one gitignore-style pattern per line." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每行输入一个 gitignore 风格的模式。" } } } },
-    "Fit" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "适合窗口" } } } },
-    "Image zoom" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像缩放" } } } },
-    "No" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "否" } } } },
-    "Pixel difference threshold" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "像素差异阈值" } } } },
-    "Save" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存" } } } },
-    "Updating image difference" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在更新图像差异" } } } },
-    "Yes" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "是" } } } },
-    "Zoom: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缩放：%@" } } } },
-    "Export Comparison as PDF…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将比较导出为 PDF…" } } } },
-    "Print Comparison…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "打印比较…" } } } },
-    "Report Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "报告操作失败" } } } },
-    "Share Comparison…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分享比较…" } } } },
-    "The PDF report could not be created." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法创建 PDF 报告。" } } } },
-    "Both items must be the same kind." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "两个项目必须是同一类型。" } } } },
-    "Clipboard text exceeds the 8 MiB safety limit." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板文本超过 8 MiB 安全限制。" } } } },
-    "Drop exactly two files or folders to compare immediately" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拖入恰好两个文件或文件夹即可立即比较" } } } },
-    "Drop exactly two files or two folders." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请拖入恰好两个文件或两个文件夹。" } } } },
-    "Drop exactly two files or two folders to compare them immediately" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拖入恰好两个文件或两个文件夹即可立即比较" } } } },
-    "Paste Left" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "粘贴到左侧" } } } },
-    "Paste Right" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "粘贴到右侧" } } } },
-    "Paste a file or text for file comparison." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "请粘贴文件或文本以进行文件比较。" } } } },
-    "Quick Compare" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较" } } } },
-    "Quick Compare drop zone" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较拖放区域" } } } },
-    "Quick Compare Failed" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速比较失败" } } } },
-    "The clipboard does not contain a file or text." : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剪贴板中没有文件或文本。" } } } },
-    "Choose" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择" } } } },
-    "Choose the image to keep" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择要保留的图像" } } } },
-    "Image Conflict Resolution" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像冲突解决" } } } },
-    "Image Unavailable" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "图像不可用" } } } },
-    "Ours: %lld px · Theirs: %lld px" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "我们的版本：%lld 像素 · 他们的版本：%lld 像素" } } } },
-    "Selected: %@" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已选择：%@" } } } },
-    "Branches, commits, index, worktree, and history" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分支、提交、索引、工作树和历史" } } } },
-    "Choose two files or folders" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "选择两个文件或文件夹" } } } },
-    "Drop, merge, or inspect a repository" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "拖放、合并或检查仓库" } } } },
-    "Drop two items anywhere in this card" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "将两个项目拖放到此卡片任意位置" } } } },
-    "Fast" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "快速" } } } },
-    "Folders" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文件夹" } } } },
-    "Git Repository" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Git 仓库" } } } },
-    "Local" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "本地处理" } } } },
-    "Native comparison for files, folders, images, merges, and Git" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "面向文件、文件夹、图像、合并和 Git 的原生比较工具" } } } },
-    "Open Source" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开源" } } } },
-    "Recent" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "最近使用" } } } },
-    "Recursive comparison with safe, reviewable operations" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "递归比较并提供安全、可审查的操作" } } } },
-    "Resolve text and image conflicts" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "解决文本和图像冲突" } } } },
-    "Text, structured data, images, and developer formats" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "文本、结构化数据、图像和开发者格式" } } } },
-    "Workflows" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "工作流" } } } },
-    "Fields" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "字段" } } } },
-    "JSON View" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "JSON 视图" } } } },
-    "Original serialized content" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "原始序列化内容" } } } },
-    "Refreshing…" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在刷新…" } } } },
-    "Source" : { "localizations" : { "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "源文件" } } } },
+    "Workflows" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作流"
+          }
+        }
+      }
+    },
+    "Working tree" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作区"
+          }
+        }
+      }
+    },
+    "Worktrees" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作树"
+          }
+        }
+      }
+    },
     "Wrap" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "自动换行"
+          }
+        }
+      }
+    },
+    "x:%lld y:%lld  RGBA %u,%u,%u,%u" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "x:%lld y:%lld  RGBA %u,%u,%u,%u"
+          }
+        }
+      }
+    },
+    "Yes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是"
+          }
+        }
+      }
+    },
+    "Zoom In" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放大"
+          }
+        }
+      }
+    },
+    "Zoom Out" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩小"
+          }
+        }
+      }
+    },
+    "Zoom: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩放：%@"
           }
         }
       }
