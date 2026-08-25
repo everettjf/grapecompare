@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.21 — 2026-08-24
+
+### Single-tab New Comparison access
+
+- Keep the single-tab workspace chrome compact while exposing New Comparison in the native title-bar toolbar.
+- Make Command-N create a comparison tab instead of opening a separate macOS window.
+- Avoid duplicate add buttons after the multi-tab bar becomes visible.
+
 ## 1.0.20 — 2026-08-24
 
 ### Cleaner window chrome and rounded icon

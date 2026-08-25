@@ -4,6 +4,10 @@ nonisolated enum WorkspaceTabBarPolicy {
     static func isVisible(itemCount: Int) -> Bool {
         itemCount > 1
     }
+
+    static func usesCompactNewComparisonButton(itemCount: Int) -> Bool {
+        !isVisible(itemCount: itemCount)
+    }
 }
 
 nonisolated enum ComparisonSessionKind: String, Codable, Sendable {
