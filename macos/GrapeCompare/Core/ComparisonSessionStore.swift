@@ -1,5 +1,9 @@
 import Foundation
 
+nonisolated enum AppLayoutPolicy {
+    static let minimumContentWidth: CGFloat = 720
+}
+
 nonisolated enum WorkspaceTabBarPolicy {
     static func isVisible(itemCount: Int) -> Bool {
         itemCount > 1

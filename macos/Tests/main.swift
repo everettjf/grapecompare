@@ -16,6 +16,8 @@ check(WorkspaceTabBarPolicy.usesCompactNewComparisonButton(itemCount: 1),
       "single comparison keeps a compact New Comparison toolbar button")
 check(!WorkspaceTabBarPolicy.usesCompactNewComparisonButton(itemCount: 2),
       "multi-tab workspace avoids a duplicate toolbar add button")
+check(AppLayoutPolicy.minimumContentWidth == 720,
+      "app content supports the compact 720-point window width")
 
 // MARK: - DiffEngine 行级 diff
 
