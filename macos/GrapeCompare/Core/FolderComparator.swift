@@ -2,6 +2,30 @@ import Foundation
 import Darwin
 import Dispatch
 
+nonisolated enum ComparisonInputKind: Sendable, Equatable {
+    case file
+    case folder
+}
+
+/// Resolves a dropped or selected filesystem URL without following symbolic links.
+/// Keeping this check in the core makes drag/drop and picker validation consistent.
+nonisolated enum ComparisonInputInspector {
+    static func kind(of url: URL) -> ComparisonInputKind? {
+        guard url.isFileURL,
+              let values = try? url.resourceValues(forKeys: [
+                .isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey
+              ]),
+              values.isSymbolicLink != true else { return nil }
+        if values.isDirectory == true { return .folder }
+        if values.isRegularFile == true { return .file }
+        return nil
+    }
+
+    static func accepts(_ url: URL, folders: Bool) -> Bool {
+        kind(of: url) == (folders ? .folder : .file)
+    }
+}
+
 nonisolated enum CompareStatus: String, Sendable {
     case same, different, onlyLeft, onlyRight
 
