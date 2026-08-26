@@ -17,6 +17,16 @@ nonisolated enum UIQualityPolicy {
     static let statusAccentWidth: CGFloat = 3
 }
 
+nonisolated enum HomePresentationPolicy {
+    static let primaryWorkflowCount = 2
+    static let secondaryWorkflowCount = 2
+    static let quickCompareItemCount = 2
+
+    static func acceptsQuickCompareDrop(itemCount: Int) -> Bool {
+        itemCount == quickCompareItemCount
+    }
+}
+
 nonisolated enum ComparisonPresentationPolicy {
     static let minimumCodeFontSize = 10.0
     static let maximumCodeFontSize = 18.0

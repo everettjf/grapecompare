@@ -32,17 +32,17 @@ struct HomeView: View {
                         }
                     }
 
+                    QuickCompareBar()
+
                     DashboardSectionTitle(
                         title: "More Workflows",
-                        subtitle: "Quick compare, resolve a merge, or inspect a Git repository")
+                        subtitle: "Resolve a merge or inspect a Git repository")
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .top, spacing: 16) {
-                            QuickCompareDropZone().frame(maxWidth: .infinity)
                             MergeCard().frame(maxWidth: .infinity)
                             GitCard().frame(maxWidth: .infinity)
                         }
                         VStack(spacing: 16) {
-                            QuickCompareDropZone()
                             MergeCard()
                             GitCard()
                         }
@@ -126,8 +126,8 @@ private struct HomeHero: View {
             Image("GrapeIcon")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 68, height: 68)
-                .shadow(color: .green.opacity(0.28), radius: 10, y: 5)
+                .frame(width: 56, height: 56)
+                .shadow(color: .green.opacity(0.2), radius: 7, y: 3)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 5) {
@@ -136,11 +136,6 @@ private struct HomeHero: View {
                 Text("Native comparison for files, folders, images, merges, and Git")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                HStack(spacing: 7) {
-                    HeroBadge(title: "Local", icon: "lock.shield")
-                    HeroBadge(title: "Fast", icon: "bolt")
-                    HeroBadge(title: "Open Source", icon: "chevron.left.forwardslash.chevron.right")
-                }
             }
 
             Spacer(minLength: 18)
@@ -161,27 +156,13 @@ private struct HomeHero: View {
             }
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        .background(.regularMaterial, in: .rect(cornerRadius: 18))
+        .padding(.vertical, 14)
+        .background(.regularMaterial, in: .rect(cornerRadius: Theme.Radius.hero))
         .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(Color.primary.opacity(0.07))
+            RoundedRectangle(cornerRadius: Theme.Radius.hero)
+                .strokeBorder(Theme.panelBorder)
         }
         .accessibilityElement(children: .contain)
-    }
-}
-
-private struct HeroBadge: View {
-    let title: LocalizedStringResource
-    let icon: String
-
-    var body: some View {
-        Label(title, systemImage: icon)
-            .font(.caption.weight(.medium))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.primary.opacity(0.055), in: .capsule)
     }
 }
 
@@ -201,41 +182,47 @@ private struct DashboardSectionTitle: View {
     }
 }
 
-private struct QuickCompareDropZone: View {
+private struct QuickCompareBar: View {
     @Environment(AppState.self) private var state
     @State private var isTargeted = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            CompactCardHeader(
-                title: "Quick Compare",
-                subtitle: "Drop exactly two files or folders to compare immediately",
-                icon: "arrow.down.doc.fill")
-            HStack {
-                Label("Drop two items anywhere in this card", systemImage: "plus.square.on.square")
+        HStack(spacing: Theme.Spacing.large) {
+            Image(systemName: "plus.square.on.square")
+                .font(.title3)
+                .foregroundStyle(
+                    isTargeted ? Color.accentColor : Color(nsColor: .secondaryLabelColor))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Quick Compare")
+                    .font(.callout.weight(.semibold))
+                Text("Drop exactly two files or two folders here to compare immediately")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Spacer()
-                Button("Paste Left") { state.pasteQuickComparisonSide(left: true) }
-                Button("Paste Right") { state.pasteQuickComparisonSide(left: false) }
             }
+            Spacer()
+            Button("Paste Left") { state.pasteQuickComparisonSide(left: true) }
+            Button("Paste Right") { state.pasteQuickComparisonSide(left: false) }
         }
-        .padding(14)
+        .controlSize(.small)
+        .padding(.horizontal, Theme.Spacing.xLarge)
+        .padding(.vertical, Theme.Spacing.large)
         .background(
-            isTargeted ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor),
-            in: .rect(cornerRadius: 16))
+            isTargeted ? Theme.selectedBackground : Theme.subtleBackground,
+            in: .rect(cornerRadius: Theme.Radius.compact))
         .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.25),
-                              style: StrokeStyle(lineWidth: 1.5, dash: [7]))
+            RoundedRectangle(cornerRadius: Theme.Radius.compact)
+                .strokeBorder(isTargeted ? Color.accentColor : Theme.panelBorder)
         }
-        .shadow(color: .black.opacity(0.055), radius: 9, y: 3)
         .dropDestination(for: URL.self) { items, _ in
+            guard HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: items.count) else {
+                return false
+            }
             state.compareQuickItems(items)
-            return items.count == 2
+            return true
         } isTargeted: { isTargeted = $0 }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Quick Compare drop zone")
+        .accessibilityLabel("Quick Compare")
         .accessibilityHint("Drop exactly two files or two folders to compare them immediately")
     }
 }

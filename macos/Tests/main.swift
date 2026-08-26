@@ -32,6 +32,14 @@ check(UIQualityPolicy.compactControlHeight < UIQualityPolicy.regularControlHeigh
       "compact controls remain shorter than regular controls")
 check(UIQualityPolicy.statusAccentWidth == 3,
       "semantic row accents use the reviewed subtle width")
+check(HomePresentationPolicy.primaryWorkflowCount == 2 &&
+      HomePresentationPolicy.secondaryWorkflowCount == 2,
+      "home hierarchy keeps two primary and two secondary workflows")
+check(HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 2),
+      "quick compare accepts exactly two items")
+check(!HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 1) &&
+      !HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 3),
+      "quick compare rejects ambiguous item counts")
 check(ComparisonPresentationPolicy.codeFontSize(8) == 10,
       "comparison code font size has a readable lower bound")
 check(ComparisonPresentationPolicy.codeFontSize(24) == 18,
