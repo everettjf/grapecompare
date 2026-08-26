@@ -39,6 +39,21 @@ nonisolated enum CompareStatus: String, Sendable {
     }
 }
 
+nonisolated enum FolderStatusRole: String, Sendable {
+    case neutral, changed, leftOnly, rightOnly
+}
+
+nonisolated enum FolderStatusPresentationPolicy {
+    static func role(for status: CompareStatus) -> FolderStatusRole {
+        switch status {
+        case .same: .neutral
+        case .different: .changed
+        case .onlyLeft: .leftOnly
+        case .onlyRight: .rightOnly
+        }
+    }
+}
+
 nonisolated struct FileMeta: Sendable, Equatable {
     var size: Int64
     var modified: Date?

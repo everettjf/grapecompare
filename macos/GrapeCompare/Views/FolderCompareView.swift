@@ -857,7 +857,7 @@ private struct FolderRow: View {
 
             actionIndicator
                 .frame(width: 118)
-                .background(Color.primary.opacity(0.025))
+                .background(Theme.subtleBackground)
 
             side(node.right, isLeft: false)
         }
@@ -866,7 +866,15 @@ private struct FolderRow: View {
         .padding(.vertical, 4)
         .padding(.horizontal, 10)
         .fixedSize(horizontal: false, vertical: true)
-        .background(rowTint)
+        .background(isHovering ? Theme.hoverBackground : .clear)
+        .overlay(alignment: .leading) {
+            if node.status != .same {
+                Rectangle()
+                    .fill(statusColor)
+                    .frame(width: UIQualityPolicy.statusAccentWidth)
+                    .accessibilityHidden(true)
+            }
+        }
         .contentShape(Rectangle())
         .help(helpText)
         .onHover { isHovering = $0 }
@@ -949,14 +957,27 @@ private struct FolderRow: View {
     private var statusBadge: some View {
         switch node.status {
         case .same:
-            Label("Same", systemImage: "equal").foregroundStyle(.secondary)
+            badge("Same", systemImage: "equal", color: .secondary)
         case .different:
-            Label("Changed", systemImage: "not.equal").foregroundStyle(.orange)
+            badge("Changed", systemImage: "not.equal", color: .orange)
         case .onlyLeft:
-            Label("Left", systemImage: "arrow.left.circle").foregroundStyle(.blue)
+            badge("Left", systemImage: "arrow.left.circle", color: .blue)
         case .onlyRight:
-            Label("Right", systemImage: "arrow.right.circle").foregroundStyle(.blue)
+            badge("Right", systemImage: "arrow.right.circle", color: .indigo)
         }
+    }
+
+    private func badge(
+        _ title: LocalizedStringResource,
+        systemImage: String,
+        color: Color
+    ) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(color)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.08), in: .capsule)
     }
 
     private func sideIconColor(isLeft: Bool, isDirectory: Bool) -> Color {
@@ -983,11 +1004,12 @@ private struct FolderRow: View {
         }
     }
 
-    private var rowTint: Color {
-        switch node.status {
-        case .same: return .clear
-        case .different: return .orange.opacity(0.07)
-        case .onlyLeft, .onlyRight: return .purple.opacity(0.06)
+    private var statusColor: Color {
+        switch FolderStatusPresentationPolicy.role(for: node.status) {
+        case .neutral: .secondary
+        case .changed: .orange
+        case .leftOnly: .blue
+        case .rightOnly: .indigo
         }
     }
 

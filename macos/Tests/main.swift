@@ -58,6 +58,13 @@ check(ComparisonPresentationPolicy.lineNumberGutterWidth == 46,
 check(ComparisonPresentationPolicy.currentDifferenceAccentWidth == 3 &&
       ComparisonPresentationPolicy.overviewWidth == 6,
       "diff navigation accents stay visible without covering content")
+check(FolderStatusPresentationPolicy.role(for: .same) == .neutral,
+      "same folder rows use a neutral presentation role")
+check(FolderStatusPresentationPolicy.role(for: .different) == .changed,
+      "changed folder rows use the changed presentation role")
+check(FolderStatusPresentationPolicy.role(for: .onlyLeft) == .leftOnly &&
+      FolderStatusPresentationPolicy.role(for: .onlyRight) == .rightOnly,
+      "one-sided folder rows retain distinct directional roles")
 
 // MARK: - DiffEngine 行级 diff
 
