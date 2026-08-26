@@ -2,11 +2,61 @@ import Foundation
 
 nonisolated enum AppLayoutPolicy {
     static let minimumContentWidth: CGFloat = 720
+    static let minimumContentHeight: CGFloat = 560
+    static let defaultContentWidth: CGFloat = 1120
+    static let defaultContentHeight: CGFloat = 740
+    static let wideReviewWidth: CGFloat = 1440
+    static let wideReviewHeight: CGFloat = 900
+}
+
+nonisolated enum UIQualityPolicy {
+    static let spacing: [CGFloat] = [4, 6, 8, 12, 16, 24]
+    static let cornerRadii: [CGFloat] = [6, 10, 14, 18]
+    static let compactControlHeight: CGFloat = 28
+    static let regularControlHeight: CGFloat = 32
+    static let statusAccentWidth: CGFloat = 3
+}
+
+nonisolated enum HomePresentationPolicy {
+    static let primaryWorkflowCount = 2
+    static let secondaryWorkflowCount = 2
+    static let quickCompareItemCount = 2
+
+    static func acceptsQuickCompareDrop(itemCount: Int) -> Bool {
+        itemCount == quickCompareItemCount
+    }
+}
+
+nonisolated enum ComparisonTopBarPolicy {
+    static let horizontalPadding: CGFloat = 14
+    static let verticalPadding: CGFloat = 8
+    static let groupSpacing: CGFloat = 10
+    static let separatorHeight: CGFloat = 20
+}
+
+nonisolated enum AccessibilityPresentationPolicy {
+    static let standardAnimationDuration = 0.16
+
+    static func animationDuration(reduceMotion: Bool) -> Double {
+        reduceMotion ? 0 : standardAnimationDuration
+    }
+
+    static func directionalStatusName(_ status: CompareStatus) -> String {
+        switch status {
+        case .same: "Same on both sides"
+        case .different: "Changed on both sides"
+        case .onlyLeft: "Only on the left"
+        case .onlyRight: "Only on the right"
+        }
+    }
 }
 
 nonisolated enum ComparisonPresentationPolicy {
     static let minimumCodeFontSize = 10.0
     static let maximumCodeFontSize = 18.0
+    static let lineNumberGutterWidth: CGFloat = 46
+    static let currentDifferenceAccentWidth: CGFloat = 3
+    static let overviewWidth: CGFloat = 6
 
     static func codeFontSize(_ requested: Double) -> Double {
         min(max(requested, minimumCodeFontSize), maximumCodeFontSize)

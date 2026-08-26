@@ -98,27 +98,20 @@ struct FolderCompareView: View {
     // MARK: 顶部工具栏
 
     private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            regularHeader
-            compactHeader
+        ComparisonTopBar(backAction: state.goHome) {
+            ViewThatFits(in: .horizontal) {
+                regularHeader
+                compactHeader
+            }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
     }
 
     private var regularHeader: some View {
         HStack(spacing: 12) {
-            Button { state.goHome() } label: {
-                Label("Back", systemImage: "chevron.left")
-            }
-            .keyboardShortcut(.cancelAction)
-
-            Divider().frame(height: 20)
-
-            HStack(spacing: 6) {
-                Image(systemName: "folder.fill").foregroundStyle(.blue)
-                Text(state.leftFolderURL?.lastPathComponent ?? "").bold().lineLimit(1)
-            }
+            ComparisonSourceLabel(
+                name: state.leftFolderURL?.lastPathComponent ?? "",
+                symbol: "folder.fill",
+                color: .blue)
             .help(displayPath(state.leftFolderURL))
             .contextMenu { folderPathMenu(state.leftFolderURL) }
             .layoutPriority(1)
@@ -126,10 +119,10 @@ struct FolderCompareView: View {
                 Image(systemName: "arrow.left.arrow.right")
             }
             .help("Swap sides and compare again")
-            HStack(spacing: 6) {
-                Image(systemName: "folder.fill").foregroundStyle(.indigo)
-                Text(state.rightFolderURL?.lastPathComponent ?? "").bold().lineLimit(1)
-            }
+            ComparisonSourceLabel(
+                name: state.rightFolderURL?.lastPathComponent ?? "",
+                symbol: "folder.fill",
+                color: .indigo)
             .help(displayPath(state.rightFolderURL))
             .contextMenu { folderPathMenu(state.rightFolderURL) }
             .layoutPriority(1)
@@ -158,9 +151,6 @@ struct FolderCompareView: View {
 
     private var compactHeader: some View {
         HStack(spacing: 8) {
-            Button { state.goHome() } label: { Image(systemName: "chevron.left") }
-                .keyboardShortcut(.cancelAction)
-                .help("Back")
             Menu {
                 Section("Left") { folderPathMenu(state.leftFolderURL) }
                 Section("Right") { folderPathMenu(state.rightFolderURL) }
@@ -265,6 +255,11 @@ struct FolderCompareView: View {
                 Text(error)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                HStack {
+                    Button("Back") { state.goHome() }
+                    Button("Try Again") { state.startFolderCompare() }
+                        .buttonStyle(.borderedProminent)
+                }
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -280,6 +275,9 @@ struct FolderCompareView: View {
                     .foregroundStyle(filter == .all ? .green : .secondary)
                 Text(filter == .all ? "Folder is empty" : "No items match the current filter")
                     .font(.title3)
+                if filter != .all {
+                    Button("Clear Filter") { filter = .all }
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -867,7 +865,7 @@ private struct FolderRow: View {
 
             actionIndicator
                 .frame(width: 118)
-                .background(Color.primary.opacity(0.025))
+                .background(Theme.subtleBackground)
 
             side(node.right, isLeft: false)
         }
@@ -876,7 +874,15 @@ private struct FolderRow: View {
         .padding(.vertical, 4)
         .padding(.horizontal, 10)
         .fixedSize(horizontal: false, vertical: true)
-        .background(rowTint)
+        .background(isHovering ? Theme.hoverBackground : .clear)
+        .overlay(alignment: .leading) {
+            if node.status != .same {
+                Rectangle()
+                    .fill(statusColor)
+                    .frame(width: UIQualityPolicy.statusAccentWidth)
+                    .accessibilityHidden(true)
+            }
+        }
         .contentShape(Rectangle())
         .help(helpText)
         .onHover { isHovering = $0 }
@@ -885,6 +891,7 @@ private struct FolderRow: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(node.relativePath)
+        .accessibilityValue(AccessibilityPresentationPolicy.directionalStatusName(node.status))
         .accessibilityAction(named: node.isFolder ? "Toggle folder" : "Open file diff") {
             node.isFolder ? onToggle() : onOpen()
         }
@@ -939,7 +946,7 @@ private struct FolderRow: View {
                 .buttonStyle(.borderless)
                 .help("Queue Right → Left")
                 .accessibilityLabel("Queue Right to Left")
-                .opacity(isHovering ? 1 : 0)
+                .opacity(isHovering ? 1 : 0.35)
             }
             statusBadge
             if let onQueueLeftToRight {
@@ -949,7 +956,7 @@ private struct FolderRow: View {
                 .buttonStyle(.borderless)
                 .help("Queue Left → Right")
                 .accessibilityLabel("Queue Left to Right")
-                .opacity(isHovering ? 1 : 0)
+                .opacity(isHovering ? 1 : 0.35)
             }
         }
         .frame(maxWidth: .infinity)
@@ -959,14 +966,27 @@ private struct FolderRow: View {
     private var statusBadge: some View {
         switch node.status {
         case .same:
-            Label("Same", systemImage: "equal").foregroundStyle(.secondary)
+            badge("Same", systemImage: "equal", color: .secondary)
         case .different:
-            Label("Changed", systemImage: "not.equal").foregroundStyle(.orange)
+            badge("Changed", systemImage: "not.equal", color: .orange)
         case .onlyLeft:
-            Label("Left", systemImage: "arrow.left.circle").foregroundStyle(.blue)
+            badge("Left", systemImage: "arrow.left.circle", color: .blue)
         case .onlyRight:
-            Label("Right", systemImage: "arrow.right.circle").foregroundStyle(.blue)
+            badge("Right", systemImage: "arrow.right.circle", color: .indigo)
         }
+    }
+
+    private func badge(
+        _ title: LocalizedStringResource,
+        systemImage: String,
+        color: Color
+    ) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(color)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.08), in: .capsule)
     }
 
     private func sideIconColor(isLeft: Bool, isDirectory: Bool) -> Color {
@@ -993,11 +1013,12 @@ private struct FolderRow: View {
         }
     }
 
-    private var rowTint: Color {
-        switch node.status {
-        case .same: return .clear
-        case .different: return .orange.opacity(0.07)
-        case .onlyLeft, .onlyRight: return .purple.opacity(0.06)
+    private var statusColor: Color {
+        switch FolderStatusPresentationPolicy.role(for: node.status) {
+        case .neutral: .secondary
+        case .changed: .orange
+        case .leftOnly: .blue
+        case .rightOnly: .indigo
         }
     }
 

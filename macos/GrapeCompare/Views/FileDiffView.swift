@@ -267,27 +267,17 @@ struct FileDiffView: View {
     // MARK: 顶部工具栏
 
     private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            regularHeader
-            compactHeader
+        ComparisonTopBar(backAction: { requestNavigation(.back) }) {
+            ViewThatFits(in: .horizontal) {
+                regularHeader
+                compactHeader
+            }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
     }
 
     private var regularHeader: some View {
         HStack(spacing: 12) {
-            Button { requestNavigation(.back) } label: {
-                Label("Back", systemImage: "chevron.left")
-            }
-            .keyboardShortcut(.cancelAction)
-
-            Divider().frame(height: 20)
-
-            HStack(spacing: 6) {
-                Circle().fill(.red).frame(width: 8, height: 8)
-                Text(state.leftFileName).bold().lineLimit(1).truncationMode(.middle)
-            }
+            ComparisonSourceLabel(name: state.leftFileName, symbol: "doc.fill", color: .red)
             .layoutPriority(1)
             .help(comparedPath(state.diffLeftURL))
             .contextMenu { comparedFileMenu(left: true) }
@@ -297,10 +287,7 @@ struct FileDiffView: View {
             }
             .help("Swap sides")
 
-            HStack(spacing: 6) {
-                Circle().fill(.green).frame(width: 8, height: 8)
-                Text(state.rightFileName).bold().lineLimit(1).truncationMode(.middle)
-            }
+            ComparisonSourceLabel(name: state.rightFileName, symbol: "doc.fill", color: .green)
             .layoutPriority(1)
             .help(comparedPath(state.diffRightURL))
             .contextMenu { comparedFileMenu(left: false) }
@@ -314,12 +301,9 @@ struct FileDiffView: View {
             Spacer()
 
             if let r = state.fileDiff, !r.identical, !r.isBinary {
-                Label("\(r.addedCount) added", systemImage: "plus")
-                    .foregroundStyle(.green).font(.callout).bold()
-                Label("\(r.removedCount) removed", systemImage: "minus")
-                    .foregroundStyle(.red).font(.callout).bold()
-                Label("\(r.modifiedCount) modified", systemImage: "plusminus")
-                    .foregroundStyle(.orange).font(.callout).bold()
+                DiffStatisticBadge(value: r.addedCount, title: "added", symbol: "plus", color: .green)
+                DiffStatisticBadge(value: r.removedCount, title: "removed", symbol: "minus", color: .red)
+                DiffStatisticBadge(value: r.modifiedCount, title: "modified", symbol: "plusminus", color: .orange)
                 if r.finalNewlineDiffers {
                     Text("↵ final newline differs")
                         .font(.callout)
@@ -348,10 +332,6 @@ struct FileDiffView: View {
 
     private var compactHeader: some View {
         HStack(spacing: 8) {
-            Button { requestNavigation(.back) } label: { Image(systemName: "chevron.left") }
-                .keyboardShortcut(.cancelAction)
-                .help("Back")
-
             Menu {
                 Section("Files") {
                     Text(state.leftFileName)
@@ -861,7 +841,7 @@ private struct DifferenceOverview: View {
                 }
             }
         }
-        .frame(width: 8)
+        .frame(width: ComparisonPresentationPolicy.overviewWidth)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -904,18 +884,12 @@ struct DiffRowView: View {
         }
         .frame(width: columnWidth * 2 + 1, alignment: .leading)
         .font(Theme.mono(size: codeFontSize))
+        .background(isCurrentDifference ? Color.accentColor.opacity(0.055) : .clear)
         .overlay(alignment: .leading) {
             if isCurrentDifference {
                 Rectangle()
                     .fill(Color.accentColor)
-                    .frame(width: 3)
-                    .accessibilityHidden(true)
-            }
-        }
-        .overlay {
-            if isCurrentDifference {
-                Rectangle()
-                    .strokeBorder(Color.accentColor.opacity(0.75), lineWidth: 1)
+                    .frame(width: ComparisonPresentationPolicy.currentDifferenceAccentWidth)
                     .accessibilityHidden(true)
             }
         }
@@ -928,10 +902,10 @@ struct DiffRowView: View {
             Text(side.map { String($0.number) } ?? "")
                 .font(Theme.mono(size: max(9, codeFontSize - 1)))
                 .foregroundStyle(.tertiary)
-                .frame(width: 46, alignment: .trailing)
+                .frame(width: ComparisonPresentationPolicy.lineNumberGutterWidth, alignment: .trailing)
                 .padding(.trailing, 10)
                 .padding(.vertical, comfortableRows ? 4 : 2)
-                .background(Color.primary.opacity(0.03))
+                .background(Color.primary.opacity(0.022))
             if let side {
                 Text(highlighted(side, isLeft: isLeft))
                     .fixedSize(horizontal: !wrapsLines, vertical: wrapsLines)
@@ -967,7 +941,7 @@ struct DiffRowView: View {
                     options: [.caseInsensitive, .diacriticInsensitive],
                     range: searchStart..<side.text.endIndex),
                   let attributedRange = Range(range, in: s) {
-                s[attributedRange].backgroundColor = .yellow.opacity(0.65)
+                s[attributedRange].backgroundColor = .systemYellow.withAlphaComponent(0.5)
                 searchStart = range.upperBound
             }
         }
@@ -1002,5 +976,27 @@ struct DiffRowView: View {
             result[target].foregroundColor = .systemGreen
         }
         attributed = result
+    }
+}
+
+private struct DiffStatisticBadge: View {
+    let value: Int
+    let title: LocalizedStringResource
+    let symbol: String
+    let color: Color
+
+    var body: some View {
+        Label {
+            Text("\(value) \(title)")
+                .monospacedDigit()
+        } icon: {
+            Image(systemName: symbol)
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(color)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background(color.opacity(0.09), in: .capsule)
+        .accessibilityLabel("\(value) \(title)")
     }
 }

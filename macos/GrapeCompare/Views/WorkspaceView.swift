@@ -81,6 +81,7 @@ struct WorkspaceView: View {
                             .buttonStyle(.plain)
                             .disabled(item.state.workspaceIsBusy)
                             .padding(.trailing, 6)
+                            .help("Close \(item.state.workspaceTitle)")
                         }
                         .padding(.vertical, 6)
                         .background(
@@ -121,6 +122,8 @@ struct WorkspaceView: View {
         .padding(.horizontal, 8)
         .frame(height: 38)
         .background(.bar)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Open comparisons")
     }
 
     private var liveUpdateSymbol: String {

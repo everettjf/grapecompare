@@ -18,6 +18,40 @@ check(!WorkspaceTabBarPolicy.usesCompactNewComparisonButton(itemCount: 2),
       "multi-tab workspace avoids a duplicate toolbar add button")
 check(AppLayoutPolicy.minimumContentWidth == 720,
       "app content supports the compact 720-point window width")
+check(AppLayoutPolicy.minimumContentHeight == 560,
+      "app content supports the compact 560-point window height")
+check(AppLayoutPolicy.defaultContentWidth == 1120 && AppLayoutPolicy.defaultContentHeight == 740,
+      "new windows use the reviewed default presentation size")
+check(AppLayoutPolicy.wideReviewWidth == 1440 && AppLayoutPolicy.wideReviewHeight == 900,
+      "UI review policy includes a stable wide-window baseline")
+check(UIQualityPolicy.spacing == [4, 6, 8, 12, 16, 24],
+      "UI spacing follows the reviewed compact macOS scale")
+check(UIQualityPolicy.cornerRadii == [6, 10, 14, 18],
+      "UI corner radii use four deliberate hierarchy levels")
+check(UIQualityPolicy.compactControlHeight < UIQualityPolicy.regularControlHeight,
+      "compact controls remain shorter than regular controls")
+check(UIQualityPolicy.statusAccentWidth == 3,
+      "semantic row accents use the reviewed subtle width")
+check(HomePresentationPolicy.primaryWorkflowCount == 2 &&
+      HomePresentationPolicy.secondaryWorkflowCount == 2,
+      "home hierarchy keeps two primary and two secondary workflows")
+check(HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 2),
+      "quick compare accepts exactly two items")
+check(!HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 1) &&
+      !HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 3),
+      "quick compare rejects ambiguous item counts")
+check(ComparisonTopBarPolicy.horizontalPadding == 14 &&
+      ComparisonTopBarPolicy.verticalPadding == 8,
+      "comparison top bars share one compact inset")
+check(ComparisonTopBarPolicy.separatorHeight == 20,
+      "comparison top bars share one navigation separator height")
+check(AccessibilityPresentationPolicy.animationDuration(reduceMotion: true) == 0,
+      "Reduce Motion removes decorative UI animation")
+check(AccessibilityPresentationPolicy.animationDuration(reduceMotion: false) == 0.16,
+      "standard UI animation remains brief")
+check(AccessibilityPresentationPolicy.directionalStatusName(.onlyLeft) == "Only on the left" &&
+      AccessibilityPresentationPolicy.directionalStatusName(.onlyRight) == "Only on the right",
+      "folder direction is available without relying on color")
 check(ComparisonPresentationPolicy.codeFontSize(8) == 10,
       "comparison code font size has a readable lower bound")
 check(ComparisonPresentationPolicy.codeFontSize(24) == 18,
@@ -26,6 +60,18 @@ check(ComparisonPresentationPolicy.currentDifferenceRow(indices: [3, 8, 13], pos
       "current difference presentation resolves the selected row")
 check(ComparisonPresentationPolicy.currentDifferenceRow(indices: [3], position: 2) == nil,
       "current difference presentation safely rejects stale positions")
+check(ComparisonPresentationPolicy.lineNumberGutterWidth == 46,
+      "diff line-number gutter remains aligned between panes")
+check(ComparisonPresentationPolicy.currentDifferenceAccentWidth == 3 &&
+      ComparisonPresentationPolicy.overviewWidth == 6,
+      "diff navigation accents stay visible without covering content")
+check(FolderStatusPresentationPolicy.role(for: .same) == .neutral,
+      "same folder rows use a neutral presentation role")
+check(FolderStatusPresentationPolicy.role(for: .different) == .changed,
+      "changed folder rows use the changed presentation role")
+check(FolderStatusPresentationPolicy.role(for: .onlyLeft) == .leftOnly &&
+      FolderStatusPresentationPolicy.role(for: .onlyRight) == .rightOnly,
+      "one-sided folder rows retain distinct directional roles")
 
 // MARK: - DiffEngine 行级 diff
 

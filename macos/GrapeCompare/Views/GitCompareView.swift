@@ -95,13 +95,11 @@ struct GitCompareView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
-            Button { state.goHome() } label: {
-                Label("Back", systemImage: "chevron.left")
-            }
-            .keyboardShortcut(.cancelAction)
-            Divider().frame(height: 20)
-            Text(state.gitRepositoryURL?.lastPathComponent ?? "Repository").bold()
+        ComparisonTopBar(backAction: state.goHome) {
+            ComparisonSourceLabel(
+                name: state.gitRepositoryURL?.lastPathComponent ?? "Repository",
+                symbol: "point.3.connected.trianglepath.dotted",
+                color: .purple)
             TextField("From revision", text: targetBinding(\.gitLeftTarget))
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 150)
@@ -192,8 +190,6 @@ struct GitCompareView: View {
             Text("\(state.gitChanges.count) changes")
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
     }
 
     private var commitContext: some View {
