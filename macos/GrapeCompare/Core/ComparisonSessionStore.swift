@@ -9,6 +9,14 @@ nonisolated enum AppLayoutPolicy {
     static let wideReviewHeight: CGFloat = 900
 }
 
+nonisolated enum UIQualityPolicy {
+    static let spacing: [CGFloat] = [4, 6, 8, 12, 16, 24]
+    static let cornerRadii: [CGFloat] = [6, 10, 14, 18]
+    static let compactControlHeight: CGFloat = 28
+    static let regularControlHeight: CGFloat = 32
+    static let statusAccentWidth: CGFloat = 3
+}
+
 nonisolated enum ComparisonPresentationPolicy {
     static let minimumCodeFontSize = 10.0
     static let maximumCodeFontSize = 18.0

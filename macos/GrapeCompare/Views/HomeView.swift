@@ -467,12 +467,7 @@ private struct CompactCardHeader: View {
 private struct DashboardCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 16))
-            .overlay {
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(Color.primary.opacity(0.075))
-            }
-            .shadow(color: .black.opacity(0.055), radius: 9, y: 3)
+            .panelSurface(elevated: true)
     }
 }
 

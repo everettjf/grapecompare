@@ -24,6 +24,14 @@ check(AppLayoutPolicy.defaultContentWidth == 1120 && AppLayoutPolicy.defaultCont
       "new windows use the reviewed default presentation size")
 check(AppLayoutPolicy.wideReviewWidth == 1440 && AppLayoutPolicy.wideReviewHeight == 900,
       "UI review policy includes a stable wide-window baseline")
+check(UIQualityPolicy.spacing == [4, 6, 8, 12, 16, 24],
+      "UI spacing follows the reviewed compact macOS scale")
+check(UIQualityPolicy.cornerRadii == [6, 10, 14, 18],
+      "UI corner radii use four deliberate hierarchy levels")
+check(UIQualityPolicy.compactControlHeight < UIQualityPolicy.regularControlHeight,
+      "compact controls remain shorter than regular controls")
+check(UIQualityPolicy.statusAccentWidth == 3,
+      "semantic row accents use the reviewed subtle width")
 check(ComparisonPresentationPolicy.codeFontSize(8) == 10,
       "comparison code font size has a readable lower bound")
 check(ComparisonPresentationPolicy.codeFontSize(24) == 18,
