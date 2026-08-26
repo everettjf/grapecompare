@@ -25,12 +25,12 @@ enum Theme {
     static let panelBorder = Color.primary.opacity(0.085)
     static let strongDivider = Color.primary.opacity(0.16)
 
-    static let addedBg = Color.green.opacity(0.16)
-    static let addedHighlight = Color.green.opacity(0.45)
-    static let removedBg = Color.red.opacity(0.14)
-    static let removedHighlight = Color.red.opacity(0.42)
-    static let modifiedLeftBg = Color.red.opacity(0.12)
-    static let modifiedRightBg = Color.green.opacity(0.12)
+    static let addedBg = Color.green.opacity(0.105)
+    static let addedHighlight = Color.green.opacity(0.38)
+    static let removedBg = Color.red.opacity(0.095)
+    static let removedHighlight = Color.red.opacity(0.36)
+    static let modifiedLeftBg = Color.red.opacity(0.075)
+    static let modifiedRightBg = Color.green.opacity(0.075)
     /// 另一侧不存在时的占位底色
     static let emptyBg = Color.primary.opacity(0.045)
     static let gutterDivider = Color.primary.opacity(0.12)

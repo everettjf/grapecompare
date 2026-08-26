@@ -37,6 +37,9 @@ nonisolated enum ComparisonTopBarPolicy {
 nonisolated enum ComparisonPresentationPolicy {
     static let minimumCodeFontSize = 10.0
     static let maximumCodeFontSize = 18.0
+    static let lineNumberGutterWidth: CGFloat = 46
+    static let currentDifferenceAccentWidth: CGFloat = 3
+    static let overviewWidth: CGFloat = 6
 
     static func codeFontSize(_ requested: Double) -> Double {
         min(max(requested, minimumCodeFontSize), maximumCodeFontSize)

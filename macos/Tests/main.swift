@@ -53,6 +53,11 @@ check(ComparisonPresentationPolicy.currentDifferenceRow(indices: [3, 8, 13], pos
       "current difference presentation resolves the selected row")
 check(ComparisonPresentationPolicy.currentDifferenceRow(indices: [3], position: 2) == nil,
       "current difference presentation safely rejects stale positions")
+check(ComparisonPresentationPolicy.lineNumberGutterWidth == 46,
+      "diff line-number gutter remains aligned between panes")
+check(ComparisonPresentationPolicy.currentDifferenceAccentWidth == 3 &&
+      ComparisonPresentationPolicy.overviewWidth == 6,
+      "diff navigation accents stay visible without covering content")
 
 // MARK: - DiffEngine 行级 diff
 
