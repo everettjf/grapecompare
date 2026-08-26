@@ -267,27 +267,17 @@ struct FileDiffView: View {
     // MARK: 顶部工具栏
 
     private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            regularHeader
-            compactHeader
+        ComparisonTopBar(backAction: { requestNavigation(.back) }) {
+            ViewThatFits(in: .horizontal) {
+                regularHeader
+                compactHeader
+            }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
     }
 
     private var regularHeader: some View {
         HStack(spacing: 12) {
-            Button { requestNavigation(.back) } label: {
-                Label("Back", systemImage: "chevron.left")
-            }
-            .keyboardShortcut(.cancelAction)
-
-            Divider().frame(height: 20)
-
-            HStack(spacing: 6) {
-                Circle().fill(.red).frame(width: 8, height: 8)
-                Text(state.leftFileName).bold().lineLimit(1).truncationMode(.middle)
-            }
+            ComparisonSourceLabel(name: state.leftFileName, symbol: "doc.fill", color: .red)
             .layoutPriority(1)
             .help(comparedPath(state.diffLeftURL))
             .contextMenu { comparedFileMenu(left: true) }
@@ -297,10 +287,7 @@ struct FileDiffView: View {
             }
             .help("Swap sides")
 
-            HStack(spacing: 6) {
-                Circle().fill(.green).frame(width: 8, height: 8)
-                Text(state.rightFileName).bold().lineLimit(1).truncationMode(.middle)
-            }
+            ComparisonSourceLabel(name: state.rightFileName, symbol: "doc.fill", color: .green)
             .layoutPriority(1)
             .help(comparedPath(state.diffRightURL))
             .contextMenu { comparedFileMenu(left: false) }
@@ -348,10 +335,6 @@ struct FileDiffView: View {
 
     private var compactHeader: some View {
         HStack(spacing: 8) {
-            Button { requestNavigation(.back) } label: { Image(systemName: "chevron.left") }
-                .keyboardShortcut(.cancelAction)
-                .help("Back")
-
             Menu {
                 Section("Files") {
                     Text(state.leftFileName)

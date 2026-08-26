@@ -27,6 +27,13 @@ nonisolated enum HomePresentationPolicy {
     }
 }
 
+nonisolated enum ComparisonTopBarPolicy {
+    static let horizontalPadding: CGFloat = 14
+    static let verticalPadding: CGFloat = 8
+    static let groupSpacing: CGFloat = 10
+    static let separatorHeight: CGFloat = 20
+}
+
 nonisolated enum ComparisonPresentationPolicy {
     static let minimumCodeFontSize = 10.0
     static let maximumCodeFontSize = 18.0

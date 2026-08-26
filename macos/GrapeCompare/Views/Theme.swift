@@ -81,3 +81,49 @@ extension View {
         modifier(ContextBarModifier())
     }
 }
+
+struct ComparisonTopBar<Content: View>: View {
+    let backAction: () -> Void
+    @ViewBuilder let content: Content
+
+    init(backAction: @escaping () -> Void, @ViewBuilder content: () -> Content) {
+        self.backAction = backAction
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(spacing: ComparisonTopBarPolicy.groupSpacing) {
+            Button(action: backAction) {
+                Label("Back", systemImage: "chevron.left")
+            }
+            .keyboardShortcut(.cancelAction)
+            .help("Back")
+
+            Divider().frame(height: ComparisonTopBarPolicy.separatorHeight)
+            content
+        }
+        .controlSize(.small)
+        .padding(.horizontal, ComparisonTopBarPolicy.horizontalPadding)
+        .padding(.vertical, ComparisonTopBarPolicy.verticalPadding)
+        .background(.bar)
+    }
+}
+
+struct ComparisonSourceLabel: View {
+    let name: String
+    let symbol: String
+    let color: Color
+
+    var body: some View {
+        Label {
+            Text(name)
+                .font(.callout.weight(.semibold))
+                .lineLimit(1)
+                .truncationMode(.middle)
+        } icon: {
+            Image(systemName: symbol)
+                .foregroundStyle(color)
+        }
+        .accessibilityLabel(name)
+    }
+}

@@ -70,14 +70,9 @@ struct MergeView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            Button {
+        ComparisonTopBar(backAction: {
                 if state.mergeOutputIsDirty { confirmsDiscard = true } else { leaveMerge() }
-            } label: {
-                Label("Back", systemImage: "chevron.left")
-            }
-            .keyboardShortcut(.cancelAction)
-            Divider().frame(height: 20)
+        }) {
             pathLabel("Base", url: state.baseFileURL, color: .secondary)
             pathLabel("Ours", url: state.oursFileURL, color: .blue)
             pathLabel("Theirs", url: state.theirsFileURL, color: .purple)
@@ -129,8 +124,6 @@ struct MergeView: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
     }
 
     private var imageConflictResolver: some View {

@@ -40,6 +40,11 @@ check(HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 2),
 check(!HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 1) &&
       !HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 3),
       "quick compare rejects ambiguous item counts")
+check(ComparisonTopBarPolicy.horizontalPadding == 14 &&
+      ComparisonTopBarPolicy.verticalPadding == 8,
+      "comparison top bars share one compact inset")
+check(ComparisonTopBarPolicy.separatorHeight == 20,
+      "comparison top bars share one navigation separator height")
 check(ComparisonPresentationPolicy.codeFontSize(8) == 10,
       "comparison code font size has a readable lower bound")
 check(ComparisonPresentationPolicy.codeFontSize(24) == 18,

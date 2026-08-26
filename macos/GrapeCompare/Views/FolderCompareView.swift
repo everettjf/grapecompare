@@ -98,27 +98,20 @@ struct FolderCompareView: View {
     // MARK: 顶部工具栏
 
     private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            regularHeader
-            compactHeader
+        ComparisonTopBar(backAction: state.goHome) {
+            ViewThatFits(in: .horizontal) {
+                regularHeader
+                compactHeader
+            }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 9)
     }
 
     private var regularHeader: some View {
         HStack(spacing: 12) {
-            Button { state.goHome() } label: {
-                Label("Back", systemImage: "chevron.left")
-            }
-            .keyboardShortcut(.cancelAction)
-
-            Divider().frame(height: 20)
-
-            HStack(spacing: 6) {
-                Image(systemName: "folder.fill").foregroundStyle(.blue)
-                Text(state.leftFolderURL?.lastPathComponent ?? "").bold().lineLimit(1)
-            }
+            ComparisonSourceLabel(
+                name: state.leftFolderURL?.lastPathComponent ?? "",
+                symbol: "folder.fill",
+                color: .blue)
             .help(displayPath(state.leftFolderURL))
             .contextMenu { folderPathMenu(state.leftFolderURL) }
             .layoutPriority(1)
@@ -126,10 +119,10 @@ struct FolderCompareView: View {
                 Image(systemName: "arrow.left.arrow.right")
             }
             .help("Swap sides and compare again")
-            HStack(spacing: 6) {
-                Image(systemName: "folder.fill").foregroundStyle(.indigo)
-                Text(state.rightFolderURL?.lastPathComponent ?? "").bold().lineLimit(1)
-            }
+            ComparisonSourceLabel(
+                name: state.rightFolderURL?.lastPathComponent ?? "",
+                symbol: "folder.fill",
+                color: .indigo)
             .help(displayPath(state.rightFolderURL))
             .contextMenu { folderPathMenu(state.rightFolderURL) }
             .layoutPriority(1)
@@ -158,9 +151,6 @@ struct FolderCompareView: View {
 
     private var compactHeader: some View {
         HStack(spacing: 8) {
-            Button { state.goHome() } label: { Image(systemName: "chevron.left") }
-                .keyboardShortcut(.cancelAction)
-                .help("Back")
             Menu {
                 Section("Left") { folderPathMenu(state.leftFolderURL) }
                 Section("Right") { folderPathMenu(state.rightFolderURL) }
