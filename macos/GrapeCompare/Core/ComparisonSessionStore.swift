@@ -2,6 +2,11 @@ import Foundation
 
 nonisolated enum AppLayoutPolicy {
     static let minimumContentWidth: CGFloat = 720
+    static let minimumContentHeight: CGFloat = 560
+    static let defaultContentWidth: CGFloat = 1120
+    static let defaultContentHeight: CGFloat = 740
+    static let wideReviewWidth: CGFloat = 1440
+    static let wideReviewHeight: CGFloat = 900
 }
 
 nonisolated enum ComparisonPresentationPolicy {

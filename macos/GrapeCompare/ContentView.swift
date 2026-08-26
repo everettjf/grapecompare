@@ -18,7 +18,9 @@ struct ContentView: View {
                 GitCompareView()
             }
         }
-        .frame(minWidth: AppLayoutPolicy.minimumContentWidth, minHeight: 560)
+        .frame(
+            minWidth: AppLayoutPolicy.minimumContentWidth,
+            minHeight: AppLayoutPolicy.minimumContentHeight)
         .onAppear { state.consumePendingArgs() }
         .onChange(of: state.operations.mutationVersion) {
             state.handleFilesystemMutation()

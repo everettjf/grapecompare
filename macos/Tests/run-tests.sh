@@ -29,3 +29,4 @@ swiftc -O -whole-module-optimization -o "$BIN" \
     ../GrapeCompare/Core/FilesystemWatcher.swift \
     main.swift
 "$BIN"
+../../scripts/validate-ui-baseline.sh

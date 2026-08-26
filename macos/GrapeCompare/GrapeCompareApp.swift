@@ -41,7 +41,9 @@ struct GrapeCompareApp: App {
             WindowRootView()
                 .environment(appearance)
         }
-        .defaultSize(width: 1120, height: 740)
+        .defaultSize(
+            width: AppLayoutPolicy.defaultContentWidth,
+            height: AppLayoutPolicy.defaultContentHeight)
         .windowResizability(.contentMinSize)
         .windowToolbarStyle(.unified)
         // NB: do NOT apply .preferredColorScheme on the scene content — it

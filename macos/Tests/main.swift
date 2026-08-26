@@ -18,6 +18,12 @@ check(!WorkspaceTabBarPolicy.usesCompactNewComparisonButton(itemCount: 2),
       "multi-tab workspace avoids a duplicate toolbar add button")
 check(AppLayoutPolicy.minimumContentWidth == 720,
       "app content supports the compact 720-point window width")
+check(AppLayoutPolicy.minimumContentHeight == 560,
+      "app content supports the compact 560-point window height")
+check(AppLayoutPolicy.defaultContentWidth == 1120 && AppLayoutPolicy.defaultContentHeight == 740,
+      "new windows use the reviewed default presentation size")
+check(AppLayoutPolicy.wideReviewWidth == 1440 && AppLayoutPolicy.wideReviewHeight == 900,
+      "UI review policy includes a stable wide-window baseline")
 check(ComparisonPresentationPolicy.codeFontSize(8) == 10,
       "comparison code font size has a readable lower bound")
 check(ComparisonPresentationPolicy.codeFontSize(24) == 18,
