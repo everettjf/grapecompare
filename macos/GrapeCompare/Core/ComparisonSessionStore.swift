@@ -34,6 +34,23 @@ nonisolated enum ComparisonTopBarPolicy {
     static let separatorHeight: CGFloat = 20
 }
 
+nonisolated enum AccessibilityPresentationPolicy {
+    static let standardAnimationDuration = 0.16
+
+    static func animationDuration(reduceMotion: Bool) -> Double {
+        reduceMotion ? 0 : standardAnimationDuration
+    }
+
+    static func directionalStatusName(_ status: CompareStatus) -> String {
+        switch status {
+        case .same: "Same on both sides"
+        case .different: "Changed on both sides"
+        case .onlyLeft: "Only on the left"
+        case .onlyRight: "Only on the right"
+        }
+    }
+}
+
 nonisolated enum ComparisonPresentationPolicy {
     static let minimumCodeFontSize = 10.0
     static let maximumCodeFontSize = 18.0

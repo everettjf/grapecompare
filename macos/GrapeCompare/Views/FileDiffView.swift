@@ -997,5 +997,6 @@ private struct DiffStatisticBadge: View {
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
         .background(color.opacity(0.09), in: .capsule)
+        .accessibilityLabel("\(value) \(title)")
     }
 }

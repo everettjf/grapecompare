@@ -255,6 +255,11 @@ struct FolderCompareView: View {
                 Text(error)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                HStack {
+                    Button("Back") { state.goHome() }
+                    Button("Try Again") { state.startFolderCompare() }
+                        .buttonStyle(.borderedProminent)
+                }
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -270,6 +275,9 @@ struct FolderCompareView: View {
                     .foregroundStyle(filter == .all ? .green : .secondary)
                 Text(filter == .all ? "Folder is empty" : "No items match the current filter")
                     .font(.title3)
+                if filter != .all {
+                    Button("Clear Filter") { filter = .all }
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -883,6 +891,7 @@ private struct FolderRow: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(node.relativePath)
+        .accessibilityValue(AccessibilityPresentationPolicy.directionalStatusName(node.status))
         .accessibilityAction(named: node.isFolder ? "Toggle folder" : "Open file diff") {
             node.isFolder ? onToggle() : onOpen()
         }
@@ -937,7 +946,7 @@ private struct FolderRow: View {
                 .buttonStyle(.borderless)
                 .help("Queue Right → Left")
                 .accessibilityLabel("Queue Right to Left")
-                .opacity(isHovering ? 1 : 0)
+                .opacity(isHovering ? 1 : 0.35)
             }
             statusBadge
             if let onQueueLeftToRight {
@@ -947,7 +956,7 @@ private struct FolderRow: View {
                 .buttonStyle(.borderless)
                 .help("Queue Left → Right")
                 .accessibilityLabel("Queue Left to Right")
-                .opacity(isHovering ? 1 : 0)
+                .opacity(isHovering ? 1 : 0.35)
             }
         }
         .frame(maxWidth: .infinity)

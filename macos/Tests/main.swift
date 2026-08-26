@@ -45,6 +45,13 @@ check(ComparisonTopBarPolicy.horizontalPadding == 14 &&
       "comparison top bars share one compact inset")
 check(ComparisonTopBarPolicy.separatorHeight == 20,
       "comparison top bars share one navigation separator height")
+check(AccessibilityPresentationPolicy.animationDuration(reduceMotion: true) == 0,
+      "Reduce Motion removes decorative UI animation")
+check(AccessibilityPresentationPolicy.animationDuration(reduceMotion: false) == 0.16,
+      "standard UI animation remains brief")
+check(AccessibilityPresentationPolicy.directionalStatusName(.onlyLeft) == "Only on the left" &&
+      AccessibilityPresentationPolicy.directionalStatusName(.onlyRight) == "Only on the right",
+      "folder direction is available without relying on color")
 check(ComparisonPresentationPolicy.codeFontSize(8) == 10,
       "comparison code font size has a readable lower bound")
 check(ComparisonPresentationPolicy.codeFontSize(24) == 18,

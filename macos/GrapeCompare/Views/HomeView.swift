@@ -184,6 +184,7 @@ private struct DashboardSectionTitle: View {
 
 private struct QuickCompareBar: View {
     @Environment(AppState.self) private var state
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isTargeted = false
 
     var body: some View {
@@ -221,9 +222,18 @@ private struct QuickCompareBar: View {
             state.compareQuickItems(items)
             return true
         } isTargeted: { isTargeted = $0 }
+        .animation(
+            reduceMotion ? nil : .easeOut(duration: AccessibilityPresentationPolicy.standardAnimationDuration),
+            value: isTargeted)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Quick Compare")
         .accessibilityHint("Drop exactly two files or two folders to compare them immediately")
+        .accessibilityAction(named: "Paste left item") {
+            state.pasteQuickComparisonSide(left: true)
+        }
+        .accessibilityAction(named: "Paste right item") {
+            state.pasteQuickComparisonSide(left: false)
+        }
     }
 }
 
