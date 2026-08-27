@@ -322,7 +322,7 @@ struct FolderCompareView: View {
             .padding(.horizontal, 12)
 
             Text("Status")
-                .frame(width: 118)
+                .frame(width: UIQualityPolicy.folderStatusColumnWidth)
                 .padding(.vertical, 6)
                 .background(Color.primary.opacity(0.025))
 
@@ -864,7 +864,7 @@ private struct FolderRow: View {
             side(node.left, isLeft: true)
 
             actionIndicator
-                .frame(width: 118)
+                .frame(width: UIQualityPolicy.folderStatusColumnWidth)
                 .background(Theme.subtleBackground)
 
             side(node.right, isLeft: false)
@@ -983,6 +983,8 @@ private struct FolderRow: View {
     ) -> some View {
         Label(title, systemImage: systemImage)
             .font(.caption.weight(.medium))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .foregroundStyle(color)
             .padding(.horizontal, 7)
             .padding(.vertical, 2)

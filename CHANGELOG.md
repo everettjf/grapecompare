@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.25 — 2026-08-26
+
+### Stable folder status badges
+
+- Keep folder comparison status badges on one line at the default and compact window sizes.
+- Give the central status-and-actions column enough width for its label and directional controls.
+- Add a regression policy check for the reviewed folder status column width.
+
+## 1.0.24 — 2026-08-26
+
+### Comprehensive UI refinement
+
+- Establish shared design tokens and a repeatable UI quality baseline for compact, default, wide, light, and dark presentations.
+- Simplify the comparison home, unify comparison top bars, and improve text-diff readability and navigation.
+- Clarify folder comparison states, interaction feedback, Reduce Motion behavior, and accessibility semantics.
+
 ## 1.0.23 — 2026-08-25
 
 ### Balanced comparison workspace

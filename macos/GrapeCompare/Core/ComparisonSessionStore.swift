@@ -15,6 +15,7 @@ nonisolated enum UIQualityPolicy {
     static let compactControlHeight: CGFloat = 28
     static let regularControlHeight: CGFloat = 32
     static let statusAccentWidth: CGFloat = 3
+    static let folderStatusColumnWidth: CGFloat = 132
 }
 
 nonisolated enum HomePresentationPolicy {
