@@ -32,6 +32,8 @@ check(UIQualityPolicy.compactControlHeight < UIQualityPolicy.regularControlHeigh
       "compact controls remain shorter than regular controls")
 check(UIQualityPolicy.statusAccentWidth == 3,
       "semantic row accents use the reviewed subtle width")
+check(UIQualityPolicy.folderStatusColumnWidth >= 132,
+      "folder status column keeps Changed badges on one line")
 check(HomePresentationPolicy.primaryWorkflowCount == 2 &&
       HomePresentationPolicy.secondaryWorkflowCount == 2,
       "home hierarchy keeps two primary and two secondary workflows")
