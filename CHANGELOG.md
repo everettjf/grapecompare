@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — 2026-08-30
+## Mac App Store 1.0.0 (35) — 2026-08-31
 
 ### Mac App Store-only sandbox release
 
