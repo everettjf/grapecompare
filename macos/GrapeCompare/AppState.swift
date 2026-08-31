@@ -481,6 +481,10 @@ final class AppState {
     }
 
     func consumeQuickAction() {
+        if let message = UserDefaults.standard.string(forKey: quickActionErrorKey) {
+            UserDefaults.standard.removeObject(forKey: quickActionErrorKey)
+            quickCompareError = message
+        }
         guard let bookmarks = UserDefaults.standard.array(forKey: quickActionBookmarksKey) as? [Data],
               bookmarks.count == 2 else { return }
         UserDefaults.standard.removeObject(forKey: quickActionBookmarksKey)

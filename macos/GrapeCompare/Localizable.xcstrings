@@ -250,16 +250,6 @@
         }
       }
     },
-    "%lld commits" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld 个提交"
-          }
-        }
-      }
-    },
     "%lld conflicts" : {
       "localizations" : {
         "zh-Hans" : {
@@ -864,16 +854,6 @@
         }
       }
     },
-    "Branches, commits, index, worktree, and history" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分支、提交、索引、工作树和历史"
-          }
-        }
-      }
-    },
     "Build a previewable folder synchronization plan" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1246,16 +1226,6 @@
         }
       }
     },
-    "Commit Graph" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提交图"
-          }
-        }
-      }
-    },
     "Compare" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1307,17 +1277,6 @@
         }
       }
     },
-    "Compare branches, commits, index, and working tree without checkout" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无需检出即可比较分支、提交、索引和工作区"
-          }
-        }
-      }
-    },
     "Compare Files" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1335,47 +1294,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "比较文件夹"
-          }
-        }
-      }
-    },
-    "Compare Git Repository" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "比较 Git 仓库"
-          }
-        }
-      }
-    },
-    "Compare HEAD ↔ INDEX" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "比较 HEAD ↔ 暂存区"
-          }
-        }
-      }
-    },
-    "Compare HEAD ↔ WORKTREE" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "比较 HEAD ↔ 工作区"
-          }
-        }
-      }
-    },
-    "Compare INDEX ↔ WORKTREE" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "比较暂存区 ↔ 工作区"
           }
         }
       }
@@ -1427,26 +1345,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将此版本与上一版本比较"
-          }
-        }
-      }
-    },
-    "Compare using parent commit %@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用父提交 %@ 进行比较"
-          }
-        }
-      }
-    },
-    "Compare with HEAD" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "与 HEAD 比较"
           }
         }
       }
@@ -1771,16 +1669,6 @@
         }
       }
     },
-    "Detached HEAD" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分离的 HEAD"
-          }
-        }
-      }
-    },
     "Developer Ignore Profile" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1968,17 +1856,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将两个项目拖放到此卡片任意位置"
-          }
-        }
-      }
-    },
-    "Drop, merge, or inspect a repository" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拖放、合并或检查仓库"
           }
         }
       }
@@ -2423,76 +2300,6 @@
         }
       }
     },
-    "Git" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git"
-          }
-        }
-      }
-    },
-    "Git Action Failed" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git 操作失败"
-          }
-        }
-      }
-    },
-    "Git Comparison Failed" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git 比较失败"
-          }
-        }
-      }
-    },
-    "Git LFS pointer" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git LFS 指针"
-          }
-        }
-      }
-    },
-    "Git live change notifications" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git 实时变更通知"
-          }
-        }
-      }
-    },
-    "Git Repository" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git 仓库"
-          }
-        }
-      }
-    },
-    "Git submodule" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git 子模块"
-          }
-        }
-      }
-    },
     "Go to line" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2513,42 +2320,12 @@
         }
       }
     },
-    "GrapeCompare Git changes updated" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "GrapeCompare Git 变更已更新"
-          }
-        }
-      }
-    },
     "Green" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "绿色"
-          }
-        }
-      }
-    },
-    "HEAD ↔ INDEX" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HEAD ↔ 暂存区"
-          }
-        }
-      }
-    },
-    "HEAD ↔ WORKTREE" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HEAD ↔ 工作区"
           }
         }
       }
@@ -2876,16 +2653,6 @@
         }
       }
     },
-    "INDEX ↔ WORKTREE" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "暂存区 ↔ 工作区"
-          }
-        }
-      }
-    },
     "Inspect Again" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3192,16 +2959,6 @@
         }
       }
     },
-    "Merge Base %@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "合并基点 %@"
-          }
-        }
-      }
-    },
     "Merge Failed" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3373,16 +3130,6 @@
         }
       }
     },
-    "Native comparison for files, folders, images, merges, and Git" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "面向文件、文件夹、图像、合并和 Git 的原生比较工具"
-          }
-        }
-      }
-    },
     "Native, fast, and professional file & folder comparison" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3484,26 +3231,6 @@
         }
       }
     },
-    "No commit exists before the selected time range." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "所选时间范围之前没有提交。"
-          }
-        }
-      }
-    },
-    "No Commit History" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有提交历史"
-          }
-        }
-      }
-    },
     "No Conflicts" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3520,16 +3247,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "没有文件历史"
-          }
-        }
-      }
-    },
-    "No Git Differences" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有 Git 差异"
           }
         }
       }
@@ -3636,16 +3353,6 @@
         }
       }
     },
-    "Open Commit Changeset" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开提交变更集"
-          }
-        }
-      }
-    },
     "Open file diff" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3672,26 +3379,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在默认编辑器中打开"
-          }
-        }
-      }
-    },
-    "Open Repository" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开仓库"
-          }
-        }
-      }
-    },
-    "Open Repository in Terminal" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在终端中打开仓库"
           }
         }
       }
@@ -3843,16 +3530,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "父提交："
-          }
-        }
-      }
-    },
-    "Partially Staged" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "部分暂存"
           }
         }
       }
@@ -4209,16 +3886,6 @@
         }
       }
     },
-    "Quick compare, resolve a merge, or inspect a Git repository" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快速比较、解决合并冲突或检查 Git 仓库"
-          }
-        }
-      }
-    },
     "Quick Look" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4235,16 +3902,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在读取文件历史…"
-          }
-        }
-      }
-    },
-    "Reading Git repository…" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在读取 Git 仓库…"
           }
         }
       }
@@ -4342,16 +3999,6 @@
         }
       }
     },
-    "Refresh Git Comparison" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "刷新 Git 比较"
-          }
-        }
-      }
-    },
     "Refreshing…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4442,46 +4089,6 @@
         }
       }
     },
-    "Repository" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仓库"
-          }
-        }
-      }
-    },
-    "Repository Actions" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仓库操作"
-          }
-        }
-      }
-    },
-    "Repository commit history" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仓库提交历史"
-          }
-        }
-      }
-    },
-    "Repository History" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仓库历史"
-          }
-        }
-      }
-    },
     "Reset" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4559,16 +4166,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在访达中显示"
-          }
-        }
-      }
-    },
-    "Reveal Repository in Finder" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在访达中显示仓库"
           }
         }
       }
@@ -4776,16 +4373,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存过滤器"
-          }
-        }
-      }
-    },
-    "Save Merge and Close" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保存合并并关闭"
           }
         }
       }
@@ -5023,16 +4610,6 @@
         }
       }
     },
-    "Staged" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已暂存"
-          }
-        }
-      }
-    },
     "Staging index" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5069,16 +4646,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "首次失败即停止"
-          }
-        }
-      }
-    },
-    "Stored locally for this repository and comparison" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仅为此仓库和比较保存在本地"
           }
         }
       }
@@ -5334,16 +4901,6 @@
         }
       }
     },
-    "The selected repository states are equivalent." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "所选仓库状态等价。"
-          }
-        }
-      }
-    },
     "The source changed after the plan was reviewed: %@" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5470,16 +5027,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "待处理"
-          }
-        }
-      }
-    },
-    "To revision, INDEX, or WORKTREE" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "目标版本、INDEX 或 WORKTREE"
           }
         }
       }
@@ -5714,42 +5261,12 @@
         }
       }
     },
-    "Unstaged" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未暂存"
-          }
-        }
-      }
-    },
     "Unsupported Item" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "不支持的项目"
-          }
-        }
-      }
-    },
-    "Untitled commit" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无标题提交"
-          }
-        }
-      }
-    },
-    "Untracked" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未跟踪"
           }
         }
       }
@@ -5891,16 +5408,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工作区"
-          }
-        }
-      }
-    },
-    "Worktrees" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "工作树"
           }
         }
       }

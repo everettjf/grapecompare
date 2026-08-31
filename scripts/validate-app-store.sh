@@ -38,8 +38,15 @@ done
 
 ! rg -n '/usr/bin/git|Process\(|--merge|grapecompare://|difftool|mergetool' \
     macos/GrapeCompare --glob '*.swift' --glob '*.plist'
+! rg -n -i \
+    'git repository|git comparison|git live|commit graph|worktrees|HEAD ↔ (INDEX|WORKTREE)|INDEX ↔ WORKTREE' \
+    macos/GrapeCompare/Localizable.xcstrings
 rg -q 'bookmarkData' macos/GrapeCompare/CompareFilesIntent.swift
+rg -q 'startAccessingSecurityScopedResource' macos/GrapeCompare/CompareFilesIntent.swift
 rg -q 'resolvingBookmarkData' macos/GrapeCompare/AppState.swift
+rg -F -q 'application(_ sender: NSApplication, open urls: [URL])' \
+    macos/GrapeCompare/GrapeCompareApp.swift
+! rg -q 'openFiles filenames' macos/GrapeCompare/GrapeCompareApp.swift
 ! rg -n 'quickActionPaths|pendingCompareFilesIntentPaths' macos/GrapeCompare
 
 echo "Validated Mac App Store-only sandbox configuration."

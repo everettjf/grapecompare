@@ -3,6 +3,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 nonisolated let quickActionBookmarksKey = "pendingCompareFilesIntentBookmarks"
+nonisolated let quickActionErrorKey = "pendingCompareFilesIntentError"
 
 extension Notification.Name {
     nonisolated static let compareFilesIntentReceived = Notification.Name("CompareFilesIntentReceived")
@@ -12,12 +13,17 @@ nonisolated enum PendingComparisonRequest {
     static func store(_ urls: [URL]) throws {
         let selected = urls.filter(\.isFileURL).map(\.standardizedFileURL)
         guard selected.count == 2 else { throw CompareFilesIntentError.requiresTwoLocalFiles }
-        let bookmarks = try selected.map {
-            try $0.bookmarkData(
+        let bookmarks = try selected.map { url in
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessed { url.stopAccessingSecurityScopedResource() }
+            }
+            return try url.bookmarkData(
                 options: [.withSecurityScope],
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil)
         }
+        UserDefaults.standard.removeObject(forKey: quickActionErrorKey)
         UserDefaults.standard.set(bookmarks, forKey: quickActionBookmarksKey)
     }
 }

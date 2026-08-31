@@ -20,12 +20,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.appearance = (AppearanceMode(rawValue: stored ?? "") ?? .system).nsAppearance
     }
 
-    func application(_ sender: NSApplication, openFiles filenames: [String]) {
+    func application(_ sender: NSApplication, open urls: [URL]) {
         do {
-            try PendingComparisonRequest.store(filenames.map(URL.init(fileURLWithPath:)))
+            try PendingComparisonRequest.store(urls)
             NotificationCenter.default.post(name: .compareFilesIntentReceived, object: nil)
             sender.reply(toOpenOrPrint: .success)
         } catch {
+            UserDefaults.standard.set(error.localizedDescription, forKey: quickActionErrorKey)
+            NotificationCenter.default.post(name: .compareFilesIntentReceived, object: nil)
             sender.reply(toOpenOrPrint: .failure)
         }
     }
