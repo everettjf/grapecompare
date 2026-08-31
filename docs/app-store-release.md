@@ -32,8 +32,8 @@ bash scripts/validate-app-store-archive.sh /tmp/GrapeCompare.xcarchive
 
 The validator requires build 35 of Mac App Store version 1.0.0, both Apple silicon and Intel
 architectures, App Sandbox, app-scoped bookmarks, user-selected read/write
-access, no debug entitlement, no helper executable, and an exact-two-file App
-Intent.
+access, a valid no-tracking privacy manifest with required API reasons, no debug
+entitlement, no helper executable, and an exact-two-file App Intent.
 
 ## Export and upload
 

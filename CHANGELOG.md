@@ -15,6 +15,8 @@
   of storing unprivileged path strings.
 - Add a repeatable Mac App Store configuration audit and validate the exact-two-file
   App Intent in the signed Release product.
+- Include a privacy manifest declaring no tracking or collected data and the approved
+  reasons for app preferences and user-selected file timestamps.
 
 ## 1.0.25 — 2026-08-26
 
