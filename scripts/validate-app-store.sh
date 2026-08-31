@@ -38,6 +38,8 @@ test "$(plutil -extract NSPrivacyAccessedAPITypes.1.NSPrivacyAccessedAPITypeReas
 test "$(plutil -extract NSPrivacyAccessedAPITypes.1.NSPrivacyAccessedAPITypeReasons.1 raw "$privacy")" = \
     "C617.1"
 
+ruby "$(dirname "$0")/validate-app-store-metadata.rb"
+
 for removed in \
     macos/CLI \
     macos/GrapeCompare/Core/GitRepository.swift \

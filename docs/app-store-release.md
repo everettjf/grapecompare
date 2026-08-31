@@ -12,6 +12,7 @@ bash macos/Tests/run-tests.sh
 ruby macos/Tests/validate-localizations.rb
 bash macos/Tests/validate-app-icons.sh
 bash scripts/validate-app-store.sh
+ruby scripts/validate-app-store-metadata.rb
 ruby scripts/run-correctness-audit.rb /tmp/grapecompare-correctness-report.json
 xcodebuild -project macos/GrapeCompare.xcodeproj -scheme GrapeCompare \
   -destination 'platform=macOS' -configuration Debug build
@@ -53,3 +54,8 @@ Connect, complete the privacy declaration, screenshots, description, support
 URL, age rating, pricing, export-compliance answer, and review notes. Submit
 only after processing reports no signing, sandbox, entitlement, or metadata
 errors.
+
+The reviewed English and Simplified Chinese listing copy, privacy answers,
+review notes, age-rating guidance, and account-holder placeholders are in
+`docs/app-store-metadata.md`. Upload-ready screenshots are in
+`app-store/screenshots/en-US/`.
