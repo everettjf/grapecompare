@@ -7,8 +7,14 @@ entitlements="macos/GrapeCompare/GrapeCompare.entitlements"
 project="macos/GrapeCompare.xcodeproj/project.pbxproj"
 info="macos/GrapeCompare/Info.plist"
 privacy="macos/GrapeCompare/PrivacyInfo.xcprivacy"
+export_options="macos/AppStoreExportOptions.plist"
 
-plutil -lint "$entitlements" "$info" "$privacy" >/dev/null
+plutil -lint "$entitlements" "$info" "$privacy" "$export_options" >/dev/null
+
+expected_entitlement_keys='["com.apple.security.app-sandbox","com.apple.security.files.bookmarks.app-scope","com.apple.security.files.user-selected.read-write"]'
+actual_entitlement_keys="$(plutil -convert json -o - "$entitlements" | ruby -rjson -e \
+    'puts JSON.generate(JSON.parse(STDIN.read).keys.sort)')"
+test "$actual_entitlement_keys" = "$expected_entitlement_keys"
 
 for key in \
     com.apple.security.app-sandbox \
@@ -21,9 +27,19 @@ done
 test "$(rg -c 'ENABLE_APP_SANDBOX = YES;' "$project")" -eq 2
 test "$(rg -c 'ENABLE_USER_SELECTED_FILES = readwrite;' "$project")" -eq 2
 test "$(rg -c 'CODE_SIGN_ENTITLEMENTS = GrapeCompare/GrapeCompare.entitlements;' "$project")" -eq 2
+test "$(rg -c 'SUPPORTED_PLATFORMS = macosx;' "$project")" -eq 2
+test "$(rg -c 'MARKETING_VERSION = 1.0.0;' "$project")" -eq 2
+test "$(rg -c 'CURRENT_PROJECT_VERSION = 35;' "$project")" -eq 2
+test "$(rg -c 'isa = PBXNativeTarget;' "$project")" -eq 1
+test "$(rg -c 'productType = "com.apple.product-type.application";' "$project")" -eq 1
+! rg -q 'isa = PBXShellScriptBuildPhase;' "$project"
 ! rg -n 'ENABLE_APP_SANDBOX = NO|com\.apple\.security\.network\.(client|server)' \
     "$project" "$entitlements"
 ! plutil -extract CFBundleURLTypes raw "$info" >/dev/null 2>&1
+test "$(plutil -extract method raw "$export_options")" = "app-store-connect"
+test "$(plutil -extract destination raw "$export_options")" = "export"
+test "$(plutil -extract signingStyle raw "$export_options")" = "automatic"
+test "$(plutil -extract teamID raw "$export_options")" = "YPV49M8592"
 test "$(plutil -extract NSPrivacyTracking raw "$privacy")" = "false"
 test "$(plutil -extract NSPrivacyCollectedDataTypes raw "$privacy")" = "0"
 test "$(plutil -extract NSPrivacyTrackingDomains raw "$privacy")" = "0"
@@ -47,6 +63,8 @@ for removed in \
     macos/GrapeCompare/Core/ExternalMergeProtocol.swift \
     macos/GrapeCompare/Views/GitCompareView.swift \
     scripts/build-release.sh \
+    scripts/publish-release.sh \
+    scripts/release-patch.sh \
     scripts/validate-release.sh \
     Casks/grapecompare.rb; do
     test ! -e "$removed"

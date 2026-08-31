@@ -6,8 +6,8 @@ Security fixes are provided for the latest released version of GrapeCompare.
 
 | Version | Supported |
 | --- | --- |
-| 1.1.x | Yes |
-| 1.0.x and earlier | No |
+| 1.0.x | Yes |
+| Earlier versions | No |
 
 ## Report a vulnerability
 
