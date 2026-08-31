@@ -16,7 +16,7 @@ the Mac; the app has no account, telemetry, network entitlement, or cloud upload
 - Read-only inspection of app bundles, signatures, entitlements, provisioning
   profiles, Mach-O files, and asset catalogs without launching inspected code.
 - User-selected three-way text and image merging.
-- Finder Open With, drag and drop, recent comparisons, and a macOS 15+ Shortcut.
+- Finder Open With, drag and drop, recent comparisons, and a Compare Files Shortcut.
 
 GrapeCompare intentionally does not include a command-line tool, Git subprocess
 integration, difftool/mergetool hooks, arbitrary-path URL schemes, or a
@@ -24,7 +24,7 @@ non-sandboxed distribution build.
 
 ## Requirements and build
 
-GrapeCompare requires macOS 14 or later. Open `macos/GrapeCompare.xcodeproj`,
+GrapeCompare requires macOS 15 or later. Open `macos/GrapeCompare.xcodeproj`,
 select the `GrapeCompare` scheme, and build for My Mac. Both Debug and Release
 enable App Sandbox with user-selected read/write access and app-scoped security
 bookmarks.

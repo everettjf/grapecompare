@@ -14,14 +14,14 @@ GrapeCompare 是一款面向 macOS 的私密沙盒比较工具，支持文件、
 - 在不启动被检查代码的前提下检查 App Bundle、签名、Entitlements、
   Provisioning Profile、Mach-O 和 Asset Catalog。
 - 用户手动选择输入的文本与图片三方合并。
-- Finder“打开方式”、拖放、最近比较，以及 macOS 15+ 快捷指令。
+- Finder“打开方式”、拖放、最近比较，以及“比较文件”快捷指令。
 
 GrapeCompare 明确不包含 CLI、Git 子进程集成、difftool/mergetool、任意路径
 URL Scheme 或非沙盒发行版本。
 
 ## 要求与构建
 
-需要 macOS 14 或更高版本。使用 Xcode 打开 `macos/GrapeCompare.xcodeproj`，
+需要 macOS 15 或更高版本。使用 Xcode 打开 `macos/GrapeCompare.xcodeproj`，
 选择 `GrapeCompare` Scheme 并为“我的 Mac”构建。Debug 和 Release 都启用
 App Sandbox、用户所选文件读写权限和应用级安全书签。
 

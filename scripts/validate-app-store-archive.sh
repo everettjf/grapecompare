@@ -21,6 +21,7 @@ test "$(plutil -extract NSPrivacyAccessedAPITypes.1.NSPrivacyAccessedAPITypeReas
     "C617.1"
 test "$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist")" = "1.0.0"
 test "$(plutil -extract CFBundleVersion raw "$app/Contents/Info.plist")" = "35"
+test "$(plutil -extract LSMinimumSystemVersion raw "$app/Contents/Info.plist")" = "15.0"
 test "$(lipo -archs "$app/Contents/MacOS/GrapeCompare")" = "x86_64 arm64"
 codesign -d --entitlements "$entitlements" "$app" 2>/dev/null
 

@@ -4,6 +4,8 @@
 
 ### Mac App Store-only sandbox release
 
+- Set macOS 15 as the minimum supported system version across the app,
+  documentation, App Store listing, and release validation.
 - Make App Sandbox mandatory in Debug and Release, with user-selected read/write
   access and app-scoped security bookmarks.
 - Remove the Git workspace, system Git subprocesses, standalone CLI,
@@ -238,4 +240,4 @@
 - Added semantic JSON, plist, XCStrings, and Xcode project comparison plus App Bundle, signature, entitlement, provisioning-profile, Mach-O, and Asset Catalog inspection.
 - Added Finder Quick Action and standalone CLI workflows.
 - Added deterministic, randomized, filesystem, stress, correctness, and repeatable performance coverage.
-- Supports macOS 14 and later on Apple silicon and Intel Macs, with local-only processing and no subscription.
+- Establish the original universal Apple silicon and Intel build, with local-only processing and no subscription.

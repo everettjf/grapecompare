@@ -53,7 +53,7 @@ Use these reviewed values for the first Mac App Store version. Fields marked
   • Resolve user-selected three-way text and image merges.
   • Choose conflict results individually or in bulk and export the completed result.
 
-  GrapeCompare uses App Sandbox and accesses only files and folders you explicitly select. Finder Open With, drag and drop, recent comparisons, and a macOS 15 or later Shortcut are supported.
+  GrapeCompare requires macOS 15 or later. It uses App Sandbox and accesses only files and folders you explicitly select. Finder Open With, drag and drop, recent comparisons, and a Compare Files Shortcut are supported.
   ```
 
 ## Simplified Chinese
@@ -89,7 +89,7 @@ Use these reviewed values for the first Mac App Store version. Fields marked
   • 对用户主动选择的文本或图片执行三方合并。
   • 逐项或批量解决冲突并导出结果。
 
-  GrapeCompare 启用 App Sandbox，只能访问你明确选择的文件和文件夹。支持 Finder“打开方式”、拖放、最近比较，以及 macOS 15 或更高版本的快捷指令。
+  GrapeCompare 需要 macOS 15 或更高版本。应用启用 App Sandbox，只能访问你明确选择的文件和文件夹。支持 Finder“打开方式”、拖放、最近比较，以及“比较文件”快捷指令。
   ```
 
 ## App Review information
@@ -106,7 +106,7 @@ Use these reviewed values for the first Mac App Store version. Fields marked
 
   The Load Demo menu creates local sample data inside the app container and provides deterministic file and folder comparisons without requiring reviewer documents.
 
-  Finder Open With accepts exactly two files or two folders. The Compare Files App Intent is available on macOS 15 or later and also requires exactly two files.
+  Finder Open With accepts exactly two files or two folders. The Compare Files App Intent also requires exactly two files.
 
   The app uses no network entitlement, analytics, advertising, tracking, external executables, Git subprocesses, command-line tool, or custom URL scheme. PrivacyInfo.xcprivacy declares no collected data and approved reasons only for app-local UserDefaults and timestamps of user-selected or container files.
   ```
