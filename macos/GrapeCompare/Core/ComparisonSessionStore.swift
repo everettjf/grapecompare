@@ -20,7 +20,7 @@ nonisolated enum UIQualityPolicy {
 
 nonisolated enum HomePresentationPolicy {
     static let primaryWorkflowCount = 2
-    static let secondaryWorkflowCount = 2
+    static let secondaryWorkflowCount = 1
     static let quickCompareItemCount = 2
 
     static func acceptsQuickCompareDrop(itemCount: Int) -> Bool {
@@ -83,7 +83,6 @@ nonisolated enum ComparisonSessionKind: String, Codable, Sendable {
     case files
     case folders
     case merge
-    case git
 }
 
 nonisolated struct ComparisonSession: Identifiable, Codable, Equatable, Sendable {

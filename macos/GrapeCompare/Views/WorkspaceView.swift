@@ -112,11 +112,6 @@ struct WorkspaceView: View {
                     workspace.selectedState.liveUpdatesEnabled
                         ? String(localized: "Enabled")
                         : String(localized: "Disabled"))
-                .contextMenu {
-                    Toggle("Git live change notifications", isOn: Binding(
-                        get: { workspace.selectedState.liveNotificationsEnabled },
-                        set: { workspace.selectedState.setLiveNotificationsEnabled($0) }))
-                }
             }
         }
         .padding(.horizontal, 8)

@@ -2,7 +2,6 @@ import AppKit
 import Observation
 import SwiftUI
 import UniformTypeIdentifiers
-import UserNotifications
 
 /// Appearance preference: follow system, force light, or force dark.
 /// Colors throughout the app are semantic/opacity-based, so both schemes
@@ -93,26 +92,15 @@ enum ImageMergeChoice: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
-nonisolated private struct GitComparisonPayload: Sendable {
-    let root: URL
-    let references: [GitReference]
-    let changes: [GitChange]
-    let leftCommit: GitCommit?
-    let rightCommit: GitCommit?
-    let worktrees: [GitWorktree]
-    let branchContext: GitBranchContext
-    let commitGraph: [GitCommitGraphRow]
-}
-
 @Observable
 @MainActor
 final class AppState {
     enum Screen: Equatable {
-        case home, fileDiff, folderCompare, merge, git
+        case home, fileDiff, folderCompare, merge
     }
 
     enum ComparisonPhase: Equatable {
-        case idle, file, folder, merge, git
+        case idle, file, folder, merge
     }
 
     var screen: Screen = .home
@@ -163,40 +151,8 @@ final class AppState {
     var selectedMergeConflictID: MergeConflict.ID?
     private var mergeChoiceUndoStack: [[MergeConflict.ID: MergeConflictChoice]] = []
     private var mergeChoiceRedoStack: [[MergeConflict.ID: MergeConflictChoice]] = []
-    var mergeDestinationURL: URL?
-    var mergeSentinelURL: URL?
-    var isExternalMerge = false
     private var mergeOutputEncoding: TextFileEncoding = .utf8
-    private var pendingExternalMerge = false
-    private var externalMergeRequest: ExternalMergeRequest?
-
-    // MARK: Git 比较
-
-    var gitRepositoryURL: URL?
-    var gitReferences: [GitReference] = []
-    var gitChanges: [GitChange] = []
-    var gitLeftCommit: GitCommit?
-    var gitRightCommit: GitCommit?
-    var gitWorktrees: [GitWorktree] = []
-    var gitBranchContext: GitBranchContext?
-    var gitCommitGraph: [GitCommitGraphRow] = []
-    var gitCommitGraphHasMore = false
-    var isLoadingGitCommitGraph = false
-    var gitReviewedChangeIDs: Set<GitChange.ID> = []
-    var gitReviewNotes: [GitChange.ID: String] = [:]
-    var gitSelectedChangeID: GitChange.ID?
-    var gitRepositoryLibrary: [GitRepositoryLibraryEntry] = []
-    var gitFileRevisions: [GitFileRevision] = []
-    var gitHistoryPath: String?
-    var gitHistoryError: String?
-    var isLoadingGitHistory = false
-    var gitHistoryHasMore = false
-    var gitSelectedFileInspection: GitFileInspection?
-    var gitLeftTarget = "HEAD"
-    var gitRightTarget = "WORKTREE"
-    var gitError: String?
     var liveUpdatesEnabled = true
-    var liveNotificationsEnabled = false
     var liveUpdatePausedReason: String?
     var lastLiveRefresh: Date?
     private(set) var liveRefreshCount = 0
@@ -218,14 +174,12 @@ final class AppState {
     var recentComparisons: [ComparisonSession] = []
     var resumableSession: ComparisonSession?
     var sessionError: String?
-    var gitActionError: String?
     var reportActionError: String?
     var quickCompareError: String?
 
     var isComparingFile: Bool { comparisonPhase == .file }
     var isComparingFolder: Bool { comparisonPhase == .folder }
     var isComparingMerge: Bool { comparisonPhase == .merge }
-    var isComparingGit: Bool { comparisonPhase == .git }
 
     var workspaceHasUnsavedOutput: Bool { outputIsDirty || mergeOutputIsDirty }
     var workspaceIsBusy: Bool {
@@ -240,7 +194,6 @@ final class AppState {
         case .folderCompare:
             return "\(leftFolderURL?.lastPathComponent ?? "Left") ↔ \(rightFolderURL?.lastPathComponent ?? "Right")"
         case .merge: return oursFileURL?.lastPathComponent ?? String(localized: "Merge")
-        case .git: return gitRepositoryURL?.lastPathComponent ?? String(localized: "Git")
         }
     }
 
@@ -250,36 +203,23 @@ final class AppState {
         case .fileDiff: "doc.text.magnifyingglass"
         case .folderCompare: "folder.badge.questionmark"
         case .merge: "arrow.triangle.branch"
-        case .git: "point.3.connected.trianglepath.dotted"
         }
     }
 
-    /// 待处理的启动参数（`GrapeCompare <左> <右>`）
-    private var pendingArgs: (left: URL, right: URL)?
     @ObservationIgnored private var comparisonTask: Task<Void, Never>?
     @ObservationIgnored private var comparisonCancellation: ComparisonCancellation?
     @ObservationIgnored private var requestGeneration: UInt = 0
     @ObservationIgnored private var operationLeftRoot: URL?
     @ObservationIgnored private var operationRightRoot: URL?
-    @ObservationIgnored private var gitTemporaryDirectories: [URL] = []
-    @ObservationIgnored private var gitHistoryTask: Task<Void, Never>?
-    @ObservationIgnored private var gitHistoryCancellation: ComparisonCancellation?
-    @ObservationIgnored private var gitHistoryGeneration: UInt = 0
-    @ObservationIgnored private var gitHistoryRevision = "HEAD"
-    @ObservationIgnored private let gitHistoryPageSize = 100
     @ObservationIgnored private let sessionStore = ComparisonSessionStore()
-    @ObservationIgnored private let gitRepositoryLibraryStore = GitRepositoryLibraryStore()
     @ObservationIgnored private var restoredSecurityScopedURLs: [URL] = []
     @ObservationIgnored private var filesystemWatcher: FilesystemWatcher?
     @ObservationIgnored private var liveRefreshTask: Task<Void, Never>?
     @ObservationIgnored private var watchedExactPaths: Set<String> = []
     @ObservationIgnored private var watchedRootPaths: [String] = []
     @ObservationIgnored private var isLiveRefresh = false
-    @ObservationIgnored private let gitReviewDefaultsKey = "gitReviewedChanges.v1"
-    @ObservationIgnored private let gitReviewNotesDefaultsKey = "gitReviewNotes.v1"
     @ObservationIgnored private let textComparisonOptionsDefaultsKey = "textComparisonOptions.v1"
     @ObservationIgnored private let liveUpdatesDefaultsKey = "liveUpdatesEnabled.v1"
-    @ObservationIgnored private let liveNotificationsDefaultsKey = "liveNotificationsEnabled.v1"
     @ObservationIgnored private var pendingLiveEventCount = 0
     @ObservationIgnored private var sharedReportURL: URL?
     @ObservationIgnored private var sharingPicker: NSSharingServicePicker?
@@ -357,7 +297,6 @@ final class AppState {
         case .fileDiff: fileDiff != nil
         case .folderCompare: folderRoot != nil
         case .merge: mergeResult != nil || imageMergeBaseData != nil
-        case .git: gitRepositoryURL != nil && gitError == nil
         }
     }
 
@@ -510,14 +449,6 @@ final class AppState {
                     .split(separator: "\n", omittingEmptySubsequences: false)
                     .forEach { append(String($0)) }
             }
-        case .git:
-            append("Repository: \(gitRepositoryURL?.path ?? "")")
-            append("Range: \(gitLeftTarget) ↔ \(gitRightTarget)    Changes: \(gitChanges.count)")
-            append("")
-            for change in gitChanges {
-                if truncated { break }
-                append("[\(change.stage.rawValue)] \(change.kind.rawValue)  \(change.oldPath.map { $0 + " → " } ?? "")\(change.path)")
-            }
         case .home:
             return nil
         }
@@ -536,74 +467,38 @@ final class AppState {
         return result
     }
 
-    /// 启动时只记录参数，不在此触发比较：scene 构建期间改动 @Published
-    /// 状态会导致窗口完全不创建（macOS 27 beta，与 .preferredColorScheme 同因）
-    init(processLaunchArguments: Bool = true) {
+    init() {
         let savedSessions = sessionStore.load()
         recentComparisons = savedSessions.recents
         resumableSession = savedSessions.current
-        gitRepositoryLibrary = gitRepositoryLibraryStore.load()
         if UserDefaults.standard.object(forKey: liveUpdatesDefaultsKey) != nil {
             liveUpdatesEnabled = UserDefaults.standard.bool(forKey: liveUpdatesDefaultsKey)
         }
-        liveNotificationsEnabled = UserDefaults.standard.bool(forKey: liveNotificationsDefaultsKey)
         if let data = UserDefaults.standard.data(forKey: textComparisonOptionsDefaultsKey),
            let stored = try? JSONDecoder().decode(TextComparisonOptions.self, from: data) {
             textComparisonOptions = stored
         }
-        guard processLaunchArguments else { return }
-        let args = ProcessInfo.processInfo.arguments
-        if let request = ExternalMergeRequest(commandLineArguments: args) {
-            baseFileURL = request.baseURL
-            oursFileURL = request.oursURL
-            theirsFileURL = request.theirsURL
-            mergeDestinationURL = request.destinationURL
-            mergeSentinelURL = request.sentinelURL
-            externalMergeRequest = request
-            isExternalMerge = true
-            pendingExternalMerge = true
-            return
-        }
-        guard args.count >= 3 else { return }
-        let l = URL(fileURLWithPath: args[1]).standardizedFileURL
-        let r = URL(fileURLWithPath: args[2]).standardizedFileURL
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: l.path(percentEncoded: false)),
-              fm.fileExists(atPath: r.path(percentEncoded: false)) else { return }
-        pendingArgs = (l, r)
     }
 
     func consumeQuickAction() {
-        guard let paths = UserDefaults.standard.stringArray(forKey: quickActionPathsKey),
-              paths.count == 2 else { return }
-        UserDefaults.standard.removeObject(forKey: quickActionPathsKey)
-        pendingArgs = (URL(fileURLWithPath: paths[0]).standardizedFileURL,
-                       URL(fileURLWithPath: paths[1]).standardizedFileURL)
-        consumePendingArgs()
-    }
-
-    /// 首个窗口出现后处理启动参数：目录走文件夹比较，其余走文件比较
-    func consumePendingArgs() {
-        if pendingExternalMerge {
-            pendingExternalMerge = false
-            startThreeWayMerge()
-            return
-        }
-        guard let (l, r) = pendingArgs else { return }
-        pendingArgs = nil
-        var isDirL: ObjCBool = false
-        var isDirR: ObjCBool = false
-        let fm = FileManager.default
-        fm.fileExists(atPath: l.path(percentEncoded: false), isDirectory: &isDirL)
-        fm.fileExists(atPath: r.path(percentEncoded: false), isDirectory: &isDirR)
-        if isDirL.boolValue, isDirR.boolValue {
-            leftFolderURL = l
-            rightFolderURL = r
-            startFolderCompare()
-        } else {
-            leftFileURL = l
-            rightFileURL = r
-            startFileCompare()
+        guard let bookmarks = UserDefaults.standard.array(forKey: quickActionBookmarksKey) as? [Data],
+              bookmarks.count == 2 else { return }
+        UserDefaults.standard.removeObject(forKey: quickActionBookmarksKey)
+        do {
+            let urls = try bookmarks.map { bookmark in
+                var stale = false
+                let url = try URL(
+                    resolvingBookmarkData: bookmark,
+                    options: [.withSecurityScope, .withoutUI],
+                    relativeTo: nil,
+                    bookmarkDataIsStale: &stale)
+                guard !stale else { throw CocoaError(.fileReadUnknown) }
+                retainSecurityScopedAccess(to: url)
+                return url.standardizedFileURL
+            }
+            compareQuickItems(urls)
+        } catch {
+            quickCompareError = error.localizedDescription
         }
     }
 
@@ -671,7 +566,7 @@ final class AppState {
         guard let baseURL = baseFileURL,
               let oursURL = oursFileURL,
               let theirsURL = theirsFileURL else { return }
-        if !isExternalMerge && !isLiveRefresh {
+        if !isLiveRefresh {
             recordSession(kind: .merge, urls: [baseURL, oursURL, theirsURL])
         }
         let (request, cancellation) = beginComparison(.merge)
@@ -754,14 +649,6 @@ final class AppState {
 
     func saveImageMerge() {
         guard let data = selectedImageMergeData else { return }
-        if isExternalMerge, let request = externalMergeRequest {
-            do {
-                try request.complete(with: data)
-                mergeOutputIsDirty = false
-                NSApp.terminate(nil)
-            } catch { mergeSaveError = error.localizedDescription }
-            return
-        }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = oursFileURL?.lastPathComponent ?? "merged-image.png"
         guard panel.runModal() == .OK, let destination = panel.url else { return }
@@ -780,195 +667,6 @@ final class AppState {
         }
     }
 
-    func startGitComparison() {
-        guard let selectedRepository = gitRepositoryURL else { return }
-        if !isLiveRefresh { recordSession(kind: .git, urls: [selectedRepository]) }
-        let left = GitComparisonTarget.parse(gitLeftTarget)
-        let right = GitComparisonTarget.parse(gitRightTarget)
-        let (request, cancellation) = beginComparison(.git)
-        gitError = nil
-        screen = .git
-        comparisonTask = Task { [weak self] in
-            let worker = Task.detached(priority: .userInitiated) {
-                try Self.checkMergeCancellation(cancellation)
-                let policy = GitCommandPolicy(isCancelled: { cancellation.isCancelled })
-                let root = try GitRepositoryComparator.repositoryRoot(
-                    at: selectedRepository, policy: policy)
-                let references = try GitRepositoryComparator.references(in: root, policy: policy)
-                let changes = try GitRepositoryComparator.changes(
-                    in: root,
-                    from: left,
-                    to: right,
-                    policy: policy)
-                let leftCommit: GitCommit?
-                if case .revision(let revision) = left {
-                    leftCommit = try GitRepositoryComparator.commit(
-                        in: root, revision: revision, policy: policy)
-                } else {
-                    leftCommit = nil
-                }
-                let rightCommit: GitCommit?
-                if case .revision(let revision) = right {
-                    rightCommit = try GitRepositoryComparator.commit(
-                        in: root, revision: revision, policy: policy)
-                } else {
-                    rightCommit = nil
-                }
-                let worktrees = try GitRepositoryComparator.worktrees(in: root, policy: policy)
-                let comparisonRevision: String
-                if case .revision(let revision) = left { comparisonRevision = revision }
-                else if case .revision(let revision) = right { comparisonRevision = revision }
-                else { comparisonRevision = "HEAD" }
-                let branchContext = try GitRepositoryComparator.branchContext(
-                    in: root, comparisonRevision: comparisonRevision, policy: policy)
-                let commitGraph = try GitRepositoryComparator.commitGraph(
-                    in: root, limit: 200, policy: policy)
-                return GitComparisonPayload(
-                    root: root,
-                    references: references,
-                    changes: changes,
-                    leftCommit: leftCommit,
-                    rightCommit: rightCommit,
-                    worktrees: worktrees,
-                    branchContext: branchContext,
-                    commitGraph: commitGraph)
-            }
-            let result = await withTaskCancellationHandler {
-                await worker.result
-            } onCancel: {
-                cancellation.cancel()
-                worker.cancel()
-            }
-            guard let self,
-                  !Task.isCancelled,
-                  self.requestGeneration == request else { return }
-            switch result {
-            case .success(let payload):
-                self.gitRepositoryURL = payload.root
-                self.gitReferences = payload.references
-                self.gitChanges = payload.changes
-                self.gitLeftCommit = payload.leftCommit
-                self.gitRightCommit = payload.rightCommit
-                self.gitWorktrees = payload.worktrees
-                self.gitBranchContext = payload.branchContext
-                self.gitCommitGraph = payload.commitGraph
-                self.gitCommitGraphHasMore = payload.commitGraph.count == 200
-                self.gitSelectedChangeID = payload.changes.first?.id
-                self.gitReviewedChangeIDs = self.loadGitReviewedChanges(
-                    repository: payload.root, changes: payload.changes)
-                self.gitReviewNotes = self.loadGitReviewNotes(
-                    repository: payload.root, changes: payload.changes)
-                self.gitRepositoryLibrary = (try? self.gitRepositoryLibraryStore.remember(payload.root))
-                    ?? self.gitRepositoryLibrary
-            case .failure(let error):
-                if !(error is CancellationError) {
-                    self.gitError = error.localizedDescription
-                }
-            }
-            self.finishComparison(request)
-        }
-    }
-
-    func openGitChange(_ change: GitChange) {
-        guard let repository = gitRepositoryURL else { return }
-        do {
-            let selectedTargets = targets(for: change)
-            let leftPath = change.oldPath ?? change.path
-            let leftURL = try materializeGitFile(
-                repository: repository, target: selectedTargets.left, path: leftPath, side: "left")
-            let rightURL = try materializeGitFile(
-                repository: repository, target: selectedTargets.right, path: change.path, side: "right")
-            diffReturnScreen = .git
-            runFileDiff(left: leftURL, right: rightURL)
-        } catch {
-            gitError = error.localizedDescription
-        }
-    }
-
-    func selectAdjacentGitChange(forward: Bool) {
-        guard !gitChanges.isEmpty else { return }
-        let current = gitSelectedChangeID.flatMap { id in gitChanges.firstIndex { $0.id == id } }
-        let index: Int
-        if forward { index = min((current ?? -1) + 1, gitChanges.count - 1) }
-        else { index = max((current ?? gitChanges.count) - 1, 0) }
-        gitSelectedChangeID = gitChanges[index].id
-        loadGitFileHistory(gitChanges[index])
-    }
-
-    func toggleGitReviewed(_ change: GitChange) {
-        if gitReviewedChangeIDs.contains(change.id) { gitReviewedChangeIDs.remove(change.id) }
-        else { gitReviewedChangeIDs.insert(change.id) }
-        persistGitReviewedChanges()
-    }
-
-    func updateGitReviewNote(_ note: String, for change: GitChange) {
-        if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            gitReviewNotes.removeValue(forKey: change.id)
-        } else {
-            gitReviewNotes[change.id] = note
-        }
-        persistGitReviewNotes()
-    }
-
-    func switchGitWorktree(_ worktree: GitWorktree) {
-        gitRepositoryURL = worktree.path
-        startGitComparison()
-    }
-
-    func compareGitChanges(since interval: TimeInterval) {
-        guard let repository = gitRepositoryURL, interval > 0 else { return }
-        let cutoff = Date().addingTimeInterval(-interval)
-        let (request, cancellation) = beginComparison(.git)
-        gitError = nil
-        comparisonTask = Task { [weak self] in
-            let result = await Task.detached(priority: .userInitiated) {
-                Result {
-                    try GitRepositoryComparator.revision(
-                        in: repository,
-                        before: cutoff,
-                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
-                }
-            }.value
-            guard let self,
-                  !Task.isCancelled,
-                  self.requestGeneration == request,
-                  !cancellation.isCancelled else { return }
-            switch result {
-            case .success(let revision):
-                guard let revision else {
-                    self.gitError = String(localized: "No commit exists before the selected time range.")
-                    self.finishComparison(request)
-                    return
-                }
-                self.gitLeftTarget = revision
-                self.gitRightTarget = "WORKTREE"
-                self.finishComparison(request)
-                self.startGitComparison()
-            case .failure(let error):
-                if !(error is CancellationError) { self.gitError = error.localizedDescription }
-                self.finishComparison(request)
-            }
-        }
-    }
-
-    func openGitCommitChangeset(_ commit: GitCommit) {
-        guard let parent = commit.parentIDs.first else { return }
-        useGitComparisonShortcut(left: parent, right: commit.objectID)
-    }
-
-    func revealGitRepositoryInFinder() {
-        guard let repository = gitRepositoryURL else { return }
-        NSWorkspace.shared.activateFileViewerSelecting([repository])
-    }
-
-    func openGitRepositoryInTerminal() {
-        guard let repository = gitRepositoryURL else { return }
-        NSWorkspace.shared.open(
-            [repository],
-            withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
-            configuration: NSWorkspace.OpenConfiguration())
-    }
-
     func openComparedFileExternally(left: Bool) {
         guard let url = left ? diffLeftURL : diffRightURL else { return }
         NSWorkspace.shared.open(url)
@@ -977,242 +675,6 @@ final class AppState {
     func revealComparedFileInFinder(left: Bool) {
         guard let url = left ? diffLeftURL : diffRightURL else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
-    }
-
-    func openGitRepositoryLibraryEntry(_ entry: GitRepositoryLibraryEntry) {
-        do {
-            let resolved = try gitRepositoryLibraryStore.resolve(entry)
-            retainSecurityScopedAccess(to: resolved.url)
-            gitRepositoryURL = resolved.url
-            startGitComparison()
-        } catch {
-            gitError = error.localizedDescription
-        }
-    }
-
-    func removeGitRepositoryLibraryEntry(_ entry: GitRepositoryLibraryEntry) {
-        gitRepositoryLibrary = (try? gitRepositoryLibraryStore.remove(id: entry.id)) ?? gitRepositoryLibrary
-    }
-
-    func loadMoreGitCommitGraph() {
-        guard let repository = gitRepositoryURL,
-              gitCommitGraphHasMore, !isLoadingGitCommitGraph else { return }
-        isLoadingGitCommitGraph = true
-        let skip = gitCommitGraph.count
-        Task { [weak self] in
-            let result = await Task.detached(priority: .userInitiated) {
-                Result { try GitRepositoryComparator.commitGraph(
-                    in: repository, limit: 200, skip: skip) }
-            }.value
-            guard let self else { return }
-            switch result {
-            case .success(let rows):
-                let existing = Set(self.gitCommitGraph.map(\.id))
-                self.gitCommitGraph.append(contentsOf: rows.filter { !existing.contains($0.id) })
-                self.gitCommitGraphHasMore = rows.count == 200
-            case .failure(let error): self.gitError = error.localizedDescription
-            }
-            self.isLoadingGitCommitGraph = false
-        }
-    }
-
-    private func gitReviewKey(repository: URL) -> String {
-        "\(repository.standardizedFileURL.path)\u{0}\(gitLeftTarget)\u{0}\(gitRightTarget)"
-    }
-
-    private func loadGitReviewedChanges(repository: URL, changes: [GitChange]) -> Set<GitChange.ID> {
-        guard let data = UserDefaults.standard.data(forKey: gitReviewDefaultsKey),
-              let stored = try? JSONDecoder().decode([String: [String]].self, from: data) else { return [] }
-        let valid = Set(changes.map(\.id))
-        return Set(stored[gitReviewKey(repository: repository)] ?? []).intersection(valid)
-    }
-
-    private func persistGitReviewedChanges() {
-        guard let repository = gitRepositoryURL else { return }
-        var stored: [String: [String]] = [:]
-        if let data = UserDefaults.standard.data(forKey: gitReviewDefaultsKey) {
-            stored = (try? JSONDecoder().decode([String: [String]].self, from: data)) ?? [:]
-        }
-        stored[gitReviewKey(repository: repository)] = gitReviewedChangeIDs.sorted()
-        if stored.count > 100 {
-            for key in stored.keys.sorted().prefix(stored.count - 100) { stored.removeValue(forKey: key) }
-        }
-        if let data = try? JSONEncoder().encode(stored) {
-            UserDefaults.standard.set(data, forKey: gitReviewDefaultsKey)
-        }
-    }
-
-    private func loadGitReviewNotes(
-        repository: URL, changes: [GitChange]
-    ) -> [GitChange.ID: String] {
-        guard let data = UserDefaults.standard.data(forKey: gitReviewNotesDefaultsKey),
-              let stored = try? JSONDecoder().decode([String: [String: String]].self, from: data)
-        else { return [:] }
-        let valid = Set(changes.map(\.id))
-        return (stored[gitReviewKey(repository: repository)] ?? [:]).filter {
-            valid.contains($0.key)
-        }
-    }
-
-    private func persistGitReviewNotes() {
-        guard let repository = gitRepositoryURL else { return }
-        var stored: [String: [String: String]] = [:]
-        if let data = UserDefaults.standard.data(forKey: gitReviewNotesDefaultsKey) {
-            stored = (try? JSONDecoder().decode([String: [String: String]].self, from: data)) ?? [:]
-        }
-        stored[gitReviewKey(repository: repository)] = gitReviewNotes
-        if stored.count > 100 {
-            for key in stored.keys.sorted().prefix(stored.count - 100) { stored.removeValue(forKey: key) }
-        }
-        if let data = try? JSONEncoder().encode(stored) {
-            UserDefaults.standard.set(data, forKey: gitReviewNotesDefaultsKey)
-        }
-    }
-
-    func loadGitFileHistory(_ change: GitChange) {
-        guard let repository = gitRepositoryURL else { return }
-        gitHistoryTask?.cancel()
-        gitHistoryCancellation?.cancel()
-        let cancellation = ComparisonCancellation()
-        gitHistoryCancellation = cancellation
-        gitHistoryGeneration &+= 1
-        let generation = gitHistoryGeneration
-        let right = GitComparisonTarget.parse(gitRightTarget)
-        let left = GitComparisonTarget.parse(gitLeftTarget)
-        let revision: String
-        let path: String
-        let selectedTargets = targets(for: change)
-        let leftPath = change.oldPath ?? change.path
-        if case .revision(let value) = right {
-            revision = value
-            path = change.path
-        } else if case .revision(let value) = left {
-            revision = value
-            path = change.oldPath ?? change.path
-        } else {
-            revision = "HEAD"
-            path = change.oldPath ?? change.path
-        }
-        gitHistoryPath = path
-        gitHistoryRevision = revision
-        gitFileRevisions = []
-        gitHistoryHasMore = false
-        gitSelectedFileInspection = nil
-        gitHistoryError = nil
-        isLoadingGitHistory = true
-        let pageSize = gitHistoryPageSize
-        gitHistoryTask = Task { [weak self] in
-            let result = await Task.detached(priority: .userInitiated) {
-                Result {
-                    let revisions = try GitRepositoryComparator.fileRevisions(
-                        in: repository,
-                        path: path,
-                        revision: revision,
-                        limit: pageSize,
-                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
-                    let rightInspection = try GitRepositoryComparator.inspectFile(
-                        in: repository,
-                        target: selectedTargets.right,
-                        path: change.path,
-                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
-                    let inspection = rightInspection.kind == .missing
-                        ? try GitRepositoryComparator.inspectFile(
-                            in: repository,
-                            target: selectedTargets.left,
-                            path: leftPath,
-                            policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
-                        : rightInspection
-                    return (revisions, inspection)
-                }
-            }.value
-            guard let self, !Task.isCancelled, self.gitHistoryGeneration == generation else { return }
-            self.isLoadingGitHistory = false
-            self.gitHistoryTask = nil
-            self.gitHistoryCancellation = nil
-            switch result {
-            case .success(let payload):
-                let revisions = payload.0
-                self.gitFileRevisions = revisions
-                self.gitHistoryHasMore = revisions.count == self.gitHistoryPageSize
-                self.gitSelectedFileInspection = payload.1
-            case .failure(let error):
-                self.gitHistoryError = error.localizedDescription
-            }
-        }
-    }
-
-    func loadMoreGitFileHistory() {
-        guard let repository = gitRepositoryURL,
-              let path = gitHistoryPath,
-              gitHistoryHasMore,
-              !isLoadingGitHistory else { return }
-        gitHistoryGeneration &+= 1
-        let generation = gitHistoryGeneration
-        let revision = gitHistoryRevision
-        let skip = gitFileRevisions.count
-        let pageSize = gitHistoryPageSize
-        gitHistoryCancellation?.cancel()
-        let cancellation = ComparisonCancellation()
-        gitHistoryCancellation = cancellation
-        gitHistoryError = nil
-        isLoadingGitHistory = true
-        gitHistoryTask = Task { [weak self] in
-            let result = await Task.detached(priority: .userInitiated) {
-                Result {
-                    try GitRepositoryComparator.fileRevisions(
-                        in: repository,
-                        path: path,
-                        revision: revision,
-                        limit: pageSize,
-                        skip: skip,
-                        policy: GitCommandPolicy(isCancelled: { cancellation.isCancelled }))
-                }
-            }.value
-            guard let self, !Task.isCancelled, self.gitHistoryGeneration == generation else { return }
-            self.isLoadingGitHistory = false
-            self.gitHistoryTask = nil
-            self.gitHistoryCancellation = nil
-            switch result {
-            case .success(let revisions):
-                let existing = Set(self.gitFileRevisions.map(\.id))
-                self.gitFileRevisions += revisions.filter { !existing.contains($0.id) }
-                self.gitHistoryHasMore = revisions.count == pageSize && self.gitFileRevisions.count < 10_000
-            case .failure(let error):
-                self.gitHistoryError = error.localizedDescription
-            }
-        }
-    }
-
-    func useGitComparisonShortcut(left: String, right: String) {
-        gitLeftTarget = left
-        gitRightTarget = right
-        startGitComparison()
-    }
-
-    func compareGitFileRevisions(_ left: GitFileRevision, _ right: GitFileRevision) {
-        guard let repository = gitRepositoryURL else { return }
-        do {
-            let leftURL = try materializeGitFile(
-                repository: repository,
-                target: .revision(left.commit.objectID),
-                path: left.path,
-                side: "\(left.commit.shortObjectID)-left")
-            let rightURL = try materializeGitFile(
-                repository: repository,
-                target: .revision(right.commit.objectID),
-                path: right.path,
-                side: "\(right.commit.shortObjectID)-right")
-            diffReturnScreen = .git
-            runFileDiff(left: leftURL, right: rightURL)
-        } catch {
-            gitHistoryError = error.localizedDescription
-        }
-    }
-
-    func compareGitRevisionWithPrevious(_ revision: GitFileRevision) {
-        guard let index = gitFileRevisions.firstIndex(where: { $0.id == revision.id }),
-              gitFileRevisions.indices.contains(index + 1) else { return }
-        compareGitFileRevisions(gitFileRevisions[index + 1], revision)
     }
 
     func resolveMergeConflict(_ id: MergeConflict.ID, with choice: MergeConflictChoice) {
@@ -1278,33 +740,8 @@ final class AppState {
         mergeOutputIsDirty = true
     }
 
-    func saveExternalMerge() {
-        guard isExternalMerge,
-              let request = externalMergeRequest,
-              let result = mergeResult,
-              mergeChoices.count >= result.conflictCount else { return }
-        guard !MergeOutputValidator.containsConflictMarkers(mergeOutputText) else {
-            mergeSaveError = String(localized: "The merge output still contains conflict markers.")
-            return
-        }
-        do {
-            let snapshot = try TextSnapshot(text: mergeOutputText, encoding: mergeOutputEncoding)
-            try request.complete(with: snapshot)
-            mergeOutputIsDirty = false
-            mergeSaveError = nil
-            NSApp.terminate(nil)
-        } catch {
-            mergeSaveError = error.localizedDescription
-        }
-    }
-
     var mergeOutputHasConflictMarkers: Bool {
         MergeOutputValidator.containsConflictMarkers(mergeOutputText)
-    }
-
-    func cancelExternalMerge() {
-        guard isExternalMerge else { return }
-        NSApp.terminate(nil)
     }
 
     /// 从文件夹对比中打开某个文件的 diff（支持仅一侧存在的情况）
@@ -1463,72 +900,6 @@ final class AppState {
         UserDefaults.standard.set(enabled, forKey: liveUpdatesDefaultsKey)
         liveUpdatePausedReason = nil
         if enabled { configureLiveUpdates() } else { stopLiveUpdates() }
-    }
-
-    func setLiveNotificationsEnabled(_ enabled: Bool) {
-        liveNotificationsEnabled = enabled
-        UserDefaults.standard.set(enabled, forKey: liveNotificationsDefaultsKey)
-        guard enabled else { return }
-        Task {
-            do {
-                let granted = try await UNUserNotificationCenter.current().requestAuthorization(
-                    options: [.alert, .sound])
-                if !granted {
-                    liveNotificationsEnabled = false
-                    UserDefaults.standard.set(false, forKey: liveNotificationsDefaultsKey)
-                    gitActionError = String(localized: "Notifications are disabled in System Settings.")
-                }
-            } catch {
-                liveNotificationsEnabled = false
-                UserDefaults.standard.set(false, forKey: liveNotificationsDefaultsKey)
-                gitActionError = error.localizedDescription
-            }
-        }
-    }
-
-    func copyGitChangePath(_ change: GitChange) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(change.path, forType: .string)
-    }
-
-    func copyGitChangeContents(_ change: GitChange) {
-        loadGitChangeContent(change) { data, _ in
-            guard let text = String(data: data, encoding: .utf8) else {
-                self.gitActionError = String(localized: "The selected file is not UTF-8 text.")
-                return
-            }
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(text, forType: .string)
-        }
-    }
-
-    func saveGitChangeCopy(_ change: GitChange) {
-        loadGitChangeContent(change) { data, filename in
-            let panel = NSSavePanel()
-            panel.nameFieldStringValue = filename
-            guard panel.runModal() == .OK, let destination = panel.url else { return }
-            do {
-                try data.write(to: destination, options: .atomic)
-            } catch {
-                self.gitActionError = error.localizedDescription
-            }
-        }
-    }
-
-    func revealGitChangeInFinder(_ change: GitChange) {
-        guard let url = workingTreeURL(for: change) else {
-            gitActionError = String(localized: "This comparison side is not a working-tree file.")
-            return
-        }
-        NSWorkspace.shared.activateFileViewerSelecting([url])
-    }
-
-    func openGitChangeExternally(_ change: GitChange) {
-        guard let url = workingTreeURL(for: change) else {
-            gitActionError = String(localized: "This comparison side is not a working-tree file.")
-            return
-        }
-        NSWorkspace.shared.open(url)
     }
 
     func loadFileDemo() {
@@ -1774,12 +1145,6 @@ final class AppState {
                 oursFileURL = resolved[1]
                 theirsFileURL = resolved[2]
                 startThreeWayMerge()
-            case .git:
-                guard resolved.count == 1, resolved[0].hasDirectoryPath else {
-                    throw CocoaError(.fileReadCorruptFile)
-                }
-                gitRepositoryURL = resolved[0]
-                startGitComparison()
             }
             sessionError = nil
         } catch {
@@ -1809,13 +1174,8 @@ final class AppState {
         requestGeneration &+= 1
         comparisonCancellation?.cancel()
         comparisonTask?.cancel()
-        gitHistoryCancellation?.cancel()
-        gitHistoryTask?.cancel()
         comparisonTask = nil
         comparisonCancellation = nil
-        gitHistoryTask = nil
-        gitHistoryCancellation = nil
-        isLoadingGitHistory = false
         comparisonPhase = .idle
         stopLiveUpdates()
     }
@@ -1828,19 +1188,14 @@ final class AppState {
         let exactURLs: [URL]
         switch screen {
         case .fileDiff:
-            guard diffReturnScreen != .git else { return }
             exactURLs = [diffLeftURL, diffRightURL].compactMap { $0 }
             roots = exactURLs.map { $0.deletingLastPathComponent() }
         case .folderCompare:
             exactURLs = []
             roots = [leftFolderURL, rightFolderURL].compactMap { $0 }
         case .merge:
-            guard !isExternalMerge else { return }
             exactURLs = [baseFileURL, oursFileURL, theirsFileURL].compactMap { $0 }
             roots = exactURLs.map { $0.deletingLastPathComponent() }
-        case .git:
-            exactURLs = []
-            roots = [gitRepositoryURL].compactMap { $0 }
         case .home:
             return
         }
@@ -1909,9 +1264,6 @@ final class AppState {
         defer { isLiveRefresh = false }
         liveRefreshCount &+= 1
         lastLiveRefresh = Date()
-        if screen == .git, liveNotificationsEnabled, pendingLiveEventCount > 0 {
-            postGitLiveNotification(eventCount: pendingLiveEventCount)
-        }
         pendingLiveEventCount = 0
         switch screen {
         case .fileDiff:
@@ -1920,8 +1272,6 @@ final class AppState {
             startFolderCompare()
         case .merge:
             startThreeWayMerge()
-        case .git:
-            startGitComparison()
         case .home:
             break
         }
@@ -1968,94 +1318,4 @@ final class AppState {
         mergeChoiceRedoStack.removeAll()
     }
 
-    private func materializeGitFile(
-        repository: URL,
-        target: GitComparisonTarget,
-        path: String,
-        side: String
-    ) throws -> URL? {
-        if target == .workingTree {
-            let url = repository.appending(path: path).standardizedFileURL
-            return FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) ? url : nil
-        }
-        guard let data = try GitRepositoryComparator.fileData(
-            in: repository, target: target, path: path) else { return nil }
-        let directory = FileManager.default.temporaryDirectory
-            .appending(path: "GrapeCompareGit-\(UUID().uuidString)", directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        gitTemporaryDirectories.append(directory)
-        let filename = "\(side)-\(URL(fileURLWithPath: path).lastPathComponent)"
-        let destination = directory.appending(path: filename, directoryHint: .notDirectory)
-        try data.write(to: destination, options: .atomic)
-        return destination
-    }
-
-    private func targets(for change: GitChange) -> (left: GitComparisonTarget, right: GitComparisonTarget) {
-        switch change.stage {
-        case .staged:
-            return (GitComparisonTarget.parse(gitLeftTarget), .index)
-        case .unstaged, .untracked:
-            return (.index, .workingTree)
-        case .comparison:
-            return (GitComparisonTarget.parse(gitLeftTarget), GitComparisonTarget.parse(gitRightTarget))
-        }
-    }
-
-    private func loadGitChangeContent(
-        _ change: GitChange,
-        completion: @escaping (Data, String) -> Void
-    ) {
-        guard let repository = gitRepositoryURL else { return }
-        let selectedTargets = targets(for: change)
-        Task {
-            let result = await Task.detached(priority: .userInitiated) {
-                Result<(Data, String), Error> {
-                    let policy = GitCommandPolicy(maximumOutputBytes: 8 * 1_024 * 1_024)
-                    if let data = try GitRepositoryComparator.fileData(
-                        in: repository, target: selectedTargets.right,
-                        path: change.path, policy: policy) {
-                        guard data.count <= 8 * 1_024 * 1_024 else {
-                            throw CocoaError(.fileReadTooLarge)
-                        }
-                        return (data, URL(fileURLWithPath: change.path).lastPathComponent)
-                    }
-                    let leftPath = change.oldPath ?? change.path
-                    guard let data = try GitRepositoryComparator.fileData(
-                        in: repository, target: selectedTargets.left,
-                        path: leftPath, policy: policy),
-                          data.count <= 8 * 1_024 * 1_024 else {
-                        throw CocoaError(.fileNoSuchFile)
-                    }
-                    return (data, URL(fileURLWithPath: leftPath).lastPathComponent)
-                }
-            }.value
-            switch result {
-            case .success(let value): completion(value.0, value.1)
-            case .failure(let error): gitActionError = error.localizedDescription
-            }
-        }
-    }
-
-    private func workingTreeURL(for change: GitChange) -> URL? {
-        guard let repository = gitRepositoryURL else { return nil }
-        let selectedTargets = targets(for: change)
-        guard selectedTargets.right == .workingTree else { return nil }
-        let url = repository.appending(path: change.path).standardizedFileURL
-        guard url.path.hasPrefix(repository.standardizedFileURL.path + "/"),
-              FileManager.default.fileExists(atPath: url.path) else { return nil }
-        return url
-    }
-
-    private func postGitLiveNotification(eventCount: Int) {
-        let content = UNMutableNotificationContent()
-        content.title = String(localized: "GrapeCompare Git changes updated")
-        let repositoryName = gitRepositoryURL?.lastPathComponent ?? String(localized: "Repository")
-        content.body = String(localized: "\(repositoryName): \(eventCount) filesystem events refreshed.")
-        content.sound = .default
-        let request = UNNotificationRequest(
-            identifier: "grapecompare.git.\(UUID().uuidString)",
-            content: content,
-            trigger: nil)
-        UNUserNotificationCenter.current().add(request)
-    }
 }

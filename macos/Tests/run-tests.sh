@@ -15,11 +15,8 @@ swiftc -O -whole-module-optimization -o "$BIN" \
     ../GrapeCompare/Core/TextComparison.swift \
     ../GrapeCompare/Core/UnifiedDiff.swift \
     ../GrapeCompare/Core/ThreeWayMerge.swift \
-    ../GrapeCompare/Core/ExternalMergeProtocol.swift \
     ../GrapeCompare/Core/StructuredComparison.swift \
     ../GrapeCompare/Core/ImageComparison.swift \
-    ../GrapeCompare/Core/GitRepository.swift \
-    ../GrapeCompare/Core/GitRepositoryWorkspace.swift \
     ../GrapeCompare/Core/FolderComparator.swift \
     ../GrapeCompare/Core/FolderSync.swift \
     ../GrapeCompare/Core/AppleDeveloperFormats.swift \

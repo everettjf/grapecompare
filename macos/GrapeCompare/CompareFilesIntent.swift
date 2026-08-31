@@ -2,32 +2,23 @@ import AppIntents
 import Foundation
 import UniformTypeIdentifiers
 
-nonisolated let quickActionPathsKey = "pendingCompareFilesIntentPaths"
+nonisolated let quickActionBookmarksKey = "pendingCompareFilesIntentBookmarks"
 
 extension Notification.Name {
     nonisolated static let compareFilesIntentReceived = Notification.Name("CompareFilesIntentReceived")
-    nonisolated static let externalCompareRequestReceived = Notification.Name("ExternalCompareRequestReceived")
 }
 
-nonisolated enum ExternalCompareRequest {
-    static func store(_ urls: [URL]) {
-        let paths = urls.filter(\.isFileURL).map { $0.standardizedFileURL.path }
-        guard paths.count == 2 else { return }
-        UserDefaults.standard.set(paths, forKey: quickActionPathsKey)
-        NotificationCenter.default.post(name: .externalCompareRequestReceived, object: nil)
-    }
-
-    static func decode(_ url: URL) -> [URL] {
-        guard url.scheme?.lowercased() == "grapecompare",
-              url.host?.lowercased() == "compare",
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return [] }
-        let items = components.queryItems ?? []
-        return ["left", "right"].compactMap { key in
-            items.first(where: { $0.name == key })?.value.flatMap { value in
-                if let url = URL(string: value), url.isFileURL { return url }
-                return URL(fileURLWithPath: value)
-            }
+nonisolated enum PendingComparisonRequest {
+    static func store(_ urls: [URL]) throws {
+        let selected = urls.filter(\.isFileURL).map(\.standardizedFileURL)
+        guard selected.count == 2 else { throw CompareFilesIntentError.requiresTwoLocalFiles }
+        let bookmarks = try selected.map {
+            try $0.bookmarkData(
+                options: [.withSecurityScope],
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil)
         }
+        UserDefaults.standard.set(bookmarks, forKey: quickActionBookmarksKey)
     }
 }
 
@@ -46,14 +37,13 @@ struct CompareFilesIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        var paths: [String] = []
+        var urls: [URL] = []
         for file in files {
             if let url = try await file.id.fileURL {
-                paths.append(url.standardizedFileURL.path)
+                urls.append(url.standardizedFileURL)
             }
         }
-        guard paths.count == 2 else { throw CompareFilesIntentError.requiresTwoLocalFiles }
-        UserDefaults.standard.set(paths, forKey: quickActionPathsKey)
+        try PendingComparisonRequest.store(urls)
         await MainActor.run {
             NotificationCenter.default.post(name: .compareFilesIntentReceived, object: nil)
         }

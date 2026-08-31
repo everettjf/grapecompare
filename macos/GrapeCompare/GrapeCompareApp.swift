@@ -21,13 +21,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
-        ExternalCompareRequest.store(filenames.map(URL.init(fileURLWithPath:)))
-        sender.reply(toOpenOrPrint: filenames.count == 2 ? .success : .failure)
-    }
-
-    func application(_ application: NSApplication, open urls: [URL]) {
-        let files = urls.flatMap { $0.isFileURL ? [$0] : ExternalCompareRequest.decode($0) }
-        ExternalCompareRequest.store(files)
+        do {
+            try PendingComparisonRequest.store(filenames.map(URL.init(fileURLWithPath:)))
+            NotificationCenter.default.post(name: .compareFilesIntentReceived, object: nil)
+            sender.reply(toOpenOrPrint: .success)
+        } catch {
+            sender.reply(toOpenOrPrint: .failure)
+        }
     }
 }
 
@@ -51,7 +51,6 @@ struct GrapeCompareApp: App {
         .commands {
             FileOperationCommands()
             MergeCommands()
-            GitCommands()
             WorkspaceCommands()
             ReportCommands()
             CommandMenu("Appearance") {
@@ -101,7 +100,6 @@ private struct WindowRootView: View {
     var body: some View {
         WorkspaceView(workspace: workspace)
             .onAppear {
-                state.consumePendingArgs()
                 state.consumeQuickAction()
             }
             .onChange(of: scenePhase) {
@@ -109,12 +107,6 @@ private struct WindowRootView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .compareFilesIntentReceived)) { _ in
                 state.consumeQuickAction()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .externalCompareRequestReceived)) { _ in
-                state.consumeQuickAction()
-            }
-            .onOpenURL { url in
-                ExternalCompareRequest.store(ExternalCompareRequest.decode(url))
             }
             .focusedSceneValue(\.fileOperationController, state.operations)
             .focusedSceneValue(\.appState, state)
@@ -142,36 +134,6 @@ extension FocusedValues {
     @Entry var fileOperationController: FileOperationController?
     @Entry var appState: AppState?
     @Entry var workspaceController: WorkspaceController?
-}
-
-private struct GitCommands: Commands {
-    @FocusedValue(\.appState) private var state
-
-    private var isGitScreen: Bool { state?.screen == .git }
-
-    var body: some Commands {
-        CommandMenu("Git") {
-            Button("Compare HEAD ↔ WORKTREE") {
-                state?.useGitComparisonShortcut(left: "HEAD", right: "WORKTREE")
-            }
-            .keyboardShortcut("1", modifiers: [.command, .shift])
-            .disabled(!isGitScreen)
-            Button("Compare HEAD ↔ INDEX") {
-                state?.useGitComparisonShortcut(left: "HEAD", right: "INDEX")
-            }
-            .keyboardShortcut("2", modifiers: [.command, .shift])
-            .disabled(!isGitScreen)
-            Button("Compare INDEX ↔ WORKTREE") {
-                state?.useGitComparisonShortcut(left: "INDEX", right: "WORKTREE")
-            }
-            .keyboardShortcut("3", modifiers: [.command, .shift])
-            .disabled(!isGitScreen)
-            Divider()
-            Button("Refresh Git Comparison") { state?.startGitComparison() }
-                .keyboardShortcut("r", modifiers: [.command])
-                .disabled(!isGitScreen || state?.isComparingGit == true)
-        }
-    }
 }
 
 private struct WorkspaceCommands: Commands {

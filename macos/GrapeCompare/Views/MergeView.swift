@@ -85,7 +85,7 @@ struct MergeView: View {
                     Text("Choose the image to keep")
                         .foregroundStyle(.orange)
                 }
-                Button(state.isExternalMerge ? "Save Merge and Close" : "Export Result…") {
+                Button("Export Result…") {
                     state.saveImageMerge()
                 }
                 .buttonStyle(.borderedProminent)
@@ -110,18 +110,12 @@ struct MergeView: View {
                 Text("\(state.mergeChoices.count) of \(result.conflictCount) resolved")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(state.mergeChoices.count == result.conflictCount ? .green : .secondary)
-                if state.isExternalMerge {
-                    Button("Save Merge and Close") { state.saveExternalMerge() }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(state.mergeChoices.count < result.conflictCount || state.mergeOutputHasConflictMarkers)
-                } else {
-                    Button("Export Result…") {
-                        resultText = state.mergeOutputText
-                        resultDocument = TextPatchDocument(text: resultText)
-                        exportsResult = true
-                    }
-                    .disabled(state.mergeChoices.count < result.conflictCount || state.mergeOutputHasConflictMarkers)
+                Button("Export Result…") {
+                    resultText = state.mergeOutputText
+                    resultDocument = TextPatchDocument(text: resultText)
+                    exportsResult = true
                 }
+                .disabled(state.mergeChoices.count < result.conflictCount || state.mergeOutputHasConflictMarkers)
             }
         }
     }
@@ -292,6 +286,6 @@ struct MergeView: View {
     }
 
     private func leaveMerge() {
-        if state.isExternalMerge { state.cancelExternalMerge() } else { state.goHome() }
+        state.goHome()
     }
 }

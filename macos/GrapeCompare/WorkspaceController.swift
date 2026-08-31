@@ -24,7 +24,7 @@ final class WorkspaceController {
 
     @discardableResult
     func addComparison() -> Item.ID {
-        let item = Item(id: UUID(), state: AppState(processLaunchArguments: false))
+        let item = Item(id: UUID(), state: AppState())
         items.append(item)
         selectedID = item.id
         return item.id
@@ -42,7 +42,7 @@ final class WorkspaceController {
         items[index].state.prepareForClose()
         items.remove(at: index)
         if items.isEmpty {
-            let replacement = Item(id: UUID(), state: AppState(processLaunchArguments: false))
+            let replacement = Item(id: UUID(), state: AppState())
             items = [replacement]
             selectedID = replacement.id
         } else if wasSelected {

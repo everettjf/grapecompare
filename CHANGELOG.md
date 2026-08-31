@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.0 — 2026-08-30
+
+### Mac App Store-only sandbox release
+
+- Make App Sandbox mandatory in Debug and Release, with user-selected read/write
+  access and app-scoped security bookmarks.
+- Remove the Git workspace, system Git subprocesses, standalone CLI,
+  difftool/mergetool handoff, arbitrary command-line paths, path-bearing URL
+  scheme, Homebrew cask, and non-sandboxed release pipeline.
+- Preserve file, folder, image, structured-data, developer-format, transactional
+  file-operation, and user-selected three-way merge workflows.
+- Transfer Finder and Shortcuts selections with security-scoped bookmarks instead
+  of storing unprivileged path strings.
+- Add a repeatable Mac App Store configuration audit and validate the exact-two-file
+  App Intent in the signed Release product.
+
 ## 1.0.25 — 2026-08-26
 
 ### Stable folder status badges

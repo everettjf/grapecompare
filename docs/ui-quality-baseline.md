@@ -27,7 +27,6 @@ trading away filesystem safety or keyboard access.
 - Folder comparison: mixed states, selection, queued plan, refresh, empty,
   filtered-empty, and error.
 - Merge: unresolved conflict, resolved conflict, dirty output, and image merge.
-- Git: repository picker, changes, history, loading, and error.
 - File operation review/history: ready, executing, failure, undo, and empty.
 
 ## Review rules

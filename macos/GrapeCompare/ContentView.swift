@@ -14,14 +14,11 @@ struct ContentView: View {
                 FolderCompareView()
             case .merge:
                 MergeView()
-            case .git:
-                GitCompareView()
             }
         }
         .frame(
             minWidth: AppLayoutPolicy.minimumContentWidth,
             minHeight: AppLayoutPolicy.minimumContentHeight)
-        .onAppear { state.consumePendingArgs() }
         .onChange(of: state.operations.mutationVersion) {
             state.handleFilesystemMutation()
         }

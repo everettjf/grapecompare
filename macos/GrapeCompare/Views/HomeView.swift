@@ -36,17 +36,8 @@ struct HomeView: View {
 
                     DashboardSectionTitle(
                         title: "More Workflows",
-                        subtitle: "Resolve a merge or inspect a Git repository")
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .top, spacing: 16) {
-                            MergeCard().frame(maxWidth: .infinity)
-                            GitCard().frame(maxWidth: .infinity)
-                        }
-                        VStack(spacing: 16) {
-                            MergeCard()
-                            GitCard()
-                        }
-                    }
+                        subtitle: "Resolve a three-way text or image merge")
+                    MergeCard()
 
                     if state.resumableSession != nil || !state.recentComparisons.isEmpty {
                         RecentComparisonsView()
@@ -133,7 +124,7 @@ private struct HomeHero: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text("GrapeCompare")
                     .font(.largeTitle.bold())
-                Text("Native comparison for files, folders, images, merges, and Git")
+                Text("Private, sandboxed comparison for files, folders, images, and merges")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -305,7 +296,6 @@ private struct RecentComparisonsView: View {
         case .files: "doc.text.magnifyingglass"
         case .folders: "folder.badge.questionmark"
         case .merge: "arrow.triangle.branch"
-        case .git: "point.3.connected.trianglepath.dotted"
         }
     }
 
@@ -314,48 +304,7 @@ private struct RecentComparisonsView: View {
         case .files: "Files"
         case .folders: "Folders"
         case .merge: "Merge"
-        case .git: "Git"
         }
-    }
-}
-
-private struct GitCard: View {
-    @Environment(AppState.self) private var state
-
-    var body: some View {
-        @Bindable var state = state
-        VStack(alignment: .leading, spacing: 12) {
-            CompactCardHeader(
-                title: "Git Repository",
-                subtitle: "Branches, commits, index, worktree, and history",
-                icon: "arrow.triangle.branch")
-            DropSlot(
-                label: "Repository",
-                acceptsFolders: true,
-                url: $state.gitRepositoryURL,
-                compact: true)
-            HStack {
-                Button("Open Repository") { state.startGitComparison() }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(state.gitRepositoryURL == nil)
-                if !state.gitRepositoryLibrary.isEmpty {
-                    Menu("Recent") {
-                        ForEach(state.gitRepositoryLibrary) { entry in
-                            Button {
-                                state.openGitRepositoryLibraryEntry(entry)
-                            } label: {
-                                Label(entry.displayName, systemImage: "externaldrive")
-                            }
-                            Button("Forget \(entry.displayName)", role: .destructive) {
-                                state.removeGitRepositoryLibraryEntry(entry)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .padding(14)
-        .dashboardCard()
     }
 }
 

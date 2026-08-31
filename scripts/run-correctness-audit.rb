@@ -12,8 +12,8 @@ output = File.expand_path(ARGV.fetch(0, File.join(root, ".audit", "correctness-r
 
 checks = [
   ["core", ["bash", "macos/Tests/run-tests.sh"]],
-  ["cli", ["bash", "macos/CLI/run-tests.sh"]],
-  ["localizations", ["ruby", "macos/Tests/validate-localizations.rb"]]
+  ["localizations", ["ruby", "macos/Tests/validate-localizations.rb"]],
+  ["app-store-sandbox", ["bash", "scripts/validate-app-store.sh"]]
 ].map do |name, command|
   started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
   stdout, stderr, status = Open3.capture3(*command, chdir: root)
