@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.1 (36) — 2026-09-18
+
+### Independent diff scrolling and multi-item quick compare
+
+- Give each side of the file diff its own horizontal scrollbar so a long line in
+  one file no longer widens the other side; vertical scrolling stays synchronized
+  and column width now scales with the selected code font size.
+- Show a picker when more than two items are dropped on Quick Compare, so users
+  can choose the left and right items to compare.
+- Add Simplified Chinese translations for the new picker copy.
+
 ## Mac App Store 1.0.0 (35) — 2026-08-31
 
 ### Mac App Store-only sandbox release
