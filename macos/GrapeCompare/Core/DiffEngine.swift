@@ -37,7 +37,10 @@ nonisolated struct FileDiffResult: Sendable {
     var leftMissing = false
     var rightMissing = false
     var isTooLarge = false
-    var maxLineLength = 0
+    /// 左侧最长一行的字符数，用于独立计算左列的横向内容宽度。
+    var leftMaxLineLength = 0
+    /// 右侧最长一行的字符数，用于独立计算右列的横向内容宽度。
+    var rightMaxLineLength = 0
     /// 两侧是否仅在文件末尾换行符的存在性上不同（仍会标记最后一行便于导航）。
     var finalNewlineDiffers = false
     /// 所有差异行（kind != .equal）在 rows 中的下标，用于上一处/下一处导航
@@ -532,7 +535,8 @@ nonisolated enum DiffEngine {
         while i < ops.count {
             if i & 0x3FFF == 0 { try checkCancellation(shouldCancel) }
             if case .equal(let s) = ops[i] {
-                result.maxLineLength = max(result.maxLineLength, s.count)
+                result.leftMaxLineLength = max(result.leftMaxLineLength, s.count)
+                result.rightMaxLineLength = max(result.rightMaxLineLength, s.count)
                 result.rows.append(DiffRow(
                     id: result.rows.count, kind: .equal,
                     left: .init(number: leftNo, text: s, changedRange: nil),
@@ -556,9 +560,8 @@ nonisolated enum DiffEngine {
 
             let paired = min(deletes.count, inserts.count)
             for p in 0..<paired {
-                result.maxLineLength = max(
-                    result.maxLineLength,
-                    max(deletes[p].count, inserts[p].count))
+                result.leftMaxLineLength = max(result.leftMaxLineLength, deletes[p].count)
+                result.rightMaxLineLength = max(result.rightMaxLineLength, inserts[p].count)
                 let (lr, rr) = changedRanges(deletes[p], inserts[p])
                 result.differenceRowIndices.append(result.rows.count)
                 result.rows.append(DiffRow(
@@ -570,7 +573,7 @@ nonisolated enum DiffEngine {
                 result.modifiedCount += 1
             }
             for d in deletes.dropFirst(paired) {
-                result.maxLineLength = max(result.maxLineLength, d.count)
+                result.leftMaxLineLength = max(result.leftMaxLineLength, d.count)
                 result.differenceRowIndices.append(result.rows.count)
                 result.rows.append(DiffRow(
                     id: result.rows.count, kind: .removed,
@@ -580,7 +583,7 @@ nonisolated enum DiffEngine {
                 result.removedCount += 1
             }
             for s in inserts.dropFirst(paired) {
-                result.maxLineLength = max(result.maxLineLength, s.count)
+                result.rightMaxLineLength = max(result.rightMaxLineLength, s.count)
                 result.differenceRowIndices.append(result.rows.count)
                 result.rows.append(DiffRow(
                     id: result.rows.count, kind: .added,

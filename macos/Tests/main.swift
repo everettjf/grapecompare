@@ -42,6 +42,11 @@ check(HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 2),
 check(!HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 1) &&
       !HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 3),
       "quick compare rejects ambiguous item counts")
+check(HomePresentationPolicy.quickCompareDropIssue(itemCount: 2) == .none,
+      "quick compare drop has no issue for exactly two items")
+check(HomePresentationPolicy.quickCompareDropIssue(itemCount: 1) == .tooFew(expected: 2) &&
+      HomePresentationPolicy.quickCompareDropIssue(itemCount: 3) == .tooMany(expected: 2),
+      "quick compare drop reports too few and too many distinctly")
 check(ComparisonTopBarPolicy.horizontalPadding == 14 &&
       ComparisonTopBarPolicy.verticalPadding == 8,
       "comparison top bars share one compact inset")
@@ -67,6 +72,28 @@ check(ComparisonPresentationPolicy.lineNumberGutterWidth == 46,
 check(ComparisonPresentationPolicy.currentDifferenceAccentWidth == 3 &&
       ComparisonPresentationPolicy.overviewWidth == 6,
       "diff navigation accents stay visible without covering content")
+check(ComparisonPresentationPolicy.monospacedAdvanceRatio == 633.0 / 1024.0,
+      "diff column width uses the measured monospaced advance ratio")
+check(ComparisonPresentationPolicy.contentColumnWidth(
+      viewportWidth: 600, maxLineLength: 100, fontSize: 12, wrapsLines: true) == 600,
+      "wrapping keeps the text column pinned to the visible width")
+check(ComparisonPresentationPolicy.contentColumnWidth(
+      viewportWidth: 600, maxLineLength: 50, fontSize: 12, wrapsLines: false) == 600,
+      "short lines never shrink the column below the visible width")
+let shortColumn = ComparisonPresentationPolicy.contentColumnWidth(
+    viewportWidth: 300, maxLineLength: 100, fontSize: 12, wrapsLines: false)
+check(abs(shortColumn - (100 * 633.0 / 1024.0 * 12 + 60)) < 0.001,
+      "a line wider than the viewport sizes the column from its measured text width")
+let smallFontColumn = ComparisonPresentationPolicy.contentColumnWidth(
+    viewportWidth: 300, maxLineLength: 100, fontSize: 10, wrapsLines: false)
+let largeFontColumn = ComparisonPresentationPolicy.contentColumnWidth(
+    viewportWidth: 300, maxLineLength: 100, fontSize: 18, wrapsLines: false)
+check(largeFontColumn > smallFontColumn,
+      "the column width scales with the selected code font size")
+let cappedColumn = ComparisonPresentationPolicy.contentColumnWidth(
+    viewportWidth: 300, maxLineLength: Int.max, fontSize: 18, wrapsLines: false)
+check(cappedColumn == ComparisonPresentationPolicy.maximumColumnWidth,
+      "pathologically long lines are capped instead of over-expanding the scroll area")
 check(FolderStatusPresentationPolicy.role(for: .same) == .neutral,
       "same folder rows use a neutral presentation role")
 check(FolderStatusPresentationPolicy.role(for: .different) == .changed,
@@ -107,6 +134,16 @@ if let rr = t6.rows[0].right?.changedRange, let txt = t6.rows[0].right?.text {
 // CRLF 处理
 let t7 = DiffEngine.diffText(left: "a\r\nb\r\n", right: "a\nb\n")
 check(t7.rows.allSatisfy { $0.kind == .equal }, "CRLF vs LF treated equal")
+
+// 左右各自记录最长行，用于独立计算每列横向宽度
+let sideLen = DiffEngine.diffText(
+    left: "short\n" + String(repeating: "L", count: 200) + "\n",
+    right: "x\n" + String(repeating: "R", count: 50) + "\n")
+check(sideLen.leftMaxLineLength == 200 && sideLen.rightMaxLineLength == 50,
+      "each side tracks its own longest line independently")
+let equalSideLen = DiffEngine.diffText(left: "abc\n", right: "abc\n")
+check(equalSideLen.leftMaxLineLength == 3 && equalSideLen.rightMaxLineLength == 3,
+      "equal rows contribute to both sides' longest line")
 
 // 大文件性能：100k 行，少量差异
 var big1 = (0..<100_000).map { "line \($0)" }

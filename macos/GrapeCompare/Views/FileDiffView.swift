@@ -9,6 +9,7 @@ struct FileDiffView: View {
     @State private var currentHunk = 0
     @State private var scrollRequest: ScrollRequest?
     @State private var scrollNonce = 0
+    @State private var scrollBridge = ScrollSyncBridge()
     @State private var searchQuery = ""
     @State private var goToLine = ""
     @State private var wrapsLines = false
@@ -35,11 +36,6 @@ struct FileDiffView: View {
             case .source: "Source"
             }
         }
-    }
-
-    private struct ScrollRequest: Equatable {
-        let row: Int
-        let nonce: Int
     }
 
     var body: some View {
@@ -566,7 +562,7 @@ struct FileDiffView: View {
 
     private func diffTable(_ r: FileDiffResult) -> some View {
         VStack(spacing: 0) {
-            // 列头：两侧完整路径
+            // 列头：两侧完整路径（始终按可视宽度平分，不随内容横向滚动）
             HStack(spacing: 0) {
                 columnHeader(state.diffLeftURL)
                 Rectangle().fill(Theme.gutterDivider).frame(width: 1)
@@ -577,56 +573,114 @@ struct FileDiffView: View {
             Divider()
 
             GeometryReader { geo in
-                let viewportColumnWidth = max(0, (geo.size.width - 1) / 2)
-                let contentColumnWidth = wrapsLines
-                    ? viewportColumnWidth
-                    : max(
-                        viewportColumnWidth,
-                        min(CGFloat(r.maxLineLength) * 7.3 + 60, 80_000))
-                ScrollViewReader { proxy in
-                    ScrollView([.horizontal, .vertical]) {
-                        LazyVStack(spacing: 0) {
-                            ForEach(r.rows) { row in
-                                DiffRowView(
-                                    row: row,
-                                    columnWidth: contentColumnWidth,
-                                    wrapsLines: wrapsLines,
-                                    searchQuery: searchQuery,
-                                    fileExtension: state.diffRightURL?.pathExtension.lowercased() ?? "",
-                                    isCurrentDifference: ComparisonPresentationPolicy.currentDifferenceRow(
-                                        indices: r.differenceRowIndices,
-                                        position: currentDiff) == row.id,
-                                    codeFontSize: ComparisonPresentationPolicy.codeFontSize(codeFontSize),
-                                    comfortableRows: comfortableDiffRows
-                                )
-                            }
-                        }
-                        .frame(
-                            width: contentColumnWidth * 2 + 1,
-                            alignment: .leading)
-                    }
-                    .onChange(of: scrollRequest) {
-                        if let target = scrollRequest {
-                            withAnimation(.easeInOut(duration: 0.15)) {
-                                proxy.scrollTo(target.row, anchor: .center)
-                            }
-                        }
-                    }
-                    .onAppear {
-                        // 仅标记当前差异位置，不自动滚动——短文件居中滚动会把内容推歪
-                        currentDiff = 0
+                let paneWidth = max(0, (geo.size.width - 1) / 2)
+                let fontSize = ComparisonPresentationPolicy.codeFontSize(codeFontSize)
+                let fileExtension = state.diffRightURL?.pathExtension.lowercased() ?? ""
+
+                if wrapsLines {
+                    singleGrid(r, paneWidth: paneWidth, fontSize: fontSize, fileExtension: fileExtension)
+                } else {
+                    splitPanes(r, paneWidth: paneWidth, fontSize: fontSize, fileExtension: fileExtension)
+                }
+            }
+            .overlay(alignment: .trailing) {
+                DifferenceOverview(
+                    rows: r.rows,
+                    differenceIndices: r.differenceRowIndices,
+                    currentPosition: currentDiff)
+                    .padding(.trailing, 4)
+                    .padding(.vertical, 6)
+            }
+            .onAppear {
+                // 仅标记当前差异位置，不自动滚动——短文件居中滚动会把内容推歪
+                currentDiff = 0
+            }
+        }
+    }
+
+    /// 换行模式：两侧共用一个纵向滚动，行内容在各自面板内折行，不出现横向滚动。
+    private func singleGrid(
+        _ r: FileDiffResult, paneWidth: CGFloat, fontSize: Double, fileExtension: String
+    ) -> some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical) {
+                LazyVStack(spacing: 0) {
+                    ForEach(r.rows) { row in
+                        DiffRowView(
+                            row: row,
+                            columnWidth: paneWidth,
+                            wrapsLines: true,
+                            searchQuery: searchQuery,
+                            fileExtension: fileExtension,
+                            isCurrentDifference: isCurrent(row, r),
+                            codeFontSize: fontSize,
+                            comfortableRows: comfortableDiffRows
+                        )
                     }
                 }
-                .overlay(alignment: .trailing) {
-                    DifferenceOverview(
-                        rows: r.rows,
-                        differenceIndices: r.differenceRowIndices,
-                        currentPosition: currentDiff)
-                        .padding(.trailing, 4)
-                        .padding(.vertical, 6)
+                .frame(width: paneWidth * 2 + 1, alignment: .leading)
+            }
+            .onChange(of: scrollRequest) {
+                if let target = scrollRequest {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        proxy.scrollTo(target.row, anchor: .center)
+                    }
                 }
             }
         }
+    }
+
+    /// 非换行模式：两侧各自独立横向滚动，纵向通过 ScrollSyncBridge 保持同步。
+    private func splitPanes(
+        _ r: FileDiffResult, paneWidth: CGFloat, fontSize: Double, fileExtension: String
+    ) -> some View {
+        let leftWidth = ComparisonPresentationPolicy.contentColumnWidth(
+            viewportWidth: paneWidth,
+            maxLineLength: r.leftMaxLineLength,
+            fontSize: fontSize,
+            wrapsLines: false)
+        let rightWidth = ComparisonPresentationPolicy.contentColumnWidth(
+            viewportWidth: paneWidth,
+            maxLineLength: r.rightMaxLineLength,
+            fontSize: fontSize,
+            wrapsLines: false)
+        return HStack(spacing: 0) {
+            DiffPaneColumn(
+                rows: r.rows,
+                isLeft: true,
+                paneWidth: paneWidth,
+                contentWidth: leftWidth,
+                scrollRequest: scrollRequest,
+                scrollBridge: scrollBridge,
+                searchQuery: searchQuery,
+                fileExtension: fileExtension,
+                differenceRowIndices: r.differenceRowIndices,
+                currentDiff: currentDiff,
+                codeFontSize: fontSize,
+                comfortableRows: comfortableDiffRows
+            )
+            Rectangle().fill(Theme.gutterDivider).frame(width: 1)
+            DiffPaneColumn(
+                rows: r.rows,
+                isLeft: false,
+                paneWidth: paneWidth,
+                contentWidth: rightWidth,
+                scrollRequest: scrollRequest,
+                scrollBridge: scrollBridge,
+                searchQuery: searchQuery,
+                fileExtension: fileExtension,
+                differenceRowIndices: r.differenceRowIndices,
+                currentDiff: currentDiff,
+                codeFontSize: fontSize,
+                comfortableRows: comfortableDiffRows
+            )
+        }
+    }
+
+    private func isCurrent(_ row: DiffRow, _ r: FileDiffResult) -> Bool {
+        ComparisonPresentationPolicy.currentDifferenceRow(
+            indices: r.differenceRowIndices,
+            position: currentDiff) == row.id
     }
 
     private func columnHeader(_ url: URL?) -> some View {
@@ -861,43 +915,27 @@ private struct DifferenceOverview: View {
     }
 }
 
-/// 并排 diff 中的一行
-struct DiffRowView: View {
-    let row: DiffRow
+/// 并排 diff 的行内导航请求（用于让两列同时滚动到同一行）。
+private struct ScrollRequest: Equatable {
+    let row: Int
+    let nonce: Int
+}
+
+/// 并排 diff 中单侧的一个单元格：行号栏 + 文本 + 背景色 + 当前差异强调。
+private struct DiffSideCellView: View {
+    let side: DiffRow.Side?
+    let kind: DiffRowKind
+    let isLeft: Bool
     let columnWidth: CGFloat
     let wrapsLines: Bool
     let searchQuery: String
     let fileExtension: String
     let isCurrentDifference: Bool
+    let showsCurrentAccent: Bool
     let codeFontSize: Double
     let comfortableRows: Bool
 
     var body: some View {
-        HStack(spacing: 0) {
-            sideView(row.left, isLeft: true)
-                .frame(width: columnWidth, alignment: .leading)
-                .clipped()
-            Rectangle().fill(Theme.gutterDivider).frame(width: 1)
-            sideView(row.right, isLeft: false)
-                .frame(width: columnWidth, alignment: .leading)
-                .clipped()
-        }
-        .frame(width: columnWidth * 2 + 1, alignment: .leading)
-        .font(Theme.mono(size: codeFontSize))
-        .background(isCurrentDifference ? Color.accentColor.opacity(0.055) : .clear)
-        .overlay(alignment: .leading) {
-            if isCurrentDifference {
-                Rectangle()
-                    .fill(Color.accentColor)
-                    .frame(width: ComparisonPresentationPolicy.currentDifferenceAccentWidth)
-                    .accessibilityHidden(true)
-            }
-        }
-        .accessibilityValue(isCurrentDifference ? "Current difference" : "")
-    }
-
-    @ViewBuilder
-    private func sideView(_ side: DiffRow.Side?, isLeft: Bool) -> some View {
         HStack(spacing: 0) {
             Text(side.map { String($0.number) } ?? "")
                 .font(Theme.mono(size: max(9, codeFontSize - 1)))
@@ -907,18 +945,30 @@ struct DiffRowView: View {
                 .padding(.vertical, comfortableRows ? 4 : 2)
                 .background(Color.primary.opacity(0.022))
             if let side {
-                Text(highlighted(side, isLeft: isLeft))
+                Text(highlighted(side))
                     .fixedSize(horizontal: !wrapsLines, vertical: wrapsLines)
                     .padding(.vertical, comfortableRows ? 4 : 2)
                     .padding(.leading, 2)
             }
             Spacer(minLength: 0)
         }
-        .background(backgroundColor(isLeft: isLeft))
+        .font(Theme.mono(size: codeFontSize))
+        .background(backgroundColor)
+        .background(isCurrentDifference ? Color.accentColor.opacity(0.055) : .clear)
+        .frame(width: columnWidth, alignment: .leading)
+        .clipped()
+        .overlay(alignment: .leading) {
+            if showsCurrentAccent && isCurrentDifference {
+                Rectangle()
+                    .fill(Color.accentColor)
+                    .frame(width: ComparisonPresentationPolicy.currentDifferenceAccentWidth)
+                    .accessibilityHidden(true)
+            }
+        }
     }
 
-    private func backgroundColor(isLeft: Bool) -> Color {
-        switch row.kind {
+    private var backgroundColor: Color {
+        switch kind {
         case .equal: return .clear
         case .added: return isLeft ? Theme.emptyBg : Theme.addedBg
         case .removed: return isLeft ? Theme.removedBg : Theme.emptyBg
@@ -927,7 +977,7 @@ struct DiffRowView: View {
     }
 
     /// modified 行中真正不同的字符段加深高亮
-    private func highlighted(_ side: DiffRow.Side, isLeft: Bool) -> AttributedString {
+    private func highlighted(_ side: DiffRow.Side) -> AttributedString {
         var s = AttributedString(side.text)
         applySyntaxHighlighting(to: &s, source: side.text)
         if let r = side.changedRange, let ar = Range(r, in: s) {
@@ -976,6 +1026,196 @@ struct DiffRowView: View {
             result[target].foregroundColor = .systemGreen
         }
         attributed = result
+    }
+}
+
+/// 并排 diff 中的一行（换行模式：两侧共用同一行，行内折行）。
+struct DiffRowView: View {
+    let row: DiffRow
+    let columnWidth: CGFloat
+    let wrapsLines: Bool
+    let searchQuery: String
+    let fileExtension: String
+    let isCurrentDifference: Bool
+    let codeFontSize: Double
+    let comfortableRows: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            DiffSideCellView(
+                side: row.left, kind: row.kind, isLeft: true,
+                columnWidth: columnWidth, wrapsLines: wrapsLines,
+                searchQuery: searchQuery, fileExtension: fileExtension,
+                isCurrentDifference: isCurrentDifference, showsCurrentAccent: true,
+                codeFontSize: codeFontSize, comfortableRows: comfortableRows)
+            Rectangle().fill(Theme.gutterDivider).frame(width: 1)
+            DiffSideCellView(
+                side: row.right, kind: row.kind, isLeft: false,
+                columnWidth: columnWidth, wrapsLines: wrapsLines,
+                searchQuery: searchQuery, fileExtension: fileExtension,
+                isCurrentDifference: isCurrentDifference, showsCurrentAccent: false,
+                codeFontSize: codeFontSize, comfortableRows: comfortableRows)
+        }
+        .frame(width: columnWidth * 2 + 1, alignment: .leading)
+        .accessibilityValue(isCurrentDifference ? "Current difference" : "")
+    }
+}
+
+/// 并排 diff 中的一列：拥有独立的横向滚动，纵向由 ScrollSyncBridge 与另一列保持同步。
+private struct DiffPaneColumn: View {
+    let rows: [DiffRow]
+    let isLeft: Bool
+    let paneWidth: CGFloat
+    let contentWidth: CGFloat
+    let scrollRequest: ScrollRequest?
+    let scrollBridge: ScrollSyncBridge
+    let searchQuery: String
+    let fileExtension: String
+    let differenceRowIndices: [Int]
+    let currentDiff: Int
+    let codeFontSize: Double
+    let comfortableRows: Bool
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView([.horizontal, .vertical]) {
+                LazyVStack(spacing: 0) {
+                    ForEach(rows) { row in
+                        DiffSideCellView(
+                            side: isLeft ? row.left : row.right,
+                            kind: row.kind,
+                            isLeft: isLeft,
+                            columnWidth: contentWidth,
+                            wrapsLines: false,
+                            searchQuery: searchQuery,
+                            fileExtension: fileExtension,
+                            isCurrentDifference: isCurrent(row),
+                            showsCurrentAccent: isLeft,
+                            codeFontSize: codeFontSize,
+                            comfortableRows: comfortableRows)
+                    }
+                }
+                .frame(width: contentWidth, alignment: .leading)
+                .background(ScrollSyncAnchor(side: isLeft ? .left : .right, bridge: scrollBridge))
+            }
+            .frame(width: paneWidth)
+            .onChange(of: scrollRequest) {
+                if let target = scrollRequest {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        proxy.scrollTo(target.row, anchor: .center)
+                    }
+                }
+            }
+        }
+    }
+
+    private func isCurrent(_ row: DiffRow) -> Bool {
+        ComparisonPresentationPolicy.currentDifferenceRow(
+            indices: differenceRowIndices,
+            position: currentDiff) == row.id
+    }
+}
+
+// MARK: - 两侧纵向滚动同步
+
+private enum DiffPaneSide {
+    case left, right
+}
+
+/// 让并排 diff 两列的纵向滚动保持同步；横向滚动保持独立。
+private final class ScrollSyncBridge: NSObject {
+    private weak var left: NSScrollView?
+    private weak var right: NSScrollView?
+    private var leftClip: NSClipView?
+    private var rightClip: NSClipView?
+    private var syncing = false
+
+    func attach(_ scrollView: NSScrollView, side: DiffPaneSide) {
+        let clip = scrollView.contentView
+        if side == .left {
+            if leftClip === clip { left = scrollView; return }
+            detach(leftClip)
+            leftClip = clip
+            left = scrollView
+        } else {
+            if rightClip === clip { right = scrollView; return }
+            detach(rightClip)
+            rightClip = clip
+            right = scrollView
+        }
+        clip.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(boundsDidChange(_:)),
+            name: NSView.boundsDidChangeNotification, object: clip)
+    }
+
+    private func detach(_ clip: NSClipView?) {
+        guard let clip else { return }
+        NotificationCenter.default.removeObserver(
+            self, name: NSView.boundsDidChangeNotification, object: clip)
+    }
+
+    @objc private func boundsDidChange(_ note: Notification) {
+        guard !syncing,
+              let sourceClip = note.object as? NSClipView,
+              let source = sourceClip.enclosingScrollView,
+              let targetClip = (source === left ? right : left)?.contentView,
+              targetClip.bounds.origin.y != sourceClip.bounds.origin.y
+        else { return }
+        syncing = true
+        targetClip.scroll(to: NSPoint(x: targetClip.bounds.origin.x, y: sourceClip.bounds.origin.y))
+        targetClip.enclosingScrollView?.reflectScrolledClipView(targetClip)
+        syncing = false
+    }
+
+    deinit {
+        detach(leftClip)
+        detach(rightClip)
+    }
+}
+
+/// 挂在每列内容里的占位视图：找到包裹它的 NSScrollView 并注册到 ScrollSyncBridge。
+private struct ScrollSyncAnchor: NSViewRepresentable {
+    let side: DiffPaneSide
+    let bridge: ScrollSyncBridge
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> ScrollSyncAnchorView {
+        let view = ScrollSyncAnchorView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.onAttach = { [weak bridge, side] scroll in
+            bridge?.attach(scroll, side: side)
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: ScrollSyncAnchorView, context: Context) {
+        nsView.attemptAttach()
+    }
+
+    final class Coordinator {}
+}
+
+/// 在进入视图层级后向上寻找包裹自己的 NSScrollView，交给 ScrollSyncAnchor 注册。
+private final class ScrollSyncAnchorView: NSView {
+    var onAttach: ((NSScrollView) -> Void)?
+    private weak var attachedScroll: NSScrollView?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        attemptAttach()
+    }
+
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        attemptAttach()
+    }
+
+    func attemptAttach() {
+        guard window != nil, let scroll = enclosingScrollView, scroll !== attachedScroll else { return }
+        attachedScroll = scroll
+        onAttach?(scroll)
     }
 }
 

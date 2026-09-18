@@ -176,6 +176,8 @@ final class AppState {
     var sessionError: String?
     var reportActionError: String?
     var quickCompareError: String?
+    /// 拖入超过两个项目时暂存，供用户在弹出的选择器里挑两个进行对比。
+    var pendingQuickCompareItems: [URL] = []
 
     var isComparingFile: Bool { comparisonPhase == .file }
     var isComparingFolder: Bool { comparisonPhase == .folder }
@@ -226,7 +228,15 @@ final class AppState {
     @ObservationIgnored private var temporaryClipboardURLs: [URL] = []
 
     func compareQuickItems(_ urls: [URL]) {
-        guard urls.count == 2 else {
+        switch HomePresentationPolicy.quickCompareDropIssue(itemCount: urls.count) {
+        case .none:
+            break
+        case .tooMany:
+            let standardized = urls.map(\.standardizedFileURL)
+            standardized.forEach { _ = $0.startAccessingSecurityScopedResource() }
+            pendingQuickCompareItems = standardized
+            return
+        case .tooFew:
             quickCompareError = String(localized: "Drop exactly two files or two folders.")
             return
         }
