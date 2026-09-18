@@ -995,6 +995,16 @@
         }
       }
     },
+    "Choose Two Items" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择两个项目"
+          }
+        }
+      }
+    },
     "Choose a focused workflow or drop two items for a quick comparison" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3906,6 +3916,16 @@
         }
       }
     },
+    "Ready to compare." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可以开始对比。"
+          }
+        }
+      }
+    },
     "Recent" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4443,6 +4463,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "选择一个已变更文件"
+          }
+        }
+      }
+    },
+    "Select one left and one right item to compare." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分别选择一个左侧项目和一个右侧项目进行对比。"
+          }
+        }
+      }
+    },
+    "Select one more item." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请再选择一个项目。"
+          }
+        }
+      }
+    },
+    "Select two items to compare." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择两个要对比的项目。"
           }
         }
       }

@@ -74,6 +74,20 @@ struct HomeView: View {
         } message: {
             Text(state.quickCompareError ?? "")
         }
+        .sheet(isPresented: Binding(
+            get: { !state.pendingQuickCompareItems.isEmpty },
+            set: { if !$0 { state.pendingQuickCompareItems = [] } }
+        )) {
+            QuickComparePickerSheet(
+                items: state.pendingQuickCompareItems,
+                onConfirm: { chosen in
+                    state.pendingQuickCompareItems = []
+                    state.compareQuickItems(chosen)
+                },
+                onCancel: {
+                    state.pendingQuickCompareItems = []
+                })
+        }
     }
 
     @ViewBuilder
@@ -207,9 +221,8 @@ private struct QuickCompareBar: View {
                 .strokeBorder(isTargeted ? Color.accentColor : Theme.panelBorder)
         }
         .dropDestination(for: URL.self) { items, _ in
-            guard HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: items.count) else {
-                return false
-            }
+            // 数量不对也收下这次拖放，交给 compareQuickItems 弹出明确的上限提示，
+            // 而不是让系统静默回弹、用户一头雾水。
             state.compareQuickItems(items)
             return true
         } isTargeted: { isTargeted = $0 }
@@ -531,6 +544,89 @@ struct DropSlot: View {
                 return
             }
             setURL(selectedURL.standardizedFileURL)
+        }
+    }
+}
+
+// MARK: - 拖入多个项目后选择两个
+
+private struct QuickComparePickerSheet: View {
+    let items: [URL]
+    let onConfirm: ([URL]) -> Void
+    let onCancel: () -> Void
+
+    /// 有序选择：先勾选的作为 Left，后勾选的作为 Right。
+    @State private var selected: [URL] = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Choose Two Items")
+                .font(.title2.bold())
+            Text("Select one left and one right item to compare.")
+                .foregroundStyle(.secondary)
+
+            List(items, id: \.self) { item in
+                let isSelected = selected.contains(item)
+                let order = selected.firstIndex(of: item)
+                HStack(spacing: 10) {
+                    Image(systemName: item.hasDirectoryPath ? "folder.fill" : "doc.fill")
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.lastPathComponent)
+                        Text((item.path(percentEncoded: false) as NSString).abbreviatingWithTildeInPath)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if let order {
+                        Text(order == 0 ? "Left" : "Right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(order == 0 ? Color.red : Color.green)
+                    }
+                    Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                        .font(.title3)
+                        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                }
+                .padding(.vertical, 2)
+                .contentShape(Rectangle())
+                .onTapGesture { toggle(item) }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(item.lastPathComponent)
+            }
+
+            HStack {
+                Text(selectionMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Cancel", action: onCancel)
+                    .keyboardShortcut(.cancelAction)
+                Button("Compare") {
+                    if selected.count == 2 {
+                        onConfirm([selected[0], selected[1]])
+                    }
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(selected.count != 2)
+            }
+        }
+        .padding(20)
+        .frame(minWidth: 480, minHeight: 400)
+    }
+
+    private var selectionMessage: String {
+        switch selected.count {
+        case 0: "Select two items to compare."
+        case 1: "Select one more item."
+        default: "Ready to compare."
+        }
+    }
+
+    private func toggle(_ item: URL) {
+        if selected.contains(item) {
+            selected.removeAll { $0 == item }
+        } else if selected.count < 2 {
+            selected.append(item)
         }
     }
 }

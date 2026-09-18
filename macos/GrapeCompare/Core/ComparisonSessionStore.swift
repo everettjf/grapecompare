@@ -26,6 +26,21 @@ nonisolated enum HomePresentationPolicy {
     static func acceptsQuickCompareDrop(itemCount: Int) -> Bool {
         itemCount == quickCompareItemCount
     }
+
+    /// 拖入数量相对「恰好两个」的偏离方向，用于给用户明确的上限提示。
+    static func quickCompareDropIssue(itemCount: Int) -> QuickCompareDropIssue {
+        if itemCount == quickCompareItemCount { return .none }
+        return itemCount < quickCompareItemCount
+            ? .tooFew(expected: quickCompareItemCount)
+            : .tooMany(expected: quickCompareItemCount)
+    }
+}
+
+/// 快速对比拖放的数量问题。
+nonisolated enum QuickCompareDropIssue: Equatable, Sendable {
+    case none
+    case tooFew(expected: Int)
+    case tooMany(expected: Int)
 }
 
 nonisolated enum ComparisonTopBarPolicy {
@@ -58,9 +73,33 @@ nonisolated enum ComparisonPresentationPolicy {
     static let lineNumberGutterWidth: CGFloat = 46
     static let currentDifferenceAccentWidth: CGFloat = 3
     static let overviewWidth: CGFloat = 6
+    /// 等宽系统字体每个 ASCII 字形的实际前进宽度比例（SF Mono / Menlo ≈ 633/1024 em）。
+    /// 用它替代硬编码的字宽，确保横向内容宽度随字号缩放。
+    static let monospacedAdvanceRatio: CGFloat = 633.0 / 1024.0
+    /// 单侧文本列宽度的上限（点）。防止单行极长的文件把横向滚动区域拉得过宽。
+    static let maximumColumnWidth: CGFloat = 80_000
+    /// 行号栏与两侧留白占用的固定宽度（点）：46（行号栏）+ 10（行号右侧）+ 2（文本左侧）+ 2（余量）。
+    static let columnGutterPadding: CGFloat = 60
 
     static func codeFontSize(_ requested: Double) -> Double {
         min(max(requested, minimumCodeFontSize), maximumCodeFontSize)
+    }
+
+    /// 计算并排 diff 中单侧文本列的渲染宽度（点）。
+    /// - Parameters:
+    ///   - viewportWidth: 单侧列在当前窗口中的可视宽度（点）。
+    ///   - maxLineLength: 两侧文件中最长一行的字符数。
+    ///   - fontSize: 实际使用的代码字号（已用 ``codeFontSize(_:)`` 收敛到合法区间）。
+    ///   - wrapsLines: 是否开启自动换行；开启时列宽固定为可视宽度。
+    static func contentColumnWidth(
+        viewportWidth: CGFloat,
+        maxLineLength: Int,
+        fontSize: Double,
+        wrapsLines: Bool
+    ) -> CGFloat {
+        guard !wrapsLines else { return max(0, viewportWidth) }
+        let textWidth = CGFloat(maxLineLength) * monospacedAdvanceRatio * CGFloat(fontSize)
+        return max(viewportWidth, min(textWidth + columnGutterPadding, maximumColumnWidth))
     }
 
     static func currentDifferenceRow(indices: [Int], position: Int) -> Int? {

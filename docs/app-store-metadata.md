@@ -1,4 +1,4 @@
-# Mac App Store metadata — version 1.0.0
+# Mac App Store metadata — version 1.0.1
 
 Use these reviewed values for the first Mac App Store version. Fields marked
 `ACCOUNT REQUIRED` must be completed by the account holder in App Store Connect.
