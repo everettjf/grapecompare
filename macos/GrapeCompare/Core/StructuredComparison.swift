@@ -63,6 +63,16 @@ nonisolated struct StructuredDifference: Identifiable, Equatable, Sendable {
     let right: StructuredValue?
 
     var id: String { path }
+
+    static func filtered(_ differences: [Self], query: String) -> [Self] {
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return differences }
+        return differences.filter {
+            $0.path.localizedCaseInsensitiveContains(query) ||
+                $0.left?.summary.localizedCaseInsensitiveContains(query) == true ||
+                $0.right?.summary.localizedCaseInsensitiveContains(query) == true
+        }
+    }
 }
 
 nonisolated enum StructuredDataComparator {

@@ -1,6 +1,6 @@
-# Mac App Store metadata — version 1.0.1
+# Mac App Store metadata — version 1.0.2
 
-Use these reviewed values for the first Mac App Store version. Fields marked
+Use these reviewed values for the next Mac App Store version. Fields marked
 `ACCOUNT REQUIRED` must be completed by the account holder in App Store Connect.
 
 ## Shared app information
@@ -125,3 +125,11 @@ Mac screenshots are required. Upload one to ten opaque PNG or JPEG images at a
 single supported 16:10 size. Two upload-ready, opaque 2560×1600 JPEG captures
 are checked in under `app-store/screenshots/en-US/`. They are lossless-layout
 conversions of the product captures and do not redraw or alter the UI.
+
+## What's New — 1.0.2 (37)
+
+English: Choose replacement inputs more easily with visible side labels. Filter structured differences with matching counts, a clear-filter button, and helpful empty states. Multi-file selection now uses native checkboxes with keyboard support.
+
+简体中文：文件可直接重新选择，左右侧标签更清晰。结构化差异筛选新增匹配数量、清除按钮和无结果提示。多文件选择改用原生复选框，支持键盘操作。
+
+Prepared locally; not uploaded or submitted to App Store Connect by this change.

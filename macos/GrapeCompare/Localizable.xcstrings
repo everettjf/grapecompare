@@ -3921,7 +3921,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可以开始对比。"
+            "value" : "可以开始比较。"
           }
         }
       }
@@ -4492,7 +4492,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "请选择两个要对比的项目。"
+            "value" : "请选择两个项目进行比较。"
           }
         }
       }
@@ -5519,6 +5519,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "缩放：%@"
+          }
+        }
+      }
+    },
+    "%lld of %lld differences" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 %1$lld 项，共 %2$lld 项差异"
+          }
+        }
+      }
+    },
+    "Drop one item in each slot, or use Quick Compare for multiple items." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在每个位置放入一个项目，或使用“快速比较”处理多个项目。"
+          }
+        }
+      }
+    },
+    "No Matching Differences" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有匹配的差异"
+          }
+        }
+      }
+    },
+    "Try another path or value, or clear the filter to see all differences." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请尝试其他路径或值，或清除筛选以查看所有差异。"
           }
         }
       }

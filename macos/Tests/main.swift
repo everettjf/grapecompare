@@ -6,6 +6,29 @@ func check(_ cond: Bool, _ name: String) {
     if cond { print("PASS: \(name)") } else { print("FAIL: \(name)"); failures += 1 }
 }
 
+// Structured filter regressions: preserve order, match either side, and recover from empty results.
+let filterFixtures = [
+    StructuredDifference(path: "$.profile.Name", kind: .changed, left: .string("Alice"), right: .string("Bob")),
+    StructuredDifference(path: "$.enabled", kind: .added, left: nil, right: .boolean(true)),
+    StructuredDifference(path: "$.旧标题", kind: .removed, left: .string("你好世界"), right: nil),
+]
+check(StructuredDifference.filtered(filterFixtures, query: " \n\t") == filterFixtures,
+      "structured filter ignores whitespace-only queries")
+check(StructuredDifference.filtered(filterFixtures, query: "  PROFILE.name \n") == [filterFixtures[0]],
+      "structured filter trims pasted whitespace and matches paths case-insensitively")
+check(StructuredDifference.filtered(filterFixtures, query: "ALICE") == [filterFixtures[0]] &&
+      StructuredDifference.filtered(filterFixtures, query: "bob") == [filterFixtures[0]],
+      "structured filter matches both old and new values")
+check(StructuredDifference.filtered(filterFixtures, query: "true") == [filterFixtures[1]],
+      "structured filter handles an absent left value")
+check(StructuredDifference.filtered(filterFixtures, query: "你好") == [filterFixtures[2]],
+      "structured filter matches Unicode with an absent right value")
+check(StructuredDifference.filtered(filterFixtures, query: "missing").isEmpty &&
+      StructuredDifference.filtered(filterFixtures, query: "") == filterFixtures,
+      "clearing a no-match structured filter restores every difference in order")
+check(StructuredDifference.filtered([], query: "name").isEmpty,
+      "structured filter supports equivalent documents")
+
 check(!WorkspaceTabBarPolicy.isVisible(itemCount: 0),
       "workspace tab bar stays hidden without comparison items")
 check(!WorkspaceTabBarPolicy.isVisible(itemCount: 1),

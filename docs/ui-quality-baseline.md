@@ -43,3 +43,13 @@ trading away filesystem safety or keyboard access.
 
 The checked-in documentation screenshots are the initial file and folder
 comparison references. Update them intentionally when those screens change.
+
+## Input and structured-filter regression (1.0.2)
+
+Repeat at 720 × 560 and 1120 × 740, in English and Simplified Chinese:
+
+1. Home: verify Left/Right and Base/Ours/Theirs labels remain visible. Select a file, choose a replacement, then cancel the panel: the original selection must remain. Reopen the panel and confirm another file; only that slot changes. Hover a long path to read it in full.
+2. Drop two files onto one slot: the unsupported-item alert must explain Quick Compare; the existing selection must remain intact.
+3. Drop three files onto Quick Compare. Use keyboard navigation (enable macOS Keyboard Navigation) and Space to select two checkboxes. Other unchecked items become disabled; deselect one to change the pair. Check that Left/Right follows selection order and Cancel dismisses without opening a comparison.
+4. Compare JSON files with changed, added, and removed values. Search for a path, an old value, and a new value. Verify matching/total counts. Search for a nonexistent value: show No Matching Differences, never the equivalent-documents state. Clear Filter must restore all rows without moving the comparison toolbar. Whitespace-only input must show all rows.
+5. Compare equivalent JSON: the equivalent-documents state must remain distinct from filtered empty results. Hover a truncated value to read its full text.

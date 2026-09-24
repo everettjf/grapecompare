@@ -445,6 +445,9 @@ struct DropSlot: View {
 
     var body: some View {
         VStack(spacing: 6) {
+            Text(label)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
             if let url {
                 Image(systemName: acceptsFolders ? "folder.fill" : "doc.fill")
                     .font(.title3)
@@ -458,9 +461,12 @@ struct DropSlot: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Button("Remove") { setURL(nil) }
-                    .font(.caption)
-                    .buttonStyle(.link)
+                HStack(spacing: 12) {
+                    Button("Choose…", action: pick)
+                    Button("Remove") { setURL(nil) }
+                }
+                .font(.caption)
+                .buttonStyle(.link)
             } else {
                 Image(systemName: "arrow.down.doc")
                     .font(.title3)
@@ -494,7 +500,10 @@ struct DropSlot: View {
                 .allowsHitTesting(false)
         }
         .dropDestination(for: URL.self) { items, _ in
-            guard items.count == 1, let item = items.first else { return false }
+            guard items.count == 1, let item = items.first else {
+                invalidDropMessage = "Drop one item in each slot, or use Quick Compare for multiple items."
+                return false
+            }
             guard ComparisonInputInspector.accepts(item, folders: acceptsFolders) else {
                 invalidDropMessage = acceptsFolders
                     ? "Please drop a folder."
@@ -506,6 +515,7 @@ struct DropSlot: View {
         } isTargeted: { isTargeted = $0 }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(label))
+        .help(url?.path(percentEncoded: false) ?? String(localized: label))
         .alert("Unsupported Item", isPresented: Binding(
             get: { invalidDropMessage != nil },
             set: { if !$0 { invalidDropMessage = nil } }
@@ -534,7 +544,9 @@ struct DropSlot: View {
         panel.canChooseFiles = !acceptsFolders
         panel.canChooseDirectories = acceptsFolders
         panel.allowsMultipleSelection = false
-        panel.prompt = "Choose"
+        panel.prompt = String(localized: "Choose…")
+        panel.message = String(localized: label)
+        panel.directoryURL = url?.deletingLastPathComponent()
         if panel.runModal() == .OK {
             guard let selectedURL = panel.url,
                   ComparisonInputInspector.accepts(selectedURL, folders: acceptsFolders) else {
@@ -568,30 +580,31 @@ private struct QuickComparePickerSheet: View {
             List(items, id: \.self) { item in
                 let isSelected = selected.contains(item)
                 let order = selected.firstIndex(of: item)
-                HStack(spacing: 10) {
-                    Image(systemName: item.hasDirectoryPath ? "folder.fill" : "doc.fill")
-                        .foregroundStyle(.secondary)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.lastPathComponent)
-                        Text((item.path(percentEncoded: false) as NSString).abbreviatingWithTildeInPath)
-                            .font(.caption)
+                Toggle(isOn: Binding(
+                    get: { selected.contains(item) },
+                    set: { _ in toggle(item) }
+                )) {
+                    HStack(spacing: 10) {
+                        Image(systemName: item.hasDirectoryPath ? "folder.fill" : "doc.fill")
                             .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.lastPathComponent)
+                            Text((item.path(percentEncoded: false) as NSString).abbreviatingWithTildeInPath)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if let order {
+                            Text(order == 0 ? "Left" : "Right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(order == 0 ? Color.red : Color.green)
+                        }
                     }
-                    Spacer()
-                    if let order {
-                        Text(order == 0 ? "Left" : "Right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(order == 0 ? Color.red : Color.green)
-                    }
-                    Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                        .font(.title3)
-                        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                    .padding(.vertical, 2)
                 }
-                .padding(.vertical, 2)
-                .contentShape(Rectangle())
-                .onTapGesture { toggle(item) }
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(item.lastPathComponent)
+                .toggleStyle(.checkbox)
+                .disabled(!isSelected && selected.count == 2)
+                .help(item.path(percentEncoded: false))
             }
 
             HStack {
@@ -614,7 +627,7 @@ private struct QuickComparePickerSheet: View {
         .frame(minWidth: 480, minHeight: 400)
     }
 
-    private var selectionMessage: String {
+    private var selectionMessage: LocalizedStringResource {
         switch selected.count {
         case 0: "Select two items to compare."
         case 1: "Select one more item."

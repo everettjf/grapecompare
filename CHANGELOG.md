@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 (37) — 2026-09-24
+
+- Show visible input-side labels and let users choose a replacement without clearing their selection first.
+- Explain multi-item drops in a single input slot and show full input paths on hover.
+- Make the quick comparison picker keyboard-accessible with native checkboxes and localized selection guidance.
+- Show matching counts, a clear-filter action, and a helpful empty state in structured comparisons; ignore accidental surrounding search whitespace.
+- Reveal truncated structured paths and values on hover.
+
 ## 1.0.1 (36) — 2026-09-18
 
 ### Independent diff scrolling and multi-item quick compare
