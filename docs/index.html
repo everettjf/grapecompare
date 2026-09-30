@@ -12,17 +12,17 @@
   <link rel="icon" href="assets/app-icon.png">
   <link rel="apple-touch-icon" href="assets/app-icon.png">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="copy-command.css">
 </head>
 <body>
   <nav class="nav wrap" aria-label="Main navigation">
     <a class="brand" href="./"><img src="assets/app-icon.png" alt="">GrapeCompare</a>
     <div class="nav-links">
+      <a href="#installation">Installation</a>
       <a href="#features">Features</a>
       <a href="#performance">Performance</a>
       <a href="privacy/">Privacy</a>
       <a href="https://github.com/everettjf/grapecompare">GitHub</a>
-      <a class="nav-download" href="https://github.com/everettjf/grapecompare" target="_blank" rel="noopener noreferrer">Source</a>
+      <a class="nav-download" href="https://apps.apple.com/us/app/grapecompare/id6796778424?mt=12" target="_blank" rel="noopener noreferrer">Mac App Store</a>
     </div>
   </nav>
 
@@ -33,10 +33,17 @@
       <h1>See every difference.<br><span>Keep complete control.</span></h1>
       <p class="lead">A professional, sandboxed macOS workbench for files, folders, images, and merges. Precise results, private by design, without an account or subscription.</p>
       <div class="actions">
-        <span class="button primary" aria-label="Mac App Store release in preparation">Mac App Store — Coming soon</span>
+        <a class="button primary" href="https://apps.apple.com/us/app/grapecompare/id6796778424?mt=12" target="_blank" rel="noopener noreferrer">Download on the Mac App Store</a>
         <a class="button" href="https://github.com/everettjf/grapecompare">View source</a>
       </div>
       <div class="trust"><span>macOS 15+</span><span>App Sandbox</span><span>Mac App Store</span><span>No tracking</span></div>
+    </section>
+
+    <section id="installation" class="policy wrap">
+      <h2>Installation and supported workflows</h2>
+      <p>Requires <strong>macOS 15 or later</strong>, on Apple silicon or Intel. Install from the <a href="https://apps.apple.com/us/app/grapecompare/id6796778424?mt=12" target="_blank" rel="noopener noreferrer">Mac App Store</a>, the supported distribution channel. GitHub provides source code; Homebrew and historical GitHub release downloads are not supported installers for the current app.</p>
+      <p>To start a comparison, choose two files or folders in the app. You can also use Finder Open With, drag and drop, or the Compare Files Shortcut. The app can access only items you select.</p>
+      <p>Three-way text and image merging uses manually selected base, left, and right inputs. Git integration, difftool/mergetool hooks, and a standalone CLI are not included.</p>
     </section>
 
     <section class="showcase wrap">
@@ -53,11 +60,11 @@
     <section id="features" class="section-heading wrap">
       <div class="eyebrow">Complete comparison workspace</div>
       <h2>Everything needed to inspect, merge, and act.</h2>
-      <p>Built for developers who need trustworthy results across everyday files and real repositories.</p>
+      <p>Built for developers who need trustworthy results across everyday files and folders.</p>
     </section>
 
     <section class="features wrap">
-      <article><span class="feature-icon">↔</span><h3>Files and folders</h3><p>Side-by-side line and character diff, recursive directory trees, filters, search, patch export, and safe synchronization.</p></article>
+      <article><span class="feature-icon">↔</span><h3>Files and folders</h3><p>Side-by-side line and character diff, recursive directory trees, filters, search, patch export, and reviewed copy, replace, move, recoverable delete, and undo.</p></article>
       <article><span class="feature-icon">◇</span><h3>Three-way merge</h3><p>Resolve user-selected text and image conflicts with explicit choices, editable output, navigation, and validation.</p></article>
       <article><span class="feature-icon">◉</span><h3>Image precision</h3><p>Two-Up, Split, Blink, Difference, synchronized zoom, metadata, pixel sampling, thresholds, channels, and local alignment.</p></article>
       <article><span class="feature-icon">{ }</span><h3>Developer formats</h3><p>Semantic JSON, plist, XCStrings, and Xcode project comparison, plus bundle, signature, entitlement, Mach-O, and asset inspection.</p></article>
@@ -73,7 +80,7 @@
       <div>
         <div class="eyebrow">Measured, not assumed</div>
         <h2>Fast on real projects.</h2>
-        <p>Release benchmarks are reproducible, checked into the repository, and guarded by CI. GrapeCompare has also been verified against two extracted LLVM source trees containing roughly 170,000 leaves and 2.3 GiB each.</p>
+        <p>Release benchmarks are reproducible and checked into the repository for local verification. GrapeCompare has also been verified against two extracted LLVM source trees containing roughly 170,000 leaves and 2.3 GiB each.</p>
         <a href="https://github.com/everettjf/grapecompare/blob/main/docs/llvm-real-world-benchmark.md">Read the LLVM benchmark →</a>
       </div>
       <dl>
@@ -92,11 +99,10 @@
     <section class="final-cta wrap">
       <img src="assets/app-icon.png" alt="">
       <div><h2>Compare with confidence.</h2><p>Free, open source, native to macOS.</p></div>
-      <a class="button primary" href="https://github.com/everettjf/grapecompare" target="_blank" rel="noopener noreferrer">View source</a>
+      <a class="button primary" href="https://apps.apple.com/us/app/grapecompare/id6796778424?mt=12" target="_blank" rel="noopener noreferrer">Download on the Mac App Store</a>
     </section>
   </main>
 
   <footer class="wrap"><span>© 2026 XNU</span><span><a href="privacy/">Privacy</a> · <a href="support.html">Support</a> · <a href="https://github.com/everettjf/grapecompare">Source</a></span></footer>
-  <script src="copy-command.js"></script>
 </body>
 </html>

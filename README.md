@@ -4,6 +4,19 @@ GrapeCompare is a private, sandboxed macOS comparison app for files, folders,
 images, structured data, and three-way merges. All comparison work happens on
 the Mac; the app has no account, telemetry, network entitlement, or cloud upload.
 
+## Installation
+
+Requires **macOS 15 or later**, on Apple silicon or Intel. The supported
+installation channel is the [**Mac App Store**](https://apps.apple.com/us/app/grapecompare/id6796778424?mt=12).
+See the [product website](https://xnu.app/grapecompare/) for supported workflows. GitHub hosts
+the source code, not a supported installer. Homebrew and historical GitHub
+release downloads are not supported installation paths for the current app.
+
+After installation, choose two files or folders in the app, or use Finder Open
+With, drag and drop, or the Compare Files Shortcut. Access is limited to items
+you select. Three-way merging takes manually selected base, left, and right
+inputs; it does not connect to Git.
+
 ## Product scope
 
 - Text comparison with line and character-level differences, navigation, filters,

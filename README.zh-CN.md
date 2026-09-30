@@ -4,6 +4,18 @@ GrapeCompare 是一款面向 macOS 的私密沙盒比较工具，支持文件、
 结构化数据和三方合并。所有处理均在本机完成；应用没有账号、遥测、网络权限或
 云端上传。
 
+## 安装与首次使用
+
+需要 **macOS 15 或更高版本**，支持 Apple silicon 和 Intel Mac。唯一支持的
+安装渠道是 [**Mac App Store**](https://apps.apple.com/us/app/grapecompare/id6796778424?mt=12)。
+[官网](https://xnu.app/grapecompare/)提供功能说明。GitHub 提供源码，不是当前
+产品的安装入口；Homebrew 和历史
+GitHub Release 下载包不属于当前应用支持的安装方式。
+
+安装后，在应用中选择两个文件或文件夹，也可以使用 Finder“打开方式”、拖放
+或“比较文件”快捷指令。应用只能访问你选择的内容。三方合并需要手动选择
+基础版本、左侧和右侧输入，不连接 Git。
+
 ## 产品范围
 
 - 文本行级与字符级比较、导航、过滤、可编辑输出和统一补丁导出。
