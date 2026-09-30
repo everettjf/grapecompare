@@ -2,10 +2,11 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// 首页：选择比较模式并拖入/选择两侧的文件或文件夹
+/// A single automatic input area, with explicit controls available on demand.
 struct HomeView: View {
     @Environment(AppState.self) private var state
     @AppStorage("showDemoButton") private var showDemoButton = true
+    @State private var showMoreOptions = false
 
     var body: some View {
         @Bindable var state = state
@@ -19,25 +20,24 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 22) {
                     HomeHero(showDemoButton: showDemoButton)
-                    DashboardSectionTitle(
-                        title: "Start a Comparison",
-                        subtitle: "Choose a focused workflow or drop two items for a quick comparison")
-
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .top, spacing: 16) {
-                            primaryCards
-                        }
-                        VStack(spacing: 16) {
-                            primaryCardsCompact
-                        }
-                    }
-
                     QuickCompareBar()
 
-                    DashboardSectionTitle(
-                        title: "More Workflows",
-                        subtitle: "Resolve a three-way text or image merge")
-                    MergeCard()
+                    DisclosureGroup("More Options", isExpanded: $showMoreOptions) {
+                        VStack(spacing: 16) {
+                            ViewThatFits(in: .horizontal) {
+                                HStack(alignment: .top, spacing: 16) { primaryCards }
+                                VStack(spacing: 16) { primaryCards }
+                            }
+                            HStack {
+                                Button("Paste Left") { state.pasteQuickComparisonSide(left: true) }
+                                Button("Paste Right") { state.pasteQuickComparisonSide(left: false) }
+                                Spacer()
+                            }
+                            MergeCard()
+                        }
+                        .padding(.top, 12)
+                    }
+                    .padding(.horizontal, 4)
 
                     if state.resumableSession != nil || !state.recentComparisons.isEmpty {
                         RecentComparisonsView()
@@ -75,18 +75,12 @@ struct HomeView: View {
             Text(state.quickCompareError ?? "")
         }
         .sheet(isPresented: Binding(
-            get: { !state.pendingQuickCompareItems.isEmpty },
-            set: { if !$0 { state.pendingQuickCompareItems = [] } }
+            get: { !state.pendingMergeItems.isEmpty },
+            set: { if !$0 { state.cancelPendingMerge() } }
         )) {
-            QuickComparePickerSheet(
-                items: state.pendingQuickCompareItems,
-                onConfirm: { chosen in
-                    state.pendingQuickCompareItems = []
-                    state.compareQuickItems(chosen)
-                },
-                onCancel: {
-                    state.pendingQuickCompareItems = []
-                })
+            MergeInputSheet(items: state.pendingMergeItems,
+                            onConfirm: state.confirmPendingMerge,
+                            onCancel: state.cancelPendingMerge)
         }
     }
 
@@ -108,11 +102,6 @@ struct HomeView: View {
             left: urlBinding(\.leftFolderURL),
             right: urlBinding(\.rightFolderURL),
             action: state.startFolderCompare)
-    }
-
-    @ViewBuilder
-    private var primaryCardsCompact: some View {
-        primaryCards
     }
 
     private func urlBinding(_ keyPath: ReferenceWritableKeyPath<AppState, URL?>) -> Binding<URL?> {
@@ -171,73 +160,60 @@ private struct HomeHero: View {
     }
 }
 
-private struct DashboardSectionTitle: View {
-    let title: LocalizedStringResource
-    let subtitle: LocalizedStringResource
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.headline)
-            Text(subtitle)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 2)
-        .accessibilityElement(children: .combine)
-    }
-}
-
 private struct QuickCompareBar: View {
     @Environment(AppState.self) private var state
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isTargeted = false
 
     var body: some View {
-        HStack(spacing: Theme.Spacing.large) {
-            Image(systemName: "plus.square.on.square")
-                .font(.title3)
-                .foregroundStyle(
-                    isTargeted ? Color.accentColor : Color(nsColor: .secondaryLabelColor))
+        VStack(spacing: 14) {
+            Image(systemName: "square.and.arrow.down.on.square")
+                .font(.system(size: 36, weight: .light))
+                .foregroundStyle(.tint)
                 .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Quick Compare")
-                    .font(.callout.weight(.semibold))
-                Text("Drop exactly two files or two folders here to compare immediately")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Button("Paste Left") { state.pasteQuickComparisonSide(left: true) }
-            Button("Paste Right") { state.pasteQuickComparisonSide(left: false) }
+            Text("Drop Files or Folders")
+                .font(.title2.bold())
+            Text("Two files or two folders compare automatically. Three files start a merge.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button("Choose Items…", action: chooseItems)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+            Text("For a merge, you will choose the base version first.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .controlSize(.small)
-        .padding(.horizontal, Theme.Spacing.xLarge)
-        .padding(.vertical, Theme.Spacing.large)
-        .background(
-            isTargeted ? Theme.selectedBackground : Theme.subtleBackground,
-            in: .rect(cornerRadius: Theme.Radius.compact))
+        .padding(28)
+        .frame(maxWidth: .infinity, minHeight: 250)
+        .contentShape(Rectangle())
+        .background(isTargeted ? Theme.selectedBackground : Theme.subtleBackground,
+                    in: .rect(cornerRadius: Theme.Radius.hero))
         .overlay {
-            RoundedRectangle(cornerRadius: Theme.Radius.compact)
-                .strokeBorder(isTargeted ? Color.accentColor : Theme.panelBorder)
+            RoundedRectangle(cornerRadius: Theme.Radius.hero)
+                .strokeBorder(isTargeted ? Color.accentColor : Theme.panelBorder,
+                              style: StrokeStyle(lineWidth: 2, dash: [8]))
+                .allowsHitTesting(false)
         }
         .dropDestination(for: URL.self) { items, _ in
-            // 数量不对也收下这次拖放，交给 compareQuickItems 弹出明确的上限提示，
-            // 而不是让系统静默回弹、用户一头雾水。
             state.compareQuickItems(items)
             return true
         } isTargeted: { isTargeted = $0 }
-        .animation(
-            reduceMotion ? nil : .easeOut(duration: AccessibilityPresentationPolicy.standardAnimationDuration),
-            value: isTargeted)
+        .animation(reduceMotion ? nil : .easeOut(duration: AccessibilityPresentationPolicy.standardAnimationDuration),
+                   value: isTargeted)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Quick Compare")
-        .accessibilityHint("Drop exactly two files or two folders to compare them immediately")
-        .accessibilityAction(named: "Paste left item") {
-            state.pasteQuickComparisonSide(left: true)
-        }
-        .accessibilityAction(named: "Paste right item") {
-            state.pasteQuickComparisonSide(left: false)
-        }
+        .accessibilityLabel("Drop Files or Folders")
+        .accessibilityHint("Two files or two folders compare automatically. Three files start a merge.")
+    }
+
+    private func chooseItems() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = true
+        panel.prompt = String(localized: "Choose Items…")
+        panel.message = String(localized: "Choose two files, two folders, or three files for a merge.")
+        if panel.runModal() == .OK { state.compareQuickItems(panel.urls) }
     }
 }
 
@@ -501,7 +477,7 @@ struct DropSlot: View {
         }
         .dropDestination(for: URL.self) { items, _ in
             guard items.count == 1, let item = items.first else {
-                invalidDropMessage = "Drop one item in each slot, or use Quick Compare for multiple items."
+                invalidDropMessage = "Drop one item in each slot, or use the main drop area for multiple items."
                 return false
             }
             guard ComparisonInputInspector.accepts(item, folders: acceptsFolders) else {
@@ -560,86 +536,62 @@ struct DropSlot: View {
     }
 }
 
-// MARK: - 拖入多个项目后选择两个
+// MARK: - Confirm the roles of three dropped files
 
-private struct QuickComparePickerSheet: View {
-    let items: [URL]
+private struct MergeInputSheet: View {
+    @State private var orderedItems: [URL]
     let onConfirm: ([URL]) -> Void
     let onCancel: () -> Void
 
-    /// 有序选择：先勾选的作为 Left，后勾选的作为 Right。
-    @State private var selected: [URL] = []
+    init(items: [URL], onConfirm: @escaping ([URL]) -> Void, onCancel: @escaping () -> Void) {
+        _orderedItems = State(initialValue: items)
+        self.onConfirm = onConfirm
+        self.onCancel = onCancel
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Choose Two Items")
-                .font(.title2.bold())
-            Text("Select one left and one right item to compare.")
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Three-Way Merge").font(.title2.bold())
+            Text("Choose the base (original) file, then confirm the left and right versions.")
                 .foregroundStyle(.secondary)
-
-            List(items, id: \.self) { item in
-                let isSelected = selected.contains(item)
-                let order = selected.firstIndex(of: item)
-                Toggle(isOn: Binding(
-                    get: { selected.contains(item) },
-                    set: { _ in toggle(item) }
-                )) {
-                    HStack(spacing: 10) {
-                        Image(systemName: item.hasDirectoryPath ? "folder.fill" : "doc.fill")
-                            .foregroundStyle(.secondary)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(item.lastPathComponent)
-                            Text((item.path(percentEncoded: false) as NSString).abbreviatingWithTildeInPath)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        if let order {
-                            Text(order == 0 ? "Left" : "Right")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(order == 0 ? Color.red : Color.green)
-                        }
+            ForEach(orderedItems.indices, id: \.self) { index in
+                HStack(spacing: 12) {
+                    Text(role(index)).font(.headline).frame(width: 70, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(orderedItems[index].lastPathComponent).lineLimit(1).truncationMode(.middle)
+                        Text(orderedItems[index].path(percentEncoded: false))
+                            .font(.caption).foregroundStyle(.secondary)
+                            .lineLimit(1).truncationMode(.middle)
                     }
-                    .padding(.vertical, 2)
+                    .help(orderedItems[index].path(percentEncoded: false))
+                    Spacer()
+                    if index > 0 {
+                        Button("Use as Base") { orderedItems.swapAt(0, index) }
+                    }
                 }
-                .toggleStyle(.checkbox)
-                .disabled(!isSelected && selected.count == 2)
-                .help(item.path(percentEncoded: false))
+                .padding(12)
+                .background(Theme.subtleBackground, in: .rect(cornerRadius: 10))
             }
-
+            Button("Swap Left and Right") { orderedItems.swapAt(1, 2) }
+                .disabled(orderedItems.count != 3)
             HStack {
-                Text(selectionMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
                 Spacer()
-                Button("Cancel", action: onCancel)
-                    .keyboardShortcut(.cancelAction)
-                Button("Compare") {
-                    if selected.count == 2 {
-                        onConfirm([selected[0], selected[1]])
-                    }
-                }
-                .keyboardShortcut(.defaultAction)
-                .disabled(selected.count != 2)
+                Button("Cancel", action: onCancel).keyboardShortcut(.cancelAction)
+                Button("Merge") { onConfirm(orderedItems) }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(orderedItems.count != 3)
             }
         }
-        .padding(20)
-        .frame(minWidth: 480, minHeight: 400)
+        .padding(24)
+        .frame(width: 570)
     }
 
-    private var selectionMessage: LocalizedStringResource {
-        switch selected.count {
-        case 0: "Select two items to compare."
-        case 1: "Select one more item."
-        default: "Ready to compare."
-        }
-    }
-
-    private func toggle(_ item: URL) {
-        if selected.contains(item) {
-            selected.removeAll { $0 == item }
-        } else if selected.count < 2 {
-            selected.append(item)
+    private func role(_ index: Int) -> LocalizedStringResource {
+        switch index {
+        case 0: "Base"
+        case 1: "Left"
+        default: "Right"
         }
     }
 }

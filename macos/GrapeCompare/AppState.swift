@@ -176,8 +176,8 @@ final class AppState {
     var sessionError: String?
     var reportActionError: String?
     var quickCompareError: String?
-    /// 拖入超过两个项目时暂存，供用户在弹出的选择器里挑两个进行对比。
-    var pendingQuickCompareItems: [URL] = []
+    var pendingMergeItems: [URL] = []
+    @ObservationIgnored private var pendingMergeScopes: [URL] = []
 
     var isComparingFile: Bool { comparisonPhase == .file }
     var isComparingFolder: Bool { comparisonPhase == .folder }
@@ -228,34 +228,63 @@ final class AppState {
     @ObservationIgnored private var temporaryClipboardURLs: [URL] = []
 
     func compareQuickItems(_ urls: [URL]) {
-        switch HomePresentationPolicy.quickCompareDropIssue(itemCount: urls.count) {
-        case .none:
-            break
-        case .tooMany:
-            let standardized = urls.map(\.standardizedFileURL)
-            standardized.forEach { _ = $0.startAccessingSecurityScopedResource() }
-            pendingQuickCompareItems = standardized
-            return
-        case .tooFew:
-            quickCompareError = String(localized: "Drop exactly two files or two folders.")
-            return
+        cancelPendingMerge()
+        quickCompareError = nil
+        // Keep the drag/open-panel grant active while inspecting real metadata.
+        let scopes = urls.filter { $0.startAccessingSecurityScopedResource() }
+        var keepScopesForMerge = false
+        defer {
+            if !keepScopesForMerge { scopes.forEach { $0.stopAccessingSecurityScopedResource() } }
         }
-        let standardized = urls.map(\.standardizedFileURL)
-        let folderFlags = standardized.map(\.hasDirectoryPath)
-        guard folderFlags[0] == folderFlags[1] else {
-            quickCompareError = String(localized: "Both items must be the same kind.")
-            return
-        }
-        standardized.forEach { _ = $0.startAccessingSecurityScopedResource() }
-        if folderFlags[0] {
-            leftFolderURL = standardized[0]
-            rightFolderURL = standardized[1]
-            startFolderCompare()
-        } else {
-            leftFileURL = standardized[0]
-            rightFileURL = standardized[1]
+        let items = urls.map(\.standardizedFileURL)
+        switch HomePresentationPolicy.route(items) {
+        case .files:
+            items.forEach { retainSecurityScopedAccess(to: $0) }
+            leftFileURL = items[0]
+            rightFileURL = items[1]
             startFileCompare()
+        case .folders:
+            items.forEach { retainSecurityScopedAccess(to: $0) }
+            leftFolderURL = items[0]
+            rightFolderURL = items[1]
+            startFolderCompare()
+        case .merge:
+            // Finder's selection order does not establish a common ancestor.
+            // Confirm roles before opening the existing three-way merge engine.
+            pendingMergeScopes = scopes
+            keepScopesForMerge = true
+            pendingMergeItems = items
+        case .invalidCount:
+            quickCompareError = String(localized: "Choose two files, two folders, or three files for a merge.")
+        case .unavailableItem:
+            quickCompareError = String(localized: "Some items cannot be opened. Choose accessible files or folders; symbolic links are not supported.")
+        case .mixedKinds:
+            quickCompareError = String(localized: "Files and folders cannot be compared together. Choose two files, two folders, or three files for a merge.")
+        case .threeFolders:
+            quickCompareError = String(localized: "Three-folder comparison is not supported. Choose two folders, or three files for a merge.")
         }
+    }
+
+    func confirmPendingMerge(_ items: [URL]) {
+        guard items.count == 3,
+              items.sorted(by: { $0.path < $1.path }) == pendingMergeItems.sorted(by: { $0.path < $1.path }),
+              HomePresentationPolicy.route(items) == .merge else {
+            cancelPendingMerge()
+            quickCompareError = String(localized: "The selected files are no longer available. Choose them again.")
+            return
+        }
+        items.forEach { retainSecurityScopedAccess(to: $0) }
+        baseFileURL = items[0]
+        oursFileURL = items[1]
+        theirsFileURL = items[2]
+        cancelPendingMerge()
+        startThreeWayMerge()
+    }
+
+    func cancelPendingMerge() {
+        pendingMergeItems = []
+        pendingMergeScopes.forEach { $0.stopAccessingSecurityScopedResource() }
+        pendingMergeScopes = []
     }
 
     func pasteQuickComparisonSide(left: Bool) {
@@ -875,6 +904,7 @@ final class AppState {
     /// intentionally explicit because a closed SwiftUI workspace can remain
     /// retained briefly while views finish updating.
     func prepareForClose() {
+        cancelPendingMerge()
         cancelCurrentComparison()
         stopLiveUpdates()
         operations.clearDrafts()

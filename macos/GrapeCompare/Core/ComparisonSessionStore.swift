@@ -18,29 +18,21 @@ nonisolated enum UIQualityPolicy {
     static let folderStatusColumnWidth: CGFloat = 132
 }
 
-nonisolated enum HomePresentationPolicy {
-    static let primaryWorkflowCount = 2
-    static let secondaryWorkflowCount = 1
-    static let quickCompareItemCount = 2
-
-    static func acceptsQuickCompareDrop(itemCount: Int) -> Bool {
-        itemCount == quickCompareItemCount
-    }
-
-    /// 拖入数量相对「恰好两个」的偏离方向，用于给用户明确的上限提示。
-    static func quickCompareDropIssue(itemCount: Int) -> QuickCompareDropIssue {
-        if itemCount == quickCompareItemCount { return .none }
-        return itemCount < quickCompareItemCount
-            ? .tooFew(expected: quickCompareItemCount)
-            : .tooMany(expected: quickCompareItemCount)
-    }
+/// Select a workflow from filesystem metadata, never from URL trailing slashes.
+nonisolated enum HomeInputRoute: Equatable, Sendable {
+    case files, folders, merge
+    case invalidCount, unavailableItem, mixedKinds, threeFolders
 }
 
-/// 快速对比拖放的数量问题。
-nonisolated enum QuickCompareDropIssue: Equatable, Sendable {
-    case none
-    case tooFew(expected: Int)
-    case tooMany(expected: Int)
+nonisolated enum HomePresentationPolicy {
+    static func route(_ urls: [URL]) -> HomeInputRoute {
+        guard (2...3).contains(urls.count) else { return .invalidCount }
+        let kinds = urls.compactMap { ComparisonInputInspector.kind(of: $0) }
+        guard kinds.count == urls.count else { return .unavailableItem }
+        guard kinds.allSatisfy({ $0 == kinds[0] }) else { return .mixedKinds }
+        if urls.count == 3 { return kinds[0] == .file ? .merge : .threeFolders }
+        return kinds[0] == .file ? .files : .folders
+    }
 }
 
 nonisolated enum ComparisonTopBarPolicy {

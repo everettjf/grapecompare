@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "More Options" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多选项"
+          }
+        }
+      }
+    },
+    "Drop Files or Folders" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖入文件或文件夹"
+          }
+        }
+      }
+    },
+    "Two files or two folders compare automatically. Three files start a merge." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "两个文件或两个文件夹会自动比较。三个文件会进入三方合并。"
+          }
+        }
+      }
+    },
+    "Choose Items…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择项目…"
+          }
+        }
+      }
+    },
+    "For a merge, you will choose the base version first." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并前，请先确认基础版本。"
+          }
+        }
+      }
+    },
+    "Choose two files, two folders, or three files for a merge." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择两个文件、两个文件夹，或用于三方合并的三个文件。"
+          }
+        }
+      }
+    },
+    "Some items cannot be opened. Choose accessible files or folders; symbolic links are not supported." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分项目无法打开。请选择可访问的文件或文件夹，不支持符号链接。"
+          }
+        }
+      }
+    },
+    "Files and folders cannot be compared together. Choose two files, two folders, or three files for a merge." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件和文件夹不能混合比较。请选择两个文件、两个文件夹，或用于三方合并的三个文件。"
+          }
+        }
+      }
+    },
+    "Three-folder comparison is not supported. Choose two folders, or three files for a merge." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂不支持三个文件夹的比较。请选择两个文件夹，或用于三方合并的三个文件。"
+          }
+        }
+      }
+    },
+    "The selected files are no longer available. Choose them again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选文件已不可用，请重新选择。"
+          }
+        }
+      }
+    },
+    "Choose the base (original) file, then confirm the left and right versions." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择基础（原始）文件，然后确认左侧和右侧版本。"
+          }
+        }
+      }
+    },
+    "Use as Base" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为基础版本"
+          }
+        }
+      }
+    },
+    "Swap Left and Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交换左右版本"
+          }
+        }
+      }
+    },
+    "Drop one item in each slot, or use the main drop area for multiple items." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个位置只能放入一个项目；多个项目请拖入首页主拖放区。"
+          }
+        }
+      }
+    },
     "" : {
 
     },

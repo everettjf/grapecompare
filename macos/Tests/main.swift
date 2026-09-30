@@ -57,19 +57,6 @@ check(UIQualityPolicy.statusAccentWidth == 3,
       "semantic row accents use the reviewed subtle width")
 check(UIQualityPolicy.folderStatusColumnWidth >= 132,
       "folder status column keeps Changed badges on one line")
-check(HomePresentationPolicy.primaryWorkflowCount == 2 &&
-      HomePresentationPolicy.secondaryWorkflowCount == 1,
-      "home hierarchy keeps two primary workflows and one merge workflow")
-check(HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 2),
-      "quick compare accepts exactly two items")
-check(!HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 1) &&
-      !HomePresentationPolicy.acceptsQuickCompareDrop(itemCount: 3),
-      "quick compare rejects ambiguous item counts")
-check(HomePresentationPolicy.quickCompareDropIssue(itemCount: 2) == .none,
-      "quick compare drop has no issue for exactly two items")
-check(HomePresentationPolicy.quickCompareDropIssue(itemCount: 1) == .tooFew(expected: 2) &&
-      HomePresentationPolicy.quickCompareDropIssue(itemCount: 3) == .tooMany(expected: 2),
-      "quick compare drop reports too few and too many distinctly")
 check(ComparisonTopBarPolicy.horizontalPadding == 14 &&
       ComparisonTopBarPolicy.verticalPadding == 8,
       "comparison top bars share one compact inset")
@@ -832,6 +819,28 @@ let dropSymlink = tmp.appending(path: "drop-link")
 try! FileManager.default.createSymbolicLink(at: dropSymlink, withDestinationURL: L)
 check(ComparisonInputInspector.kind(of: dropSymlink) == nil,
       "drop validation does not follow symbolic links")
+
+// Home routing uses filesystem metadata, including directory URLs without a slash.
+let bareFolderURL = URL(fileURLWithPath: L.path, isDirectory: false)
+check(HomePresentationPolicy.route([dropFixture, dropFixture]) == .files,
+      "home routes two files to comparison")
+check(HomePresentationPolicy.route([bareFolderURL, R]) == .folders,
+      "home identifies folders from metadata rather than URL spelling")
+check(HomePresentationPolicy.route([dropFixture, dropFixture, dropFixture]) == .merge,
+      "home routes three files to role confirmation")
+check(HomePresentationPolicy.route([L, R, bareFolderURL]) == .threeFolders,
+      "home explicitly rejects unsupported three-folder comparison")
+check(HomePresentationPolicy.route([dropFixture, L]) == .mixedKinds &&
+      HomePresentationPolicy.route([L, dropFixture, R]) == .mixedKinds,
+      "home rejects mixed file and folder selections")
+check(HomePresentationPolicy.route([]) == .invalidCount &&
+      HomePresentationPolicy.route([dropFixture]) == .invalidCount &&
+      HomePresentationPolicy.route([L, R, L, R]) == .invalidCount,
+      "home rejects zero, one, and four inputs without silently dropping any")
+check(HomePresentationPolicy.route([dropSymlink, dropFixture]) == .unavailableItem &&
+      HomePresentationPolicy.route([tmp.appending(path: "missing"), L]) == .unavailableItem &&
+      HomePresentationPolicy.route([URL(string: "https://example.com")!, dropFixture]) == .unavailableItem,
+      "home rejects symlinks, missing items, and remote URLs")
 
 write("same content", L.appending(path: "same.txt"))
 write("same content", R.appending(path: "same.txt"))

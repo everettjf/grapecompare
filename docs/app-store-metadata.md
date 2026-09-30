@@ -1,4 +1,4 @@
-# Mac App Store metadata — version 1.0.2
+# Mac App Store metadata — version 1.0.3
 
 Use these reviewed values for the next Mac App Store version. Fields marked
 `ACCOUNT REQUIRED` must be completed by the account holder in App Store Connect.
@@ -133,3 +133,11 @@ English: Choose replacement inputs more easily with visible side labels. Filter 
 简体中文：文件可直接重新选择，左右侧标签更清晰。结构化差异筛选新增匹配数量、清除按钮和无结果提示。多文件选择改用原生复选框，支持键盘操作。
 
 Prepared locally; not uploaded or submitted to App Store Connect by this change.
+
+## What's New — 1.0.3 (38)
+
+English: A simpler start screen automatically opens file or folder comparison when you drop two items. Drop three files to confirm the base, left, and right versions for a merge. Mixed inputs and unsupported three-folder comparisons now show clear guidance. Manual selection and clipboard controls are available in More Options.
+
+简体中文：首页新增统一拖放入口，拖入两个文件或两个文件夹即可自动比较；拖入三个文件后确认基础、左侧和右侧版本再合并。混合类型和三个文件夹会显示明确提示。手动选择与剪贴板操作收纳在“更多选项”中。
+
+Prepared locally; not uploaded or submitted to App Store Connect.

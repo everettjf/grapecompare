@@ -50,6 +50,10 @@ Repeat at 720 × 560 and 1120 × 740, in English and Simplified Chinese:
 
 1. Home: verify Left/Right and Base/Ours/Theirs labels remain visible. Select a file, choose a replacement, then cancel the panel: the original selection must remain. Reopen the panel and confirm another file; only that slot changes. Hover a long path to read it in full.
 2. Drop two files onto one slot: the unsupported-item alert must explain Quick Compare; the existing selection must remain intact.
-3. Drop three files onto Quick Compare. Use keyboard navigation (enable macOS Keyboard Navigation) and Space to select two checkboxes. Other unchecked items become disabled; deselect one to change the pair. Check that Left/Right follows selection order and Cancel dismisses without opening a comparison.
+3. Open More Options for individual input slots. Drop two files or two folders on the main drop area: open the corresponding comparison. Drop three files: confirm Base/Left/Right in the merge sheet, change the base and swap sides, then merge. Cancel must preserve the current comparison inputs. Mixed file/folder inputs, three folders, unavailable paths, symlinks, and counts other than two or three show clear errors without opening a comparison.
 4. Compare JSON files with changed, added, and removed values. Search for a path, an old value, and a new value. Verify matching/total counts. Search for a nonexistent value: show No Matching Differences, never the equivalent-documents state. Clear Filter must restore all rows without moving the comparison toolbar. Whitespace-only input must show all rows.
 5. Compare equivalent JSON: the equivalent-documents state must remain distinct from filtered empty results. Hover a truncated value to read its full text.
+
+## Automatic home input regression (1.0.3)
+
+The empty home contains one drop area, Choose Items, collapsed More Options, and recent comparisons when present. Choose Items uses the same routing as drag/drop. Folder kind comes from filesystem metadata, not trailing slashes. Three-file roles must be confirmed because Finder ordering does not identify the common ancestor. Pending security-scoped access is released on cancellation or workspace close. Three-folder merge remains unsupported.
