@@ -296,7 +296,25 @@
           "en": "Folder changes.\nMade clear."
         },
         "screenshot": "/screenshots/apple/mac/en/01.png",
-        "inverted": false
+        "inverted": false,
+        "transforms": {
+          "device": {
+            "x": 1260,
+            "y": 428,
+            "width": 1510,
+            "height": 944,
+            "rotation": 0,
+            "zIndex": 2
+          },
+          "caption": {
+            "x": 140,
+            "y": 360,
+            "width": 1040,
+            "height": 1050,
+            "rotation": 0,
+            "zIndex": 3
+          }
+        }
       },
       {
         "id": "grape-2",
