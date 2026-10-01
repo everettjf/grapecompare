@@ -21,6 +21,7 @@ struct HomeView: View {
                 VStack(spacing: 22) {
                     HomeHero(showDemoButton: showDemoButton)
                     QuickCompareBar()
+                    if !state.shelfItems.isEmpty { InputShelfView() }
 
                     DisclosureGroup("More Options", isExpanded: $showMoreOptions) {
                         VStack(spacing: 16) {
@@ -173,14 +174,14 @@ private struct QuickCompareBar: View {
                 .accessibilityHidden(true)
             Text("Drop Files or Folders")
                 .font(.title2.bold())
-            Text("Two files or two folders compare automatically. Three files start a merge.")
+            Text("Add one item at a time, or drop two to compare. Keep more file versions on the shelf.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button("Choose Items…", action: chooseItems)
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-            Text("For a merge, you will choose the base version first.")
+            Text("Choose any two versions on the shelf. Three-way merge is available separately.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -196,14 +197,14 @@ private struct QuickCompareBar: View {
                 .allowsHitTesting(false)
         }
         .dropDestination(for: URL.self) { items, _ in
-            state.compareQuickItems(items)
+            state.stageInputs(items)
             return true
         } isTargeted: { isTargeted = $0 }
         .animation(reduceMotion ? nil : .easeOut(duration: AccessibilityPresentationPolicy.standardAnimationDuration),
                    value: isTargeted)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Drop Files or Folders")
-        .accessibilityHint("Two files or two folders compare automatically. Three files start a merge.")
+        .accessibilityHint("Add one item at a time, or drop two to compare. Keep more file versions on the shelf.")
     }
 
     private func chooseItems() {
@@ -212,8 +213,8 @@ private struct QuickCompareBar: View {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = true
         panel.prompt = String(localized: "Choose Items…")
-        panel.message = String(localized: "Choose two files, two folders, or three files for a merge.")
-        if panel.runModal() == .OK { state.compareQuickItems(panel.urls) }
+        panel.message = String(localized: "Add files or folders to the shelf.")
+        if panel.runModal() == .OK { state.stageInputs(panel.urls) }
     }
 }
 
@@ -593,5 +594,48 @@ private struct MergeInputSheet: View {
         case 1: "Left"
         default: "Right"
         }
+    }
+}
+
+private struct InputShelfView: View {
+    @Environment(AppState.self) private var state
+    var body: some View {
+        @Bindable var state = state
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Input Shelf").font(.headline)
+                Spacer()
+                Button("Clear Shelf") { state.clearShelf() }
+            }
+            ForEach(state.shelfItems, id: \.self) { url in
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(url.lastPathComponent).lineLimit(1)
+                        Text(url.deletingLastPathComponent().path).font(.caption).foregroundStyle(.secondary)
+                            .lineLimit(1).truncationMode(.middle)
+                    }.help(url.path)
+                    Spacer()
+                    Button { state.shelfLeft = url; if state.shelfRight == url { state.shelfRight = nil } } label: {
+                        Label("Left", systemImage: state.shelfLeft == url ? "checkmark.circle.fill" : "circle")
+                    }
+                    Button { state.shelfRight = url; if state.shelfLeft == url { state.shelfLeft = nil } } label: {
+                        Label("Right", systemImage: state.shelfRight == url ? "checkmark.circle.fill" : "circle")
+                    }
+                    Button { state.removeShelfItem(url) } label: { Image(systemName: "xmark") }
+                        .help("Remove from Shelf")
+                        .accessibilityLabel("Remove from Shelf")
+                }
+            }
+            HStack {
+                Button("Compare Selected Versions") { state.compareShelfPair() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(state.shelfLeft == nil || state.shelfRight == nil || state.shelfLeft == state.shelfRight)
+                if state.shelfItems.count == 3 {
+                    Button("Three-Way Merge…") { state.compareQuickItems(state.shelfItems) }
+                }
+            }
+        }
+        .padding(18)
+        .background(.regularMaterial, in: .rect(cornerRadius: Theme.Radius.hero))
     }
 }

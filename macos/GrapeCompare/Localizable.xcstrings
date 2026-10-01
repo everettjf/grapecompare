@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Add one item at a time, or drop two to compare. Keep more file versions on the shelf." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可逐个添加，或拖入两个项目直接比较。更多文件版本可放在暂存架中。"
+          }
+        }
+      }
+    },
+    "Choose any two versions on the shelf. Three-way merge is available separately." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在暂存架中选择任意两个版本，或单独开始三方合并。"
+          }
+        }
+      }
+    },
+    "Add files or folders to the shelf." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加文件或文件夹到暂存架。"
+          }
+        }
+      }
+    },
+    "Input Shelf" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入暂存架"
+          }
+        }
+      }
+    },
+    "Clear Shelf" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空暂存架"
+          }
+        }
+      }
+    },
+    "Remove from Shelf" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从暂存架移除"
+          }
+        }
+      }
+    },
+    "Compare Selected Versions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较所选版本"
+          }
+        }
+      }
+    },
+    "Three-Way Merge…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "三方合并…"
+          }
+        }
+      }
+    },
+    "Files and folders cannot share a comparison. Clear the shelf to switch input types." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件和文件夹不能一起比较。请清空暂存架后切换输入类型。"
+          }
+        }
+      }
+    },
+    "The shelf supports up to 16 files or two folders." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂存架最多支持 16 个文件或两个文件夹。"
+          }
+        }
+      }
+    },
+    "Search file names or paths" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索文件名或路径"
+          }
+        }
+      }
+    },
+    "Clear Search" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除搜索"
+          }
+        }
+      }
+    },
+    "Collapse Unchanged" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折叠相同文本"
+          }
+        }
+      }
+    },
+    "Show %lld unchanged lines" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开 %lld 行相同文本"
+          }
+        }
+      }
+    },
     "More Options" : {
       "localizations" : {
         "zh-Hans" : {

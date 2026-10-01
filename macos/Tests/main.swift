@@ -1694,5 +1694,86 @@ try? FileManager.default.removeItem(at: exactWatcherRoot)
 
 try? FileManager.default.removeItem(at: tmp)
 
+// Workspace presentation regressions: original rows always survive a fold/expand round trip.
+let foldingRows = (0..<50).map { index in
+    DiffRow(id: index, kind: index == 20 || index == 40 ? .modified : .equal,
+            left: .init(number: index + 1, text: "line \(index)", changedRange: nil),
+            right: .init(number: index + 1, text: "line \(index)", changedRange: nil))
+}
+let foldedRows = UnchangedTextPolicy.rows(foldingRows, collapsed: true, expanded: [])
+check(foldedRows.filter { $0.hiddenRange != nil }.count == 3, "fold leading, middle and trailing unchanged regions")
+check(foldedRows.contains { $0.id == 20 && $0.hiddenRange == nil } &&
+      foldedRows.contains { $0.id == 40 && $0.hiddenRange == nil }, "folding never hides changed rows")
+check(Set(foldedRows.map(\.id)).count == foldedRows.count, "fold markers have unique original row IDs")
+let reconstructedIDs = foldedRows.flatMap { item in item.hiddenRange.map(Array.init) ?? [item.id] }
+check(reconstructedIDs == foldingRows.map(\.id), "folding preserves every original row in order")
+let allExpanded = UnchangedTextPolicy.rows(foldingRows, collapsed: true, expanded: Set(foldedRows.map(\.id)))
+check(allExpanded.map(\.id) == foldingRows.map(\.id) && allExpanded.allSatisfy { $0.hiddenRange == nil },
+      "expanding all groups restores the exact original row sequence")
+check(UnchangedTextPolicy.rows([], collapsed: true, expanded: []).isEmpty, "folding empty text is safe")
+check(UnchangedTextPolicy.rows(Array(foldingRows.prefix(6)), collapsed: true, expanded: []).count == 6,
+      "short unchanged groups retain full context")
+for count in 0...120 {
+    let rows = (0..<count).map { DiffRow(id: $0, kind: $0 % 19 == 0 ? .added : .equal, left: nil, right: nil) }
+    for context in [0, 1, 3, 10] {
+        let folded = UnchangedTextPolicy.rows(rows, collapsed: true, expanded: [], context: context)
+        if folded.flatMap({ $0.hiddenRange.map(Array.init) ?? [$0.id] }) != rows.map(\.id) {
+            check(false, "fold round trip for \(count) rows / \(context) context")
+        }
+    }
+}
+check(true, "fold round trips cover 484 combinations of lengths and contexts")
+let workspaceRoot = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+try! FileManager.default.createDirectory(at: workspaceRoot, withIntermediateDirectories: true)
+let workspaceFiles = (0..<17).map { workspaceRoot.appendingPathComponent("version\($0).txt") }
+for file in workspaceFiles { try! Data("sample".utf8).write(to: file) }
+check((try? InputShelfPolicy.adding([workspaceFiles[0]], to: [])) == [workspaceFiles[0]], "shelf accepts a single staged file")
+check((try? InputShelfPolicy.adding([workspaceFiles[0], workspaceFiles[1]], to: [workspaceFiles[0]])) == Array(workspaceFiles.prefix(2)),
+      "shelf accumulates batches and deduplicates files")
+check((try? InputShelfPolicy.adding(Array(workspaceFiles.prefix(16)), to: []))?.count == 16,
+      "shelf accepts sixteen versions without selecting a merge workflow")
+check((try? InputShelfPolicy.adding(workspaceFiles, to: [])) == nil, "shelf enforces its capacity atomically")
+check((try? InputShelfPolicy.adding([workspaceRoot], to: [workspaceFiles[0]])) == nil,
+      "shelf rejects mixed files and folders")
+let missingShelfFile = workspaceRoot.appendingPathComponent("missing")
+check((try? InputShelfPolicy.adding([missingShelfFile], to: [])) == nil, "shelf rejects inaccessible input")
+let shelfLink = workspaceRoot.appendingPathComponent("link")
+try! FileManager.default.createSymbolicLink(at: shelfLink, withDestinationURL: workspaceFiles[0])
+check((try? InputShelfPolicy.adding([shelfLink], to: [])) == nil, "shelf never follows symbolic links")
+let searchLeaf = FolderNode(name: "Café.swift", relativePath: "Sources/Café.swift", isFolder: false, status: .different)
+let searchOther = FolderNode(name: "same.txt", relativePath: "same.txt", isFolder: false, status: .same)
+let searchParent = FolderNode(name: "Sources", relativePath: "Sources", isFolder: true, status: .different, children: [searchLeaf])
+let searchRoot = FolderNode(name: "", relativePath: "", isFolder: true, status: .different, children: [searchParent, searchOther])
+check(FolderSearchPolicy.matchingIDs(in: searchRoot, query: " CAFE ") { _ in true } == ["", "Sources", "Sources/Café.swift"],
+      "folder search trims whitespace, ignores case/accents, and retains ancestors")
+check(FolderSearchPolicy.matchingIDs(in: searchRoot, query: "Sources/") { _ in true }.contains(searchLeaf.id),
+      "folder search matches relative paths")
+check(FolderSearchPolicy.matchingIDs(in: searchRoot, query: "same") { $0.status == .different }.isEmpty,
+      "folder search intersects the status filter")
+check(FolderSearchPolicy.matchingIDs(in: searchRoot, query: "") { _ in true }.count == 4,
+      "clearing folder search restores all nodes")
+let readingURL = workspaceRoot.appendingPathComponent("reading.json")
+let readingStore = ComparisonReadingStore(url: readingURL)
+let readingKey = ComparisonReadingStore.key(kind: "files", left: workspaceFiles[0], right: workspaceFiles[1])
+var readingFixture = ComparisonReadingState()
+readingFixture.search = "Café"
+readingFixture.expandedFolders = ["Sources"]
+readingFixture.selection = ["Sources/Café.swift"]
+readingFixture.topVisibleFolderID = "Sources/Café.swift"
+readingFixture.collapsed = true
+readingFixture.expandedText = [3, 24]
+readingFixture.leftOffset = ReadingOffset(x: 75, y: 320)
+readingStore.save(readingFixture, for: readingKey)
+check(ComparisonReadingStore(url: readingURL).read(readingKey) == readingFixture,
+      "reading state survives a new store instance, preserving search, selection, folds and offsets")
+check(readingStore.read(ComparisonReadingStore.key(kind: "files", left: workspaceFiles[1], right: workspaceFiles[0])) == nil,
+      "reading positions are isolated by ordered file pair")
+for index in 0..<70 { readingStore.save(readingFixture, for: "pair-\(index)") }
+check(readingStore.read(readingKey) == nil && readingStore.read("pair-69") == readingFixture,
+      "reading history evicts old entries at the bounded capacity")
+try! Data("broken json".utf8).write(to: readingURL)
+check(readingStore.read(readingKey) == nil, "corrupt reading history falls back safely")
+try? FileManager.default.removeItem(at: workspaceRoot)
+
 print(failures == 0 ? "\nALL TESTS PASSED" : "\n\(failures) TEST(S) FAILED")
 exit(failures == 0 ? 0 : 1)

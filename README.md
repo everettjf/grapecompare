@@ -12,7 +12,8 @@ See the [product website](https://xnu.app/grapecompare/) for supported workflows
 the source code, not a supported installer. Homebrew and historical GitHub
 release downloads are not supported installation paths for the current app.
 
-After installation, choose two files or folders in the app, or use Finder Open
+After installation, stage inputs one at a time or drop two files or two folders
+to compare. Keep up to 16 file versions on the shelf and choose any two. Use Finder Open
 With, drag and drop, or the Compare Files Shortcut. Access is limited to items
 you select. Three-way merging takes manually selected base, left, and right
 inputs; it does not connect to Git.
@@ -20,8 +21,8 @@ inputs; it does not connect to Git.
 ## Product scope
 
 - Text comparison with line and character-level differences, navigation, filters,
-  editable output, and unified patch export.
-- Recursive folder comparison with reviewed, transactional copy, replace, move,
+  unchanged-text folding, restored reading positions, editable output, and unified patch export.
+- Recursive folder comparison with filename/path search, restored selection and expansion, and reviewed, transactional copy, replace, move,
   recoverable delete, dry-run reports, and undo.
 - Image comparison with side-by-side, overlay, heatmap, alignment, metadata, and
   pixel metrics.

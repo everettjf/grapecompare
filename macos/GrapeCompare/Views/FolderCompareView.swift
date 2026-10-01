@@ -6,6 +6,12 @@ import UniformTypeIdentifiers
 /// 文件夹比较视图：树形结构、状态着色、筛选、双击打开文件 diff
 struct FolderCompareView: View {
     @Environment(AppState.self) private var state
+    @State private var searchQuery = ""
+    @State private var readingKey = ""
+    @State private var topVisibleID: String?
+    @State private var initialVisibleID: String?
+    @State private var restoringScroll = false
+    @State private var didRestoreReading = false
     @State private var filter: Filter = .all
     @State private var expanded: Set<String> = []
     @State private var visibleItems: [VisibleItem] = []
@@ -24,7 +30,7 @@ struct FolderCompareView: View {
     @State private var showsAppleInspection = false
     @State private var quickLookController = FolderQuickLookController()
 
-    enum Filter: CaseIterable, Identifiable {
+    enum Filter: String, CaseIterable, Identifiable {
         case all, differences, onlyLeft, onlyRight
         var id: Self { self }
 
@@ -41,6 +47,11 @@ struct FolderCompareView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            HStack {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField("Search file names or paths", text: $searchQuery).textFieldStyle(.roundedBorder)
+                if !searchQuery.isEmpty { Button("Clear Search") { searchQuery = "" } }
+            }.padding(.horizontal, 14).padding(.bottom, 8)
             Divider()
             content
             Divider()
@@ -49,9 +60,9 @@ struct FolderCompareView: View {
         .onChange(of: state.treeVersion, initial: true) {
             initExpansion()
         }
-        .onChange(of: filter) {
-            rebuildVisibleItems()
-        }
+        .onChange(of: filter) { rebuildVisibleItems() }
+        .onChange(of: searchQuery) { rebuildVisibleItems() }
+        .onDisappear { saveReading() }
         .fileImporter(
             isPresented: $isImportingPlan,
             allowedContentTypes: [.grapeComparePlan, .json],
@@ -270,13 +281,13 @@ struct FolderCompareView: View {
     private var folderResults: some View {
         if visibleItems.isEmpty {
             VStack(spacing: 14) {
-                Image(systemName: filter == .all ? "checkmark.seal.fill" : "line.3.horizontal.decrease.circle")
+                Image(systemName: filter == .all && searchQuery.isEmpty ? "checkmark.seal.fill" : "line.3.horizontal.decrease.circle")
                     .font(.system(size: 48))
-                    .foregroundStyle(filter == .all ? .green : .secondary)
-                Text(filter == .all ? "Folder is empty" : "No items match the current filter")
+                    .foregroundStyle(filter == .all && searchQuery.isEmpty ? .green : .secondary)
+                Text(filter == .all && searchQuery.isEmpty ? "Folder is empty" : "No items match the current filter")
                     .font(.title3)
-                if filter != .all {
-                    Button("Clear Filter") { filter = .all }
+                if filter != .all || !searchQuery.isEmpty {
+                    Button("Clear Filter") { filter = .all; searchQuery = "" }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -288,26 +299,47 @@ struct FolderCompareView: View {
                     selectionActionBar
                     Divider()
                 }
-                List(visibleItems, selection: $selectedNodeIDs) { item in
-                    FolderRow(
-                        node: item.node,
-                        depth: item.depth,
-                        isExpanded: expanded.contains(item.node.id),
-                        onToggle: { toggle(item.node) },
-                        onOpen: { state.openDiff(for: item.node) },
-                        onQueueLeftToRight: canQueueCopy(item.node, direction: .leftToRight)
-                            ? { queue(nodes: [item.node], kind: .copy, direction: .leftToRight) }
-                            : nil,
-                        onQueueRightToLeft: canQueueCopy(item.node, direction: .rightToLeft)
-                            ? { queue(nodes: [item.node], kind: .copy, direction: .rightToLeft) }
-                            : nil)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
+                ScrollViewReader { proxy in
+                    List(visibleItems, selection: $selectedNodeIDs) { item in
+                        FolderRow(
+                            node: item.node,
+                            depth: item.depth,
+                            isExpanded: !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || expanded.contains(item.node.id),
+                            onToggle: { toggle(item.node) },
+                            onOpen: { state.openDiff(for: item.node) },
+                            onQueueLeftToRight: canQueueCopy(item.node, direction: .leftToRight)
+                                ? { queue(nodes: [item.node], kind: .copy, direction: .leftToRight) }
+                                : nil,
+                            onQueueRightToLeft: canQueueCopy(item.node, direction: .rightToLeft)
+                                ? { queue(nodes: [item.node], kind: .copy, direction: .rightToLeft) }
+                                : nil)
+                        .background(GeometryReader { geometry in
+                            Color.clear.preference(key: FolderRowFrames.self,
+                                value: [item.id: geometry.frame(in: .named("folderList"))])
+                        })
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets())
+                    }
+                    .listStyle(.plain)
+                    .coordinateSpace(name: "folderList")
+                    .onPreferenceChange(FolderRowFrames.self) { frames in
+                        guard !restoringScroll else { return }
+                        topVisibleID = frames.filter { $0.value.maxY > 0 }
+                            .min(by: { $0.value.minY < $1.value.minY })?.key
+                    }
+                    .onAppear {
+                        guard let target = initialVisibleID,
+                              visibleItems.contains(where: { $0.id == target }) else { return }
+                        restoringScroll = true
+                        DispatchQueue.main.async {
+                            proxy.scrollTo(target, anchor: .top)
+                            DispatchQueue.main.async { restoringScroll = false }
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                    .onKeyPress(.return) { openSelectedNode() }
+                    .onKeyPress(.space) { previewSelectedNodes() }
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .onKeyPress(.return) { openSelectedNode() }
-                .onKeyPress(.space) { previewSelectedNodes() }
             }
         }
     }
@@ -408,28 +440,35 @@ struct FolderCompareView: View {
     }
 
     private func visibleNodes(of root: FolderNode) -> [VisibleItem] {
+        let matches = FolderSearchPolicy.matchingIDs(in: root, query: searchQuery) { node in
+            switch filter {
+            case .all: return true
+            case .differences: return node.status != .same
+            case .onlyLeft: return node.status == .onlyLeft
+            case .onlyRight: return node.status == .onlyRight
+            }
+        }
+        let searching = !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         var result: [VisibleItem] = []
-        flatten(root, depth: 0, into: &result)
+        func walk(_ folder: FolderNode, depth: Int) {
+            for child in folder.children ?? [] where matches.contains(child.id) {
+                result.append(VisibleItem(node: child, depth: depth))
+                if child.isFolder && (searching || expanded.contains(child.id)) { walk(child, depth: depth + 1) }
+            }
+        }
+        walk(root, depth: 0)
         return result
     }
 
-    private func flatten(_ folder: FolderNode, depth: Int, into result: inout [VisibleItem]) {
-        for child in folder.children ?? [] {
-            guard filter == .all || descendantMatches(child) else { continue }
-            result.append(VisibleItem(node: child, depth: depth))
-            if child.isFolder, expanded.contains(child.id) {
-                flatten(child, depth: depth + 1, into: &result)
-            }
-        }
-    }
-
-    private func descendantMatches(_ node: FolderNode) -> Bool {
-        switch filter {
-        case .all: return true
-        case .differences: return node.status != .same
-        case .onlyLeft: return node.subtreeContains(.onlyLeft)
-        case .onlyRight: return node.subtreeContains(.onlyRight)
-        }
+    private func saveReading() {
+        guard didRestoreReading else { return }
+        var reading = ComparisonReadingState()
+        reading.search = searchQuery
+        reading.filter = filter.rawValue
+        reading.expandedFolders = expanded
+        reading.selection = selectedNodeIDs
+        reading.topVisibleFolderID = topVisibleID
+        state.readingStore.save(reading, for: readingKey)
     }
 
     private func toggle(_ node: FolderNode) {
@@ -444,6 +483,21 @@ struct FolderCompareView: View {
 
     /// 默认展开所有包含差异的文件夹
     private func initExpansion() {
+        guard state.folderRoot != nil else { return }
+        let key = ComparisonReadingStore.key(kind: "folders", left: state.leftFolderURL, right: state.rightFolderURL)
+        if didRestoreReading && key == readingKey { rebuildVisibleItems(); return }
+        readingKey = key
+        didRestoreReading = true
+        if let reading = state.readingStore.read(key) {
+            searchQuery = reading.search
+            filter = Filter(rawValue: reading.filter) ?? .all
+            expanded = reading.expandedFolders
+            selectedNodeIDs = reading.selection
+            topVisibleID = reading.topVisibleFolderID
+            initialVisibleID = reading.topVisibleFolderID
+            rebuildVisibleItems()
+            return
+        }
         var set: Set<String> = []
         func walk(_ node: FolderNode) {
             guard node.isFolder, let children = node.children else { return }
@@ -1035,5 +1089,12 @@ private struct FolderRow: View {
         if let d = node.left?.modified { parts.append("Left modified: \(d.formatted(fmt))") }
         if let d = node.right?.modified { parts.append("Right modified: \(d.formatted(fmt))") }
         return parts.joined(separator: "\n")
+    }
+}
+
+private struct FolderRowFrames: PreferenceKey {
+    static let defaultValue: [String: CGRect] = [:]
+    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
     }
 }

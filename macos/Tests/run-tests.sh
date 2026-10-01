@@ -24,6 +24,7 @@ swiftc -O -whole-module-optimization -o "$BIN" \
     ../GrapeCompare/Core/FileOperationPersistence.swift \
     ../GrapeCompare/Core/ComparisonSessionStore.swift \
     ../GrapeCompare/Core/FilesystemWatcher.swift \
+    ../GrapeCompare/Core/ComparisonWorkspace.swift \
     main.swift
 "$BIN"
 ../../scripts/validate-ui-baseline.sh

@@ -116,7 +116,8 @@ final class AppState {
     var diffRightURL: URL?
     var leftFileName = ""
     var rightFileName = ""
-    var fileDiff: FileDiffResult?
+    var fileDiffRevision = 0
+    var fileDiff: FileDiffResult? { didSet { fileDiffRevision &+= 1 } }
     var fileError: String?
     var leftTextSnapshot: TextSnapshot?
     var rightTextSnapshot: TextSnapshot?
@@ -176,6 +177,57 @@ final class AppState {
     var sessionError: String?
     var reportActionError: String?
     var quickCompareError: String?
+    var shelfItems: [URL] = []
+    var shelfLeft: URL?
+    var shelfRight: URL?
+    @ObservationIgnored private var shelfScopes: [URL] = []
+    @ObservationIgnored let readingStore = ComparisonReadingStore()
+
+    func stageInputs(_ urls: [URL]) {
+        quickCompareError = nil
+        let scopes = urls.filter { $0.startAccessingSecurityScopedResource() }
+        defer { scopes.forEach { $0.stopAccessingSecurityScopedResource() } }
+        do {
+            let previousCount = shelfItems.count
+            let items = try InputShelfPolicy.adding(urls, to: shelfItems)
+            for url in urls where !shelfItems.contains(url.standardizedFileURL) {
+                if !shelfScopes.contains(url), url.startAccessingSecurityScopedResource() { shelfScopes.append(url) }
+            }
+            shelfItems = items
+            if shelfLeft == nil { shelfLeft = items.first }
+            if shelfRight == nil { shelfRight = items.dropFirst().first }
+            if previousCount < 2, items.count == 2 { compareShelfPair() }
+        } catch InputShelfPolicy.Failure.mixed {
+            quickCompareError = String(localized: "Files and folders cannot share a comparison. Clear the shelf to switch input types.")
+        } catch InputShelfPolicy.Failure.tooMany {
+            quickCompareError = String(localized: "The shelf supports up to 16 files or two folders.")
+        } catch {
+            quickCompareError = String(localized: "Some items cannot be opened. Choose accessible files or folders; symbolic links are not supported.")
+        }
+    }
+
+    func removeShelfItem(_ url: URL) {
+        shelfItems.removeAll { $0 == url }
+        shelfScopes.filter { $0.standardizedFileURL == url }.forEach { $0.stopAccessingSecurityScopedResource() }
+        shelfScopes.removeAll { $0.standardizedFileURL == url }
+        if shelfLeft == url { shelfLeft = shelfItems.first(where: { $0 != shelfRight }) }
+        if shelfRight == url { shelfRight = shelfItems.first(where: { $0 != shelfLeft }) }
+    }
+
+    func clearShelf() {
+        shelfScopes.forEach { $0.stopAccessingSecurityScopedResource() }
+        shelfScopes = []
+        shelfItems = []
+        shelfLeft = nil
+        shelfRight = nil
+    }
+
+    func compareShelfPair() {
+        guard let left = shelfLeft, let right = shelfRight, left != right,
+              shelfItems.contains(left), shelfItems.contains(right) else { return }
+        compareQuickItems([left, right])
+    }
+
     var pendingMergeItems: [URL] = []
     @ObservationIgnored private var pendingMergeScopes: [URL] = []
 
@@ -904,6 +956,7 @@ final class AppState {
     /// intentionally explicit because a closed SwiftUI workspace can remain
     /// retained briefly while views finish updating.
     func prepareForClose() {
+        clearShelf()
         cancelPendingMerge()
         cancelCurrentComparison()
         stopLiveUpdates()

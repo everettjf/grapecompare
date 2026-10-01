@@ -134,10 +134,10 @@ English: Choose replacement inputs more easily with visible side labels. Filter 
 
 Prepared locally; not uploaded or submitted to App Store Connect by this change.
 
-## What's New — 1.0.3 (38)
+## What's New — 1.0.3 (39)
 
-English: A simpler start screen automatically opens file or folder comparison when you drop two items. Drop three files to confirm the base, left, and right versions for a merge. Mixed inputs and unsupported three-folder comparisons now show clear guidance. Manual selection and clipboard controls are available in More Options.
+English: Stage files one at a time, keep up to 16 versions on the input shelf, and choose any two to compare. Search folder comparisons by name or path with matching folders expanded automatically. Collapse unchanged text while keeping context around differences; search and line navigation reveal hidden matches. Return to a comparison with your search, selection, expanded sections, and reading position restored. Three-way merge remains an explicit choice.
 
-简体中文：首页新增统一拖放入口，拖入两个文件或两个文件夹即可自动比较；拖入三个文件后确认基础、左侧和右侧版本再合并。混合类型和三个文件夹会显示明确提示。手动选择与剪贴板操作收纳在“更多选项”中。
+简体中文：支持逐个暂存输入，在文件架中保留最多 16 个版本并任选两个比较。文件夹比较新增文件名和路径搜索，自动展开匹配路径。相同文本可折叠并保留差异上下文，搜索与行号跳转会展开隐藏内容。返回比较时恢复搜索、选中项、展开状态和阅读位置。三方合并保留为独立操作。
 
-Prepared locally; not uploaded or submitted to App Store Connect.
+Release preparation and test results are tracked in `docs/releases/1.0.3.md`.

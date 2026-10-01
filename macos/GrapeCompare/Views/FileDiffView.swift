@@ -5,6 +5,12 @@ import UniformTypeIdentifiers
 /// 文件 diff 视图：左右并排、行级 + 行内高亮、差异导航
 struct FileDiffView: View {
     @Environment(AppState.self) private var state
+    @State private var visibleTextRows: [PresentedDiffRow] = []
+    @State private var collapseUnchanged = false
+    @State private var expandedText: Set<Int> = []
+    @State private var readingKey = ""
+    @State private var reading = ComparisonReadingState()
+    @State private var initialReading = ComparisonReadingState()
     @State private var currentDiff = 0
     @State private var currentHunk = 0
     @State private var scrollRequest: ScrollRequest?
@@ -99,9 +105,23 @@ struct FileDiffView: View {
                 editsCustomFilters = false
             }
         }
-        .onChange(of: comparisonIdentity) {
+        .onChange(of: comparisonIdentity, initial: true) {
+            saveReading()
             structuredViewMode = .fields
+            readingKey = comparisonIdentity
+            reading = state.readingStore.read(readingKey) ?? ComparisonReadingState()
+            initialReading = reading
+            currentDiff = max(0, reading.difference)
+            currentHunk = max(0, reading.hunk)
+            searchQuery = reading.search
+            wrapsLines = reading.wraps
+            collapseUnchanged = reading.collapsed
+            expandedText = reading.expandedText
         }
+        .onChange(of: state.fileDiffRevision, initial: true) { rebuildPresentedRows() }
+        .onChange(of: collapseUnchanged) { rebuildPresentedRows() }
+        .onChange(of: expandedText) { rebuildPresentedRows() }
+        .onDisappear { saveReading() }
     }
 
     private var textActionBar: some View {
@@ -144,6 +164,7 @@ struct FileDiffView: View {
             }
             .disabled(state.outputIsDirty)
 
+            Toggle("Collapse Unchanged", isOn: $collapseUnchanged).toggleStyle(.button)
             Toggle(isOn: $wrapsLines) {
                 Label("Wrap", systemImage: "arrow.turn.down.right")
             }
@@ -215,6 +236,7 @@ struct FileDiffView: View {
                 Menu("Rules", systemImage: "slider.horizontal.3") {
                     comparisonRulesMenu
                 }
+                Toggle("Collapse Unchanged", isOn: $collapseUnchanged)
                 Toggle("Wrap", systemImage: "arrow.turn.down.right", isOn: $wrapsLines)
                 Divider()
                 Button("Output", systemImage: "square.and.pencil") { state.showOutput() }
@@ -502,7 +524,7 @@ struct FileDiffView: View {
     }
 
     private var comparisonIdentity: String {
-        "\(state.diffLeftURL?.standardizedFileURL.path ?? "")\u{0}\(state.diffRightURL?.standardizedFileURL.path ?? "")"
+        ComparisonReadingStore.key(kind: "files", left: state.diffLeftURL, right: state.diffRightURL)
     }
 
     private var outputEditor: some View {
@@ -591,10 +613,7 @@ struct FileDiffView: View {
                     .padding(.trailing, 4)
                     .padding(.vertical, 6)
             }
-            .onAppear {
-                // 仅标记当前差异位置，不自动滚动——短文件居中滚动会把内容推歪
-                currentDiff = 0
-            }
+
         }
     }
 
@@ -605,20 +624,25 @@ struct FileDiffView: View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
                 LazyVStack(spacing: 0) {
-                    ForEach(r.rows) { row in
+                    ForEach(presentedRows(r)) { item in
+                        if let range = item.hiddenRange {
+                            UnchangedRowsButton(count: range.count) { expandedText.insert(item.id) }
+                        } else {
                         DiffRowView(
-                            row: row,
+                            row: item.row,
                             columnWidth: paneWidth,
                             wrapsLines: true,
                             searchQuery: searchQuery,
                             fileExtension: fileExtension,
-                            isCurrentDifference: isCurrent(row, r),
+                            isCurrentDifference: isCurrent(item.row, r),
                             codeFontSize: fontSize,
                             comfortableRows: comfortableDiffRows
                         )
+                        }
                     }
                 }
                 .frame(width: paneWidth * 2 + 1, alignment: .leading)
+                .background(ReadingScrollAnchor(initial: initialReading.wrappedOffset) { reading.wrappedOffset = $0 })
             }
             .onChange(of: scrollRequest) {
                 if let target = scrollRequest {
@@ -646,7 +670,10 @@ struct FileDiffView: View {
             wrapsLines: false)
         return HStack(spacing: 0) {
             DiffPaneColumn(
-                rows: r.rows,
+                rows: presentedRows(r),
+                expand: { expandedText.insert($0) },
+                initialOffset: initialReading.leftOffset,
+                offsetChanged: { reading.leftOffset = $0 },
                 isLeft: true,
                 paneWidth: paneWidth,
                 contentWidth: leftWidth,
@@ -661,7 +688,10 @@ struct FileDiffView: View {
             )
             Rectangle().fill(Theme.gutterDivider).frame(width: 1)
             DiffPaneColumn(
-                rows: r.rows,
+                rows: presentedRows(r),
+                expand: { expandedText.insert($0) },
+                initialOffset: initialReading.rightOffset,
+                offsetChanged: { reading.rightOffset = $0 },
                 isLeft: false,
                 paneWidth: paneWidth,
                 contentWidth: rightWidth,
@@ -675,6 +705,23 @@ struct FileDiffView: View {
                 comfortableRows: comfortableDiffRows
             )
         }
+    }
+
+    private func presentedRows(_ result: FileDiffResult) -> [PresentedDiffRow] { visibleTextRows }
+
+    private func rebuildPresentedRows() {
+        visibleTextRows = UnchangedTextPolicy.rows(state.fileDiff?.rows ?? [], collapsed: collapseUnchanged, expanded: expandedText)
+    }
+
+    private func saveReading() {
+        guard !readingKey.isEmpty else { return }
+        reading.search = searchQuery
+        reading.wraps = wrapsLines
+        reading.collapsed = collapseUnchanged
+        reading.expandedText = expandedText
+        reading.difference = currentDiff
+        reading.hunk = currentHunk
+        state.readingStore.save(reading, for: readingKey)
     }
 
     private func isCurrent(_ row: DiffRow, _ r: FileDiffResult) -> Bool {
@@ -744,6 +791,11 @@ struct FileDiffView: View {
     }
 
     private func requestScroll(to row: Int) {
+        if let result = state.fileDiff,
+           let folded = presentedRows(result).first(where: { $0.hiddenRange?.contains(row) == true }) {
+            expandedText.insert(folded.id)
+            rebuildPresentedRows()
+        }
         scrollNonce &+= 1
         scrollRequest = ScrollRequest(row: row, nonce: scrollNonce)
     }
@@ -766,7 +818,7 @@ struct FileDiffView: View {
 
     private func acceptCurrentHunk(_ side: TextSide) {
         guard let hunks = state.textComparison?.hunks, !hunks.isEmpty else { return }
-        currentHunk = min(currentHunk, hunks.count - 1)
+        currentHunk = max(0, min(currentHunk, hunks.count - 1))
         state.accept(side, hunkID: hunks[currentHunk].id)
     }
 
@@ -1063,7 +1115,10 @@ struct DiffRowView: View {
 
 /// 并排 diff 中的一列：拥有独立的横向滚动，纵向由 ScrollSyncBridge 与另一列保持同步。
 private struct DiffPaneColumn: View {
-    let rows: [DiffRow]
+    let rows: [PresentedDiffRow]
+    let expand: (Int) -> Void
+    let initialOffset: ReadingOffset
+    let offsetChanged: (ReadingOffset) -> Void
     let isLeft: Bool
     let paneWidth: CGFloat
     let contentWidth: CGFloat
@@ -1080,7 +1135,13 @@ private struct DiffPaneColumn: View {
         ScrollViewReader { proxy in
             ScrollView([.horizontal, .vertical]) {
                 LazyVStack(spacing: 0) {
-                    ForEach(rows) { row in
+                    ForEach(rows) { item in
+                        if let range = item.hiddenRange {
+                            UnchangedRowsButton(count: range.count) { expand(item.id) }
+                                .frame(width: paneWidth, alignment: .leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else {
+                        let row = item.row
                         DiffSideCellView(
                             side: isLeft ? row.left : row.right,
                             kind: row.kind,
@@ -1093,10 +1154,12 @@ private struct DiffPaneColumn: View {
                             showsCurrentAccent: isLeft,
                             codeFontSize: codeFontSize,
                             comfortableRows: comfortableRows)
+                        }
                     }
                 }
                 .frame(width: contentWidth, alignment: .leading)
                 .background(ScrollSyncAnchor(side: isLeft ? .left : .right, bridge: scrollBridge))
+                .background(ReadingScrollAnchor(initial: initialOffset, changed: offsetChanged))
             }
             .frame(width: paneWidth)
             .onChange(of: scrollRequest) {
@@ -1238,5 +1301,19 @@ private struct DiffStatisticBadge: View {
         .padding(.vertical, 3)
         .background(color.opacity(0.09), in: .capsule)
         .accessibilityLabel("\(value) \(title)")
+    }
+}
+
+private struct UnchangedRowsButton: View {
+    let count: Int
+    let expand: () -> Void
+    var body: some View {
+        Button(action: expand) {
+            Label("Show \(count) unchanged lines", systemImage: "arrow.up.and.down")
+                .font(.caption).frame(maxWidth: .infinity).frame(height: 28)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .background(Color.accentColor.opacity(0.06))
     }
 }
