@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 /// 文件 diff 视图：左右并排、行级 + 行内高亮、差异导航
 struct FileDiffView: View {
     @Environment(AppState.self) private var state
+    @State private var showsShelf = false
     @State private var visibleTextRows: [PresentedDiffRow] = []
     @State private var collapseUnchanged = false
     @State private var expandedText: Set<Int> = []
@@ -47,6 +48,26 @@ struct FileDiffView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            HStack {
+                if state.isFolderWorkspace {
+                    Button("Previous File", systemImage: "chevron.left") { state.navigateFolderFile(-1) }
+                        .disabled(state.adjacentFolderFile(-1) == nil)
+                    Button("Next File", systemImage: "chevron.right") { state.navigateFolderFile(1) }
+                        .disabled(state.adjacentFolderFile(1) == nil)
+                    Spacer()
+                }
+                Button("Input Shelf", systemImage: "square.stack") {
+                    state.prepareComparisonShelf()
+                    showsShelf.toggle()
+                }
+            }.padding(.horizontal, 12).padding(.vertical, 5)
+            if showsShelf {
+                ScrollView { InputShelfView(comparisonPage: true) }.frame(maxHeight: 210)
+                    .dropDestination(for: URL.self) { urls, _ in
+                        state.stageInputs(urls, automaticallyCompare: false)
+                        return true
+                    }
+            }
             if state.fileDiff?.isBinary == false, state.fileDiff?.isTooLarge == false {
                 Divider()
                 textActionBar
@@ -54,6 +75,10 @@ struct FileDiffView: View {
             Divider()
             content
         }
+        .alert("Quick Compare Failed", isPresented: Binding(
+            get: { state.quickCompareError != nil }, set: { if !$0 { state.quickCompareError = nil } })) {
+                Button("OK") { state.quickCompareError = nil }
+        } message: { Text(state.quickCompareError ?? "") }
         .modifier(TextPatchExportModifier(
             isPresented: $exportsPatch,
             legacyDocument: patchDocument,
@@ -118,7 +143,16 @@ struct FileDiffView: View {
             collapseUnchanged = reading.collapsed
             expandedText = reading.expandedText
         }
-        .onChange(of: state.fileDiffRevision, initial: true) { rebuildPresentedRows() }
+        .onChange(of: state.fileDiffRevision, initial: true) {
+            rebuildPresentedRows()
+            if let direction = state.incomingDifferenceDirection, let result = state.fileDiff {
+                state.incomingDifferenceDirection = nil
+                currentDiff = direction < 0 ? max(0, result.differenceCount - 1) : 0
+                if result.differenceRowIndices.indices.contains(currentDiff) {
+                    requestScroll(to: result.differenceRowIndices[currentDiff])
+                }
+            }
+        }
         .onChange(of: collapseUnchanged) { rebuildPresentedRows() }
         .onChange(of: expandedText) { rebuildPresentedRows() }
         .onDisappear { saveReading() }
@@ -747,6 +781,10 @@ struct FileDiffView: View {
 
     private func jumpToDiff(_ delta: Int) {
         guard let r = state.fileDiff, r.differenceCount > 0 else { return }
+        if state.isFolderWorkspace && !(0..<r.differenceCount).contains(currentDiff + delta) {
+            state.navigateFolderFile(delta)
+            return
+        }
         currentDiff = (currentDiff + delta + r.differenceCount) % r.differenceCount
         scrollNonce &+= 1
         scrollRequest = ScrollRequest(

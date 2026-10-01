@@ -104,7 +104,8 @@ final class AppState {
     }
 
     var screen: Screen = .home
-    let operations = FileOperationController()
+    let operations: FileOperationController
+    @ObservationIgnored private let preferences: UserDefaults
     /// diff 视图点"返回"时回到哪个页面
     private var diffReturnScreen: Screen = .home
 
@@ -177,13 +178,59 @@ final class AppState {
     var sessionError: String?
     var reportActionError: String?
     var quickCompareError: String?
+    var activeFolderFileID: String?
+    var folderReviewFiles: [FolderNode] = []
+    var incomingDifferenceDirection: Int?
+    var showsNavigationConfirmation = false
+    @ObservationIgnored private var pendingFileNavigation: (() -> Void)?
+
+    var isFolderWorkspace: Bool {
+        screen == .folderCompare || (screen == .fileDiff && diffReturnScreen == .folderCompare)
+    }
+
+    func requestFileNavigation(_ action: @escaping () -> Void) {
+        if outputIsDirty {
+            pendingFileNavigation = action
+            showsNavigationConfirmation = true
+        } else { action() }
+    }
+
+    func resolveFileNavigation(save: Bool?, discard: Bool = false) {
+        guard save != nil || discard else {
+            pendingFileNavigation = nil
+            showsNavigationConfirmation = false
+            return
+        }
+        if save == true { saveOutput() }
+        if discard { resetOutput() }
+        guard !outputIsDirty else { return }
+        let action = pendingFileNavigation
+        pendingFileNavigation = nil
+        showsNavigationConfirmation = false
+        action?()
+    }
+
+    func adjacentFolderFile(_ direction: Int) -> FolderNode? {
+        guard let id = FolderReviewPolicy.adjacentID(folderReviewFiles.map(\.id),
+            current: activeFolderFileID, direction: direction) else { return nil }
+        return folderReviewFiles.first { $0.id == id }
+    }
+
+    func navigateFolderFile(_ direction: Int) {
+        guard let node = adjacentFolderFile(direction) else { return }
+        requestFileNavigation { [weak self] in
+            self?.incomingDifferenceDirection = direction
+            self?.openFolderFile(node)
+        }
+    }
+
     var shelfItems: [URL] = []
     var shelfLeft: URL?
     var shelfRight: URL?
     @ObservationIgnored private var shelfScopes: [URL] = []
-    @ObservationIgnored let readingStore = ComparisonReadingStore()
+    @ObservationIgnored let readingStore: ComparisonReadingStore
 
-    func stageInputs(_ urls: [URL]) {
+    func stageInputs(_ urls: [URL], automaticallyCompare: Bool = true) {
         quickCompareError = nil
         let scopes = urls.filter { $0.startAccessingSecurityScopedResource() }
         defer { scopes.forEach { $0.stopAccessingSecurityScopedResource() } }
@@ -196,7 +243,7 @@ final class AppState {
             shelfItems = items
             if shelfLeft == nil { shelfLeft = items.first }
             if shelfRight == nil { shelfRight = items.dropFirst().first }
-            if previousCount < 2, items.count == 2 { compareShelfPair() }
+            if automaticallyCompare, previousCount < 2, items.count == 2 { compareShelfPair() }
         } catch InputShelfPolicy.Failure.mixed {
             quickCompareError = String(localized: "Files and folders cannot share a comparison. Clear the shelf to switch input types.")
         } catch InputShelfPolicy.Failure.tooMany {
@@ -225,7 +272,15 @@ final class AppState {
     func compareShelfPair() {
         guard let left = shelfLeft, let right = shelfRight, left != right,
               shelfItems.contains(left), shelfItems.contains(right) else { return }
-        compareQuickItems([left, right])
+        requestFileNavigation { [weak self] in self?.compareQuickItems([left, right]) }
+    }
+
+    func prepareComparisonShelf() {
+        let pair = [diffLeftURL, diffRightURL].compactMap { $0 }
+        if shelfItems.contains(where: { ComparisonInputInspector.kind(of: $0) == .folder }) { clearShelf() }
+        stageInputs(pair, automaticallyCompare: false)
+        if let left = diffLeftURL, shelfItems.contains(left) { shelfLeft = left }
+        if let right = diffRightURL, shelfItems.contains(right) { shelfRight = right }
     }
 
     var pendingMergeItems: [URL] = []
@@ -265,7 +320,7 @@ final class AppState {
     @ObservationIgnored private var requestGeneration: UInt = 0
     @ObservationIgnored private var operationLeftRoot: URL?
     @ObservationIgnored private var operationRightRoot: URL?
-    @ObservationIgnored private let sessionStore = ComparisonSessionStore()
+    @ObservationIgnored private let sessionStore: ComparisonSessionStore
     @ObservationIgnored private var restoredSecurityScopedURLs: [URL] = []
     @ObservationIgnored private var filesystemWatcher: FilesystemWatcher?
     @ObservationIgnored private var liveRefreshTask: Task<Void, Never>?
@@ -337,6 +392,43 @@ final class AppState {
         pendingMergeItems = []
         pendingMergeScopes.forEach { $0.stopAccessingSecurityScopedResource() }
         pendingMergeScopes = []
+    }
+
+    var isImportingClipboardImage = false
+    @ObservationIgnored private var clipboardImageTask: Task<Void, Never>?
+    @ObservationIgnored private var workspaceClosed = false
+
+    func pasteImageToShelf() {
+        guard !isImportingClipboardImage else { return }
+        let pasteboard = NSPasteboard.general
+        guard let data = pasteboard.data(forType: .png) ?? pasteboard.data(forType: .tiff) else {
+            quickCompareError = String(localized: "The clipboard does not contain an image.")
+            return
+        }
+        importClipboardImageData(data)
+    }
+
+    func importClipboardImageData(_ data: Data) {
+        guard !isImportingClipboardImage, !workspaceClosed else { return }
+        isImportingClipboardImage = true
+        let autoCompare = screen == .home
+        clipboardImageTask = Task {
+            defer { isImportingClipboardImage = false }
+            do {
+                let png = try await Task.detached(priority: .userInitiated) {
+                    try ClipboardImagePolicy.pngData(data)
+                }.value
+                guard !Task.isCancelled, !workspaceClosed else { return }
+                let directory = FileManager.default.temporaryDirectory.appendingPathComponent("GrapeCompare-Clipboard", isDirectory: true)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
+                    attributes: [.posixPermissions: 0o700])
+                let url = directory.appendingPathComponent("Clipboard-\(UUID().uuidString.prefix(8)).png")
+                try png.write(to: url, options: .atomic)
+                try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+                temporaryClipboardURLs.append(url)
+                stageInputs([url], automaticallyCompare: autoCompare && screen == .home)
+            } catch { quickCompareError = error.localizedDescription }
+        }
     }
 
     func pasteQuickComparisonSide(left: Bool) {
@@ -558,27 +650,37 @@ final class AppState {
         return result
     }
 
-    init() {
+    init(storageDirectory: URL? = nil, preferences: UserDefaults = .standard) {
+        self.preferences = preferences
+        self.sessionStore = ComparisonSessionStore(fileURL: storageDirectory?.appendingPathComponent("sessions.json"))
+        if let storageDirectory {
+            self.readingStore = ComparisonReadingStore(url: storageDirectory.appendingPathComponent("reading.json"))
+            self.operations = FileOperationController(journalStore: FileOperationJournalStore(
+                journalURL: storageDirectory.appendingPathComponent("operations.json")))
+        } else {
+            self.readingStore = ComparisonReadingStore()
+            self.operations = FileOperationController()
+        }
         let savedSessions = sessionStore.load()
         recentComparisons = savedSessions.recents
         resumableSession = savedSessions.current
-        if UserDefaults.standard.object(forKey: liveUpdatesDefaultsKey) != nil {
-            liveUpdatesEnabled = UserDefaults.standard.bool(forKey: liveUpdatesDefaultsKey)
+        if preferences.object(forKey: liveUpdatesDefaultsKey) != nil {
+            liveUpdatesEnabled = preferences.bool(forKey: liveUpdatesDefaultsKey)
         }
-        if let data = UserDefaults.standard.data(forKey: textComparisonOptionsDefaultsKey),
+        if let data = preferences.data(forKey: textComparisonOptionsDefaultsKey),
            let stored = try? JSONDecoder().decode(TextComparisonOptions.self, from: data) {
             textComparisonOptions = stored
         }
     }
 
     func consumeQuickAction() {
-        if let message = UserDefaults.standard.string(forKey: quickActionErrorKey) {
-            UserDefaults.standard.removeObject(forKey: quickActionErrorKey)
+        if let message = preferences.string(forKey: quickActionErrorKey) {
+            preferences.removeObject(forKey: quickActionErrorKey)
             quickCompareError = message
         }
-        guard let bookmarks = UserDefaults.standard.array(forKey: quickActionBookmarksKey) as? [Data],
+        guard let bookmarks = preferences.array(forKey: quickActionBookmarksKey) as? [Data],
               bookmarks.count == 2 else { return }
-        UserDefaults.standard.removeObject(forKey: quickActionBookmarksKey)
+        preferences.removeObject(forKey: quickActionBookmarksKey)
         do {
             let urls = try bookmarks.map { bookmark in
                 var stale = false
@@ -603,6 +705,8 @@ final class AppState {
         guard let l = leftFileURL, let r = rightFileURL else { return }
         if !isLiveRefresh { recordSession(kind: .files, urls: [l, r]) }
         diffReturnScreen = .home
+        activeFolderFileID = nil
+        incomingDifferenceDirection = nil
         runFileDiff(left: l, right: r)
     }
 
@@ -623,6 +727,7 @@ final class AppState {
             folderError = nil
         }
         folderNeedsRefresh = false
+        activeFolderFileID = nil
         screen = .folderCompare
         let compareMetadata = compareFolderMetadata
         comparisonTask = Task { [weak self] in
@@ -841,10 +946,18 @@ final class AppState {
 
     /// 从文件夹对比中打开某个文件的 diff（支持仅一侧存在的情况）
     func openDiff(for node: FolderNode) {
+        requestFileNavigation { [weak self] in
+            self?.incomingDifferenceDirection = nil
+            self?.openFolderFile(node)
+        }
+    }
+
+    private func openFolderFile(_ node: FolderNode) {
         guard !node.isFolder, let lf = leftFolderURL, let rf = rightFolderURL else { return }
         let l: URL? = node.left != nil ? lf.appending(path: node.relativePath) : nil
         let r: URL? = node.right != nil ? rf.appending(path: node.relativePath) : nil
         diffReturnScreen = .folderCompare
+        activeFolderFileID = node.id
         runFileDiff(left: l, right: r)
     }
 
@@ -857,7 +970,7 @@ final class AppState {
         guard textComparisonOptions != options, !outputIsDirty else { return }
         textComparisonOptions = options
         if let data = try? JSONEncoder().encode(options) {
-            UserDefaults.standard.set(data, forKey: textComparisonOptionsDefaultsKey)
+            preferences.set(data, forKey: textComparisonOptionsDefaultsKey)
         }
         runFileDiff(left: diffLeftURL, right: diffRightURL)
     }
@@ -956,6 +1069,9 @@ final class AppState {
     /// intentionally explicit because a closed SwiftUI workspace can remain
     /// retained briefly while views finish updating.
     func prepareForClose() {
+        workspaceClosed = true
+        clipboardImageTask?.cancel()
+        pendingFileNavigation = nil
         clearShelf()
         cancelPendingMerge()
         cancelCurrentComparison()
@@ -994,7 +1110,7 @@ final class AppState {
 
     func setLiveUpdatesEnabled(_ enabled: Bool) {
         liveUpdatesEnabled = enabled
-        UserDefaults.standard.set(enabled, forKey: liveUpdatesDefaultsKey)
+        preferences.set(enabled, forKey: liveUpdatesDefaultsKey)
         liveUpdatePausedReason = nil
         if enabled { configureLiveUpdates() } else { stopLiveUpdates() }
     }

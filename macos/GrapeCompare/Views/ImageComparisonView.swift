@@ -2,6 +2,8 @@ import AppKit
 import SwiftUI
 
 struct ImageComparisonView: View {
+    @Environment(AppState.self) private var state
+    @State private var savedPairKey = ""
     enum Mode: String, CaseIterable, Identifiable {
         case twoUp, oneUp, split, blink, difference
         var id: Self { self }
@@ -45,6 +47,7 @@ struct ImageComparisonView: View {
     @State private var canvasSize = CGSize.zero
     @State private var computedResult: ImageDifferenceResult?
     @State private var isComputingDifference = false
+    @State private var differenceGeneration = UUID()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var currentResult: ImageDifferenceResult {
@@ -59,7 +62,11 @@ struct ImageComparisonView: View {
             Divider()
             status
         }
-        .task(id: "\(leftURL?.path ?? "")|\(rightURL?.path ?? "")") { await load() }
+        .task(id: pairKey) {
+            restoreReading()
+            await load()
+        }
+        .onDisappear { saveReading() }
         .task(id: differenceOptionsKey) {
             try? await Task.sleep(for: .milliseconds(80))
             await recomputeDifference()
@@ -71,6 +78,43 @@ struct ImageComparisonView: View {
                 if !Task.isCancelled { showRight.toggle() }
             }
         }
+    }
+
+    private var pairKey: String {
+        ComparisonReadingStore.key(kind: "images", left: leftURL, right: rightURL)
+    }
+
+    private func saveReading() {
+        guard !savedPairKey.isEmpty else { return }
+        var value = ComparisonReadingState()
+        value.image = ImageReadingState(mode: mode.rawValue, zoom: zoom,
+            panX: pan.width, panY: pan.height, split: split, offsetX: offsetX, offsetY: offsetY,
+            threshold: threshold, channels: channels.rawValue, rendering: differenceRendering.rawValue)
+        state.readingStore.save(value, for: savedPairKey)
+    }
+
+    private func restoreReading() {
+        if savedPairKey == pairKey { return }
+        saveReading()
+        savedPairKey = pairKey
+        differenceGeneration = UUID()
+        leftRaster = nil; rightRaster = nil
+        leftImage = nil; rightImage = nil
+        leftMetadata = nil; rightMetadata = nil
+        computedResult = nil; loadError = nil
+        isComputingDifference = false
+        let value = (state.readingStore.read(pairKey)?.image ?? ImageReadingState()).validated()
+        mode = Mode(rawValue: value.mode) ?? .twoUp
+        zoom = value.zoom
+        pan = CGSize(width: value.panX, height: value.panY)
+        split = value.split
+        offsetX = value.offsetX
+        offsetY = value.offsetY
+        threshold = value.threshold
+        channels = ImageComparisonChannels(rawValue: value.channels)
+        differenceRendering = ImageDifferenceRendering(rawValue: value.rendering) ?? .proportional
+        pixel = nil
+        lockedPixel = nil
     }
 
     private var controls: some View {
@@ -255,6 +299,7 @@ struct ImageComparisonView: View {
                     try ImageMetadata.inspect(rightData, formatHint: rightURL.pathExtension))
             }
         }.value
+        guard !Task.isCancelled else { return }
         switch loaded {
         case .success(let pair):
             leftRaster = pair.0; rightRaster = pair.1
@@ -273,22 +318,26 @@ struct ImageComparisonView: View {
             rendering: differenceRendering,
             differingColor: imageDifferenceColor(differingColor),
             identicalColor: imageDifferenceColor(identicalColor))
+        let generation = UUID()
+        differenceGeneration = generation
         isComputingDifference = true
         let value = await Task.detached(priority: .userInitiated) {
             ImageComparisonEngine.compare(left: leftRaster, right: rightRaster, options: options)
         }.value
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled, differenceGeneration == generation else { return }
         computedResult = value
         isComputingDifference = false
     }
 
     private func autoAlign() {
         guard let leftRaster, let rightRaster else { return }
+        let key = savedPairKey
         Task {
             let alignment = await Task.detached(priority: .userInitiated) {
                 (try? ImageAlignmentEngine.visionTranslation(left: leftRaster, right: rightRaster)) ??
                     ImageAlignmentEngine.bestTranslation(left: leftRaster, right: rightRaster)
             }.value
+            guard savedPairKey == key else { return }
             offsetX = alignment.x
             offsetY = alignment.y
         }

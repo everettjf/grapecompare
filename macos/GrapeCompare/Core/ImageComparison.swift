@@ -392,3 +392,28 @@ nonisolated enum ImageAlignmentEngine {
                        shouldInterpolate: false, intent: .defaultIntent)
     }
 }
+
+/// Decode only bounded, user-pasted raster data. Persist an independent PNG snapshot.
+nonisolated enum ClipboardImagePolicy {
+    static let maximumBytes = 64 * 1_024 * 1_024
+    static func pngData(_ data: Data, maximumPixels: Int = 25_000_000) throws -> Data {
+        guard data.count <= maximumBytes else { throw ImageComparisonError.dimensionsTooLarge }
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue,
+              let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue else {
+            throw ImageComparisonError.cannotDecode
+        }
+        guard width > 0, height > 0, maximumPixels > 0, width <= maximumPixels / height else {
+            throw ImageComparisonError.dimensionsTooLarge
+        }
+        guard let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { throw ImageComparisonError.cannotDecode }
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(output, "public.png" as CFString, 1, nil) else {
+            throw ImageComparisonError.cannotDecode
+        }
+        CGImageDestinationAddImage(destination, image, nil)
+        guard CGImageDestinationFinalize(destination) else { throw ImageComparisonError.cannotDecode }
+        return output as Data
+    }
+}

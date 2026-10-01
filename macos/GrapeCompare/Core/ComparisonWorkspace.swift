@@ -79,6 +79,7 @@ nonisolated struct ReadingOffset: Codable, Equatable, Sendable {
 }
 
 nonisolated struct ComparisonReadingState: Codable, Equatable, Sendable {
+    var image: ImageReadingState?
     var search = ""
     var filter = "all"
     var expandedFolders: Set<String> = []
@@ -121,5 +122,55 @@ nonisolated final class ComparisonReadingStore: @unchecked Sendable {
         guard let data = try? JSONEncoder().encode(entries) else { return }
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: url, options: .atomic)
+    }
+}
+
+nonisolated enum FolderReviewPolicy {
+    static func files(in root: FolderNode, allowedIDs: Set<String>? = nil) -> [FolderNode] {
+        var result: [FolderNode] = []
+        func visit(_ node: FolderNode) {
+            if node.isFolder {
+                for child in node.children ?? [] { visit(child) }
+            } else if node.status != .same && (allowedIDs?.contains(node.id) ?? true) {
+                result.append(node)
+            }
+        }
+        visit(root)
+        return result
+    }
+
+    static func adjacentID(_ ids: [String], current: String?, direction: Int) -> String? {
+        guard !ids.isEmpty else { return nil }
+        guard let current, let index = ids.firstIndex(of: current) else {
+            return direction < 0 ? ids.last : ids.first
+        }
+        let next = index + (direction < 0 ? -1 : 1)
+        return ids.indices.contains(next) ? ids[next] : nil
+    }
+}
+
+nonisolated struct ImageReadingState: Codable, Equatable, Sendable {
+    var mode = "twoUp"
+    var zoom = 1.0
+    var panX = 0.0
+    var panY = 0.0
+    var split = 0.5
+    var offsetX = 0
+    var offsetY = 0
+    var threshold = 0.0
+    var channels: UInt8 = 15
+    var rendering = "proportional"
+
+    func validated() -> Self {
+        var value = self
+        value.zoom = zoom.isFinite ? min(8, max(0.1, zoom)) : 1
+        value.panX = panX.isFinite ? min(1_000_000, max(-1_000_000, panX)) : 0
+        value.panY = panY.isFinite ? min(1_000_000, max(-1_000_000, panY)) : 0
+        value.split = split.isFinite ? min(1, max(0, split)) : 0.5
+        value.threshold = threshold.isFinite ? min(255, max(0, threshold)) : 0
+        value.offsetX = min(100_000, max(-100_000, offsetX))
+        value.offsetY = min(100_000, max(-100_000, offsetY))
+        value.channels &= 15
+        return value
     }
 }

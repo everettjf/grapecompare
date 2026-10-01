@@ -1,4 +1,5 @@
 import AppKit
+import ImageIO
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -181,6 +182,8 @@ private struct QuickCompareBar: View {
             Button("Choose Items…", action: chooseItems)
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+            Button("Paste Image") { state.pasteImageToShelf() }
+                .disabled(state.isImportingClipboardImage)
             Text("Choose any two versions on the shelf. Three-way merge is available separately.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -597,7 +600,8 @@ private struct MergeInputSheet: View {
     }
 }
 
-private struct InputShelfView: View {
+struct InputShelfView: View {
+    var comparisonPage = false
     @Environment(AppState.self) private var state
     var body: some View {
         @Bindable var state = state
@@ -607,8 +611,13 @@ private struct InputShelfView: View {
                 Spacer()
                 Button("Clear Shelf") { state.clearShelf() }
             }
+            HStack {
+                Button("Add Files…") { chooseMore() }
+                Button("Paste Image") { state.pasteImageToShelf() }.disabled(state.isImportingClipboardImage)
+            }
             ForEach(state.shelfItems, id: \.self) { url in
                 HStack {
+                    ShelfThumbnail(url: url)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(url.lastPathComponent).lineLimit(1)
                         Text(url.deletingLastPathComponent().path).font(.caption).foregroundStyle(.secondary)
@@ -630,12 +639,44 @@ private struct InputShelfView: View {
                 Button("Compare Selected Versions") { state.compareShelfPair() }
                     .buttonStyle(.borderedProminent)
                     .disabled(state.shelfLeft == nil || state.shelfRight == nil || state.shelfLeft == state.shelfRight)
-                if state.shelfItems.count == 3 {
+                if state.shelfItems.count == 3 && !comparisonPage {
                     Button("Three-Way Merge…") { state.compareQuickItems(state.shelfItems) }
                 }
             }
         }
         .padding(18)
         .background(.regularMaterial, in: .rect(cornerRadius: Theme.Radius.hero))
+    }
+    private func chooseMore() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = !comparisonPage
+        panel.allowsMultipleSelection = true
+        if panel.runModal() == .OK { state.stageInputs(panel.urls, automaticallyCompare: !comparisonPage) }
+    }
+
+}
+
+private struct ShelfThumbnail: View {
+    let url: URL
+    @State private var thumbnail: NSImage?
+    var body: some View {
+        Group {
+            if let thumbnail { Image(nsImage: thumbnail).resizable().scaledToFit() }
+            else { Image(systemName: "doc").foregroundStyle(.secondary) }
+        }
+        .frame(width: 42, height: 36)
+        .task(id: url) {
+            let data = await Task.detached(priority: .utility) { () -> Data? in
+                guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary),
+                      let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                        kCGImageSourceCreateThumbnailFromImageAlways: true,
+                        kCGImageSourceThumbnailMaxPixelSize: 84,
+                        kCGImageSourceCreateThumbnailWithTransform: true
+                      ] as CFDictionary) else { return nil }
+                return NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])
+            }.value
+            if !Task.isCancelled { thumbnail = data.flatMap(NSImage.init(data:)) }
+        }
     }
 }

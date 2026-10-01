@@ -12,6 +12,7 @@ output = File.expand_path(ARGV.fetch(0, File.join(root, ".audit", "correctness-r
 
 checks = [
   ["core", ["bash", "macos/Tests/run-tests.sh"]],
+  ["workspace-integration", ["bash", "macos/Tests/run-workspace-integration.sh"]],
   ["localizations", ["ruby", "macos/Tests/validate-localizations.rb"]],
   ["app-store-sandbox", ["bash", "scripts/validate-app-store.sh"]]
 ].map do |name, command|

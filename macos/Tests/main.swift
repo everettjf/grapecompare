@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Darwin
 
 var failures = 0
@@ -1773,6 +1774,52 @@ check(readingStore.read(readingKey) == nil && readingStore.read("pair-69") == re
       "reading history evicts old entries at the bounded capacity")
 try! Data("broken json".utf8).write(to: readingURL)
 check(readingStore.read(readingKey) == nil, "corrupt reading history falls back safely")
+let reviewIDs = FolderReviewPolicy.files(in: searchRoot).map(\.id)
+check(reviewIDs == [searchLeaf.id], "folder review excludes unchanged files and directory containers")
+check(FolderReviewPolicy.files(in: searchRoot, allowedIDs: [searchOther.id]).isEmpty,
+      "folder review honors search and status restrictions")
+check(FolderReviewPolicy.adjacentID(["a", "b"], current: "a", direction: 1) == "b" &&
+      FolderReviewPolicy.adjacentID(["a", "b"], current: "b", direction: -1) == "a",
+      "folder navigation moves forwards and backwards")
+check(FolderReviewPolicy.adjacentID(["a", "b"], current: "b", direction: 1) == nil &&
+      FolderReviewPolicy.adjacentID(["a", "b"], current: "a", direction: -1) == nil,
+      "folder navigation stops at both boundaries")
+check(FolderReviewPolicy.adjacentID([], current: nil, direction: 1) == nil &&
+      FolderReviewPolicy.adjacentID(["a", "b"], current: "removed", direction: -1) == "b",
+      "folder navigation handles empty and filtered selections")
+var imageReading = ImageReadingState(mode: "split", zoom: 2.5, panX: 72, panY: -33,
+    split: 0.7, offsetX: 8, offsetY: -4, threshold: 21, channels: 7, rendering: "binary")
+readingFixture.image = imageReading
+readingStore.save(readingFixture, for: readingKey)
+check(ComparisonReadingStore(url: readingURL).read(readingKey)?.image == imageReading,
+      "image zoom, pan, split, alignment and display settings survive reopening the store")
+var legacyReading = try! JSONSerialization.jsonObject(with: JSONEncoder().encode(readingFixture)) as! [String: Any]
+legacyReading.removeValue(forKey: "image")
+let legacyReadingData = try! JSONSerialization.data(withJSONObject: legacyReading)
+check((try? JSONDecoder().decode(ComparisonReadingState.self, from: legacyReadingData))?.image == nil,
+      "reading history remains compatible with versions without image state")
+imageReading.zoom = .infinity; imageReading.panX = .nan; imageReading.panY = -2_000_000
+imageReading.split = 2; imageReading.threshold = -1; imageReading.channels = 255
+imageReading.offsetX = Int.max; imageReading.offsetY = Int.min
+let validImageReading = imageReading.validated()
+check(validImageReading.zoom == 1 && validImageReading.panX == 0 && validImageReading.panY == -1_000_000 &&
+      validImageReading.split == 1 && validImageReading.threshold == 0 && validImageReading.channels == 15 &&
+      validImageReading.offsetX == 100_000 && validImageReading.offsetY == -100_000,
+      "invalid image state is clamped before rendering")
+let clipboardFixture = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")!
+let clipboardPNG = try! ClipboardImagePolicy.pngData(clipboardFixture)
+check((try? ImageRaster.decode(clipboardPNG, formatHint: "png"))?.rgba ==
+      (try? ImageRaster.decode(clipboardFixture, formatHint: "png"))?.rgba,
+      "clipboard snapshot preserves decoded image pixels")
+let clipboardTIFF = NSBitmapImageRep(data: clipboardFixture)!.representation(using: .tiff, properties: [:])!
+let tiffSnapshot = try! ClipboardImagePolicy.pngData(clipboardTIFF)
+check((try? ImageRaster.decode(tiffSnapshot, formatHint: "png"))?.rgba ==
+      (try? ImageRaster.decode(clipboardFixture, formatHint: "png"))?.rgba,
+      "clipboard TIFF input is normalized to PNG without changing pixels")
+check((try? ClipboardImagePolicy.pngData(Data("bad data".utf8))) == nil &&
+      (try? ClipboardImagePolicy.pngData(clipboardFixture, maximumPixels: 0)) == nil,
+      "clipboard decoder rejects invalid and over-budget images")
+
 try? FileManager.default.removeItem(at: workspaceRoot)
 
 print(failures == 0 ? "\nALL TESTS PASSED" : "\n\(failures) TEST(S) FAILED")

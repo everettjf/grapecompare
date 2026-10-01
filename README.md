@@ -13,7 +13,7 @@ the source code, not a supported installer. Homebrew and historical GitHub
 release downloads are not supported installation paths for the current app.
 
 After installation, stage inputs one at a time or drop two files or two folders
-to compare. Keep up to 16 file versions on the shelf and choose any two. Use Finder Open
+to compare. Keep up to 16 file versions on the shelf and choose any two, including while viewing a comparison. Paste images onto the shelf to compare independent clipboard snapshots. Use Finder Open
 With, drag and drop, or the Compare Files Shortcut. Access is limited to items
 you select. Three-way merging takes manually selected base, left, and right
 inputs; it does not connect to Git.
@@ -22,10 +22,11 @@ inputs; it does not connect to Git.
 
 - Text comparison with line and character-level differences, navigation, filters,
   unchanged-text folding, restored reading positions, editable output, and unified patch export.
-- Recursive folder comparison with filename/path search, restored selection and expansion, and reviewed, transactional copy, replace, move,
+- Recursive folder comparison with filename/path search, an inline file preview,
+  previous/next changed-file navigation, restored selection and expansion, and reviewed, transactional copy, replace, move,
   recoverable delete, dry-run reports, and undo.
 - Image comparison with side-by-side, overlay, heatmap, alignment, metadata, and
-  pixel metrics.
+  pixel metrics, and restored zoom, pan, mode, split and alignment per input pair.
 - Semantic JSON, plist, XCStrings, and Xcode project comparison.
 - Read-only inspection of app bundles, signatures, entitlements, provisioning
   profiles, Mach-O files, and asset catalogs without launching inspected code.

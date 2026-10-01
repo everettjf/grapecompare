@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 /// 文件夹比较视图：树形结构、状态着色、筛选、双击打开文件 diff
 struct FolderCompareView: View {
     @Environment(AppState.self) private var state
+    var sidebar = false
     @State private var searchQuery = ""
     @State private var readingKey = ""
     @State private var topVisibleID: String?
@@ -46,16 +47,16 @@ struct FolderCompareView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
+            if sidebar { sidebarHeader } else { header }
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                 TextField("Search file names or paths", text: $searchQuery).textFieldStyle(.roundedBorder)
                 if !searchQuery.isEmpty { Button("Clear Search") { searchQuery = "" } }
             }.padding(.horizontal, 14).padding(.bottom, 8)
             Divider()
-            content
+            if sidebar, state.folderRoot != nil { sidebarList } else { content }
             Divider()
-            statusBar
+            if !sidebar { statusBar }
         }
         .onChange(of: state.treeVersion, initial: true) {
             initExpansion()
@@ -103,6 +104,89 @@ struct FolderCompareView: View {
                     }.keyboardShortcut(.defaultAction)
                 }
             }.padding(20)
+        }
+    }
+
+    private func statusLabel(_ status: CompareStatus) -> LocalizedStringResource {
+        switch status {
+        case .same: "Same"
+        case .different: "Changed"
+        case .onlyLeft: "Left Only"
+        case .onlyRight: "Right Only"
+        }
+    }
+
+    private var sidebarHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Button("Home", systemImage: "house") {
+                    state.requestFileNavigation { state.goHome() }
+                }.labelStyle(.iconOnly)
+                Text("Folder Review").font(.headline)
+                Spacer()
+                Picker("Filter", selection: $filter) {
+                    ForEach(Filter.allCases) { Text($0.title).tag($0) }
+                }.labelsHidden().frame(maxWidth: 120)
+            }
+            Text("\(state.leftFolderURL?.lastPathComponent ?? "") ↔ \(state.rightFolderURL?.lastPathComponent ?? "")")
+                .font(.caption).lineLimit(1).truncationMode(.middle)
+            HStack {
+                Text("\(state.folderReviewFiles.count) changed files").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Previous File", systemImage: "chevron.up") { state.navigateFolderFile(-1) }
+                    .labelStyle(.iconOnly).disabled(state.adjacentFolderFile(-1) == nil)
+                Button("Next File", systemImage: "chevron.down") { state.navigateFolderFile(1) }
+                    .labelStyle(.iconOnly).disabled(state.adjacentFolderFile(1) == nil)
+            }
+        }.padding(10)
+    }
+
+    private var sidebarList: some View {
+        ScrollViewReader { proxy in
+            List(selection: Binding<String?>(
+                get: { state.activeFolderFileID },
+                set: { id in
+                    if let item = visibleItems.first(where: { $0.id == id }), !item.node.isFolder {
+                        state.openDiff(for: item.node)
+                    }
+                })) {
+                ForEach(visibleItems) { item in
+                    HStack(spacing: 6) {
+                        if item.node.isFolder {
+                            Button { toggle(item.node) } label: {
+                                Image(systemName: expanded.contains(item.id) || !searchQuery.isEmpty ? "chevron.down" : "chevron.right")
+                            }.buttonStyle(.plain)
+                        }
+                        Image(systemName: item.node.isFolder ? "folder" : "doc")
+                        Text(item.node.name).lineLimit(1)
+                        Spacer(minLength: 0)
+                        Text(statusLabel(item.node.status)).font(.caption2).foregroundStyle(.secondary)
+                    }
+                    .padding(.leading, CGFloat(item.depth) * 12)
+                    .help(item.node.relativePath)
+                    .tag(item.id)
+                }
+            }.listStyle(.sidebar)
+            .onChange(of: state.activeFolderFileID) {
+                if let id = state.activeFolderFileID {
+                    revealReviewFile(id)
+                    proxy.scrollTo(id)
+                }
+            }
+            .onAppear { if let id = state.activeFolderFileID {
+                    revealReviewFile(id)
+                    proxy.scrollTo(id)
+                } }
+        }
+    }
+
+    private func revealReviewFile(_ id: String) {
+        let components = id.split(separator: "/")
+        if components.count > 1 {
+            for count in 1..<components.count {
+                expanded.insert(components.prefix(count).joined(separator: "/"))
+            }
+            rebuildVisibleItems()
         }
     }
 
@@ -448,6 +532,7 @@ struct FolderCompareView: View {
             case .onlyRight: return node.status == .onlyRight
             }
         }
+        state.folderReviewFiles = FolderReviewPolicy.files(in: root, allowedIDs: matches)
         let searching = !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         var result: [VisibleItem] = []
         func walk(_ folder: FolderNode, depth: Int) {
