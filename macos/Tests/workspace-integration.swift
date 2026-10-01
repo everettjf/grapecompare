@@ -74,11 +74,24 @@ struct WorkspaceIntegrationTests {
         state.stageInputs([third], automaticallyCompare: false)
         check(state.shelfItems.count == 3 && state.outputText == "must survive", "adding a shelf version does not interrupt dirty output")
         state.shelfRight = third
+        state.prepareComparisonShelf()
+        check(state.shelfRight == third && state.outputText == "must survive",
+              "reopening the shelf preserves pending A/B choices and dirty output")
+        let removedInput = state.diffRightURL!
+        state.removeShelfItem(removedInput)
+        state.prepareComparisonShelf()
+        check(!state.shelfItems.contains(removedInput) && state.shelfRight == third,
+              "reopening the shelf does not restore a deliberately removed input")
         state.compareShelfPair()
         check(state.showsNavigationConfirmation && state.diffRightURL != third, "shelf switching uses the same unsaved-output guard")
         state.resolveFileNavigation(save: false, discard: true)
         try await settle()
         check(state.diffRightURL == third && !state.isFolderWorkspace, "shelf comparison opens selected versions after confirmation")
+        state.shelfLeft = third
+        state.shelfRight = state.diffLeftURL
+        state.prepareComparisonShelf()
+        check(state.shelfLeft == state.diffLeftURL && state.shelfRight == third,
+              "a new comparison initializes the shelf to its active pair")
         state.goHome(); state.clearShelf()
         let png = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")!
         state.importClipboardImageData(png)

@@ -228,6 +228,7 @@ final class AppState {
     var shelfLeft: URL?
     var shelfRight: URL?
     @ObservationIgnored private var shelfScopes: [URL] = []
+    @ObservationIgnored private var preparedShelfPair: [URL]?
     @ObservationIgnored let readingStore: ComparisonReadingStore
 
     func stageInputs(_ urls: [URL], automaticallyCompare: Bool = true) {
@@ -277,10 +278,14 @@ final class AppState {
 
     func prepareComparisonShelf() {
         let pair = [diffLeftURL, diffRightURL].compactMap { $0 }
+        // Reopening the same comparison must preserve pending choices and removals.
+        guard preparedShelfPair != pair else { return }
         if shelfItems.contains(where: { ComparisonInputInspector.kind(of: $0) == .folder }) { clearShelf() }
         stageInputs(pair, automaticallyCompare: false)
+        guard quickCompareError == nil else { return }
         if let left = diffLeftURL, shelfItems.contains(left) { shelfLeft = left }
         if let right = diffRightURL, shelfItems.contains(right) { shelfRight = right }
+        preparedShelfPair = pair
     }
 
     var pendingMergeItems: [URL] = []

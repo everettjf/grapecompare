@@ -57,7 +57,7 @@ struct FileDiffView: View {
                     Spacer()
                 }
                 Button("Input Shelf", systemImage: "square.stack") {
-                    state.prepareComparisonShelf()
+                    if !showsShelf { state.prepareComparisonShelf() }
                     showsShelf.toggle()
                 }
             }.padding(.horizontal, 12).padding(.vertical, 5)
