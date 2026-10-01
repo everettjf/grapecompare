@@ -58,7 +58,7 @@ struct ImageComparisonView: View {
         VStack(spacing: 0) {
             controls
             Divider()
-            content.overlay(alignment: .topTrailing) { navigator.padding(12) }
+            content.clipped().overlay(alignment: .topTrailing) { navigator.padding(12) }
             Divider()
             status
         }
@@ -118,10 +118,28 @@ struct ImageComparisonView: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 9) {
+        VStack(alignment: .leading, spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) { modeControls; zoomControls }
+                VStack(alignment: .leading, spacing: 8) { modeControls; zoomControls }
+            }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) { inspectionControls; thresholdControls }
+                VStack(alignment: .leading, spacing: 8) { inspectionControls; thresholdControls }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .controlSize(.small).padding(10)
+    }
+
+    private var modeControls: some View {
             Picker("Image display", selection: $mode) {
                 ForEach(Mode.allCases) { Text($0.title).tag($0) }
-            }.pickerStyle(.segmented).frame(maxWidth: 430)
+            }.pickerStyle(.segmented).labelsHidden().frame(maxWidth: 430)
+    }
+
+    private var zoomControls: some View {
+        HStack(spacing: 8) {
             Button { zoom = max(0.1, zoom / 1.25) } label: { Label("Zoom Out", systemImage: "minus.magnifyingglass") }
                 .labelStyle(.iconOnly)
                 .keyboardShortcut("-", modifiers: .command)
@@ -133,6 +151,11 @@ struct ImageComparisonView: View {
                 .keyboardShortcut("+", modifiers: .command)
             Button("Fit") { zoom = 1; pan = .zero }.keyboardShortcut("0", modifiers: .command)
             Button("Actual Pixels") { showActualPixels() }.keyboardShortcut("1", modifiers: .command)
+        }.fixedSize(horizontal: true, vertical: false)
+    }
+
+    private var inspectionControls: some View {
+        HStack(spacing: 8) {
             Menu("Channels") {
                 channelButton("Red", .red); channelButton("Green", .green)
                 channelButton("Blue", .blue); channelButton("Alpha", .alpha)
@@ -146,10 +169,6 @@ struct ImageComparisonView: View {
                 ColorPicker("Different Pixels", selection: $differingColor, supportsOpacity: true)
                 ColorPicker("Identical Pixels", selection: $identicalColor, supportsOpacity: true)
             }
-            Text("Threshold")
-            Slider(value: $threshold, in: 0...255, step: 1).frame(width: 90)
-                .accessibilityLabel("Pixel difference threshold")
-            Text(threshold, format: .number.precision(.fractionLength(0))).monospacedDigit()
             Menu("Align") {
                 Stepper("Horizontal: \(offsetX) px", value: $offsetX, in: -10_000...10_000)
                 Stepper("Vertical: \(offsetY) px", value: $offsetY, in: -10_000...10_000)
@@ -159,16 +178,25 @@ struct ImageComparisonView: View {
             Button("Image Inspector", systemImage: "info.circle") {
                 showsMetadata.toggle()
             }
+            .labelStyle(.iconOnly)
             .popover(isPresented: $showsMetadata) {
                 ImageMetadataInspector(left: leftMetadata, right: rightMetadata)
                     .frame(width: 520)
                     .padding(16)
             }
-            Spacer()
+        }.fixedSize(horizontal: true, vertical: false)
+    }
+
+    private var thresholdControls: some View {
+        HStack(spacing: 8) {
+            Text("Threshold")
+            Slider(value: $threshold, in: 0...255, step: 1).frame(width: 90)
+                .accessibilityLabel("Pixel difference threshold")
+            Text(threshold, format: .number.precision(.fractionLength(0))).monospacedDigit()
             if isComputingDifference {
                 ProgressView().controlSize(.small).accessibilityLabel("Updating image difference")
             }
-        }.controlSize(.small).padding(10)
+        }.fixedSize(horizontal: true, vertical: false)
     }
 
     @ViewBuilder private var content: some View {
@@ -194,9 +222,23 @@ struct ImageComparisonView: View {
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
                         transformed(rightImage, aligned: true)
-                        transformed(leftImage).frame(width: proxy.size.width * split, alignment: .leading).clipped()
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                        transformed(leftImage)
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .mask(alignment: .leading) { Rectangle().frame(width: proxy.size.width * split) }
                         Rectangle().fill(.white).frame(width: 1).offset(x: proxy.size.width * split)
-                    }.overlay(alignment: .bottom) { Slider(value: $split).frame(width: 280).padding() }
+                    }
+                    .contentShape(.rect)
+                    .gesture(DragGesture()
+                        .updating($dragTranslation) { value, state, _ in state = value.translation }
+                        .onEnded { value in
+                            pan = CGSize(width: pan.width + value.translation.width,
+                                         height: pan.height + value.translation.height)
+                        })
+                    .overlay(alignment: .bottom) {
+                        Slider(value: $split).frame(width: 280).padding().accessibilityLabel("Split position")
+                    }
+                    .onChange(of: proxy.size, initial: true) { _, size in canvasSize = size }
                 }
             case .blink:
                 canvas(showRight ? rightImage : leftImage, showRight ? rightRaster : leftRaster,
@@ -265,14 +307,13 @@ struct ImageComparisonView: View {
 
     private var status: some View {
         let value = currentResult
-        return HStack(spacing: 16) {
+        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), alignment: .leading)], alignment: .leading, spacing: 4) {
             Text("Left: \(value.leftWidth)×\(value.leftHeight)")
             Text("Right: \(value.rightWidth)×\(value.rightHeight)")
             Text("\(value.differingPixelCount) / \(value.comparedPixelCount) pixels")
             Text(value.meanAbsoluteDifference, format: .percent.precision(.fractionLength(3)))
             Text("Zoom: \(zoom, format: .percent.precision(.fractionLength(0)))")
             Text("Maximum channel difference: \(value.maximumChannelDifference)")
-            Spacer()
             Text(value.identical ? "Images are identical" : "Images differ")
                 .foregroundStyle(value.identical ? .green : .orange)
         }.font(.caption).padding(8)

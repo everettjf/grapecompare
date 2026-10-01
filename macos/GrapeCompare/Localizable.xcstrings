@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Split position" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分割位置"
+          }
+        }
+      }
+    },
     "Paste Image" : {
       "localizations" : {
         "zh-Hans" : {

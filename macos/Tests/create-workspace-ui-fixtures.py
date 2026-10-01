@@ -37,4 +37,5 @@ for version in range(1, 4):
     (root / f"image{version}.png").write_bytes(png(version))
 for index, side in enumerate(("left", "right"), 1):
     (root / side / "image.png").write_bytes(png(index))
+    (root / side / "Sources/File003.txt").write_bytes((root / f"version{index}.txt").read_bytes())
 print(root)

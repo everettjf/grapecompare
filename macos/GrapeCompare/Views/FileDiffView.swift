@@ -68,7 +68,7 @@ struct FileDiffView: View {
                         return true
                     }
             }
-            if state.fileDiff?.isBinary == false, state.fileDiff?.isTooLarge == false {
+            if state.imageComparison == nil, state.fileDiff?.isBinary == false, state.fileDiff?.isTooLarge == false {
                 Divider()
                 textActionBar
             }
