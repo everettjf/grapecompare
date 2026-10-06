@@ -1,5 +1,7 @@
 # GrapeCompare
 
+[Discord](https://discord.gg/eGzEaP6TzR)
+
 GrapeCompare is a private, sandboxed macOS comparison app for files, folders,
 images, structured data, and three-way merges. All comparison work happens on
 the Mac; the app has no account, telemetry, network entitlement, or cloud upload.

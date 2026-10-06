@@ -1,5 +1,7 @@
 # GrapeCompare
 
+[Discord](https://discord.gg/eGzEaP6TzR)
+
 GrapeCompare 是一款面向 macOS 的私密沙盒比较工具，支持文件、文件夹、图片、
 结构化数据和三方合并。所有处理均在本机完成；应用没有账号、遥测、网络权限或
 云端上传。

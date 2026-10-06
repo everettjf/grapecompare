@@ -51,6 +51,9 @@ struct GrapeCompareApp: App {
         // NB: do NOT apply .preferredColorScheme on the scene content — it
         // prevents the window from being created at all (macOS 27 beta).
         .commands {
+            CommandGroup(after: .help) {
+                Link("Discord", destination: URL(string: "https://discord.gg/eGzEaP6TzR")!)
+            }
             FileOperationCommands()
             MergeCommands()
             WorkspaceCommands()
